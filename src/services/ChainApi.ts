@@ -66,7 +66,11 @@ export class ChainApi {
             if (method === 'GET') {
                 response = await fetch(mainUrl);
             } else {
-                response = await fetch(mainUrl, {method, body: request});
+                response = await fetch(mainUrl, {
+                    method: method.toLowerCase(), 
+                    body: JSON.stringify(request),
+                    headers: { 'Content-Type': 'application/json' },
+                });
             }
 
             return response.json();
@@ -112,7 +116,12 @@ export class ChainApi {
     }
 
     async order(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<number | string> {
-        return (await this.aggregatorApi(isCreateInternalOrder ? '/order/maker' : '/order', order, 'POST')).orderId;
+        try {
+            return await this.aggregatorApi(isCreateInternalOrder ? '/order/maker' : '/order', order, 'POST')
+        } catch (error) {
+            console.log('ChainApi order error: ', error);
+            return error
+        }
     }
 
 }

@@ -8,7 +8,8 @@ import { BigNumber } from 'bignumber.js'
 import { ChainApi } from './services/ChainApi'
 import { OrionBlockchain } from './services/OrionBlockchain'
 
-import {SignOrderModel, DEFAULT_NUMBER_FORMAT} from './utils/Models'
+import {SignOrderModel} from './utils/Models'
+import {getNumberFormat} from './utils/Helpers'
 
 /* TEST SECTION BELOW */
 
@@ -31,8 +32,7 @@ const run = async () => {
     const orion = new OrionBlockchain(provider, walletAddress, '')
     console.log('chain: ', Object.keys(orion))
 
-    const format = {...DEFAULT_NUMBER_FORMAT}
-    format.name = 'ORN-USDT'
+    const format = getNumberFormat(provider.blockchainInfo, 'ORN', 'USDT')
 
     const order: SignOrderModel = {
       fromCurrency: 'ORN', // '0xf223eca06261145b3287a0fefd8cfad371c7eb34', // ORN 
@@ -46,7 +46,10 @@ const run = async () => {
       needWithdraw: false
     }
 
-    orion.signOrder(order)
+    const signedOrder = await orion.signOrder(order)
+    console.log('signedOrder: ', signedOrder);
+    const sendOrder = await provider.order(signedOrder, false)
+    console.log('sendOrder: ', sendOrder);
 
   } catch (error) {
     console.log('run error: ', error);

@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
-import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat } from "./Models";
+import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo } from "./Models";
 import { ChainApi } from "../main";
 
 export const ETH_CHAIN_ID = 3
@@ -68,4 +68,14 @@ export function calculateNetworkFee(provider: ChainApi, gasPriceGwei: string, na
     const price = nameToPrice[currency] && nameToPrice[baseCurrencyName] ? nameToPrice[baseCurrencyName].dividedBy(nameToPrice[currency]) : new BigNumber(0);
     const networkFee = networkFeeEth.multipliedBy(price);
     return {networkFeeEth, networkFee};
+}
+
+export function getNumberFormat(info: BlockchainInfo, from: string, to: string): NumberFormat {
+    const format = {...DEFAULT_NUMBER_FORMAT}
+    format.name = `${from}-${to}`
+    if(!info.assetToDecimals[from]) throw new Error('Invalid asset "from"')
+    if(!info.assetToDecimals[to]) throw new Error('Invalid asset "to"')
+    format.baseAssetPrecision = info.assetToDecimals[from]
+    format.quoteAssetPrecision = info.assetToDecimals[to]
+    return format
 }
