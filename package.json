@@ -1,0 +1,35 @@
+{
+  "name": "orion-trading-sdk",
+  "version": "1.0.0",
+  "description": "Orion trading SDK",
+  "keywords": [
+    "orion",
+    "crypto",
+    "lib"
+  ],
+  "main": "build/main.js",
+  "scripts": {
+    "dev": "concurrently \"tsc --watch\" \"nodemon -q build/main.js\"",
+    "build": "tsc"
+  },
+  "author": "peiko.tumakov.y@gmail.com",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.4.10",
+    "@types/node-fetch": "^2.5.12",
+    "@typescript-eslint/eslint-plugin": "^4.29.0",
+    "@typescript-eslint/parser": "^4.29.0",
+    "concurrently": "^6.2.0",
+    "eslint": "^7.30.0",
+    "nodemon": "^2.0.12",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "@ethersproject/abstract-provider": "^5.4.0",
+    "bignumber.js": "^9.0.1",
+    "eth-sig-util": "^3.0.1",
+    "ethers": "^5.1.6",
+    "node-fetch": "^2.6.1",
+    "rimraf": "^3.0.2"
+  }
+}
