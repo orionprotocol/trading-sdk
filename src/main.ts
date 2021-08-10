@@ -32,31 +32,40 @@ const run = async () => {
     provider.connectWallet(privateKey)
     const orion = new OrionBlockchain(provider, walletAddress, '')
 
-    const format = getNumberFormat(provider.blockchainInfo, 'ORN', 'USDT')
+    // const format = getNumberFormat(provider.blockchainInfo, 'ORN', 'USDT')
 
-    const order: SignOrderModel = {
-      fromCurrency: 'ORN', 
-      toCurrency: 'USDT',
-      side: 'buy', 
-      price: new BigNumber(12), 
-      amount: new BigNumber(20),
-      senderAddress: walletAddress, 
-      priceDeviation: new BigNumber(1), 
-      numberFormat: format, 
-      needWithdraw: false
-    }
+    // const order: SignOrderModel = {
+    //   fromCurrency: 'ORN', 
+    //   toCurrency: 'USDT',
+    //   side: 'buy', 
+    //   price: new BigNumber(12), 
+    //   amount: new BigNumber(20),
+    //   senderAddress: walletAddress, 
+    //   priceDeviation: new BigNumber(1), 
+    //   numberFormat: format, 
+    //   needWithdraw: false
+    // }
 
-    const signedOrder = await orion.signOrder(order)
-    console.log('signedOrder: ', signedOrder);
+    // const signedOrder = await orion.signOrder(order)
+    // console.log('signedOrder: ', signedOrder);
 
-    const sendOrder = await provider.sendOrder(signedOrder, false)
-    console.log('sendOrder: ', sendOrder);
+    const deposit = await orion.deposit('ORN', '100')
+    console.log('deposit: ', deposit);
 
-    const history = await provider.getTradeHistory(walletAddress)
+    const balance = await orion.checkContractBalance('ORN', walletAddress)
+    console.log('balance: ', balance.toString());
+
+    // const balanceReserved = await provider.checkReservedBalance(walletAddress)
+    // console.log('balanceReserved: ', balanceReserved);
+
+    // const sendOrder = await provider.sendOrder(signedOrder, false)
+    // console.log('sendOrder: ', sendOrder);
+
+    // const history = await provider.getTradeHistory(walletAddress)
     // console.log('history: ', history);
 
-    const status = await provider.getOrderStatus(walletAddress, Number(history[0].id))
-    console.log('getOrderStatus: ', status);
+    // const status = await provider.getOrderStatus(walletAddress, Number(history[0].id))
+    // console.log('getOrderStatus: ', status);
 
   } catch (error) {
     console.log('run error: ', error);

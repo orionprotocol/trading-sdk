@@ -2,8 +2,8 @@ import BigNumber from "bignumber.js";
 import {ethers} from "ethers";
 import {signTypedMessage} from 'eth-sig-util';
 import {arrayify, joinSignature, splitSignature} from "ethers/lib/utils";
-import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel} from "../utils/Models";
-import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee} from '../utils/Helpers'
+import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, CancelOrderRequest} from "../utils/Models";
+import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT} from '../utils/Helpers'
 import exchangeABI from '../abis/Exchange.json';
 import erc20ABI from '../abis/ERC20.json';
 import { ChainApi } from "./ChainApi";
@@ -121,13 +121,13 @@ export class OrionBlockchain {
         return this.blockchainInfo.assetToAddress[name];
     }
 
-    tokenAddressToName(address: string): (string | undefined) {
+    tokenAddressToName(address: string): string {
         for (const name in this.blockchainInfo.assetToAddress) {
             if (this.blockchainInfo.assetToAddress.hasOwnProperty(name)) {
                 if (this.blockchainInfo.assetToAddress[name] === address.toLowerCase()) return name;
             }
         }
-        return undefined;
+        return '';
     }
 
     private async validateOrder(order: BlockchainOrder): Promise<boolean> {
@@ -319,6 +319,78 @@ export class OrionBlockchain {
             return false;
         } else {
             return !!transactionReceipt.status;
+        }
+    }
+
+    
+    async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<number | string> {
+        try {
+            return await this.chainApi.aggregatorApi(isCreateInternalOrder ? '/order/maker' : '/order', order, 'POST')
+        } catch (error) {
+            console.log('ChainApi order error: ', error);
+            return error
+        }
+    }
+
+    async cancelOrder(order: CancelOrderRequest): Promise<void> {
+        return await this.chainApi.aggregatorApi('/order', order, 'DELETE');
+    }
+
+    private async depositETH(amountUnit: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionResponse> {
+        const unsignedTx: ethers.PopulatedTransaction = await this.exchangeContract.populateTransaction.deposit();
+        unsignedTx.value = ethers.BigNumber.from(amountUnit);
+        return this.sendTransaction(
+            unsignedTx,
+            DEPOSIT_ETH_GAS_LIMIT,
+            gasPriceWei
+        )
+    }
+
+    private async depositERC20(currency: string, amountUnit: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionResponse> {
+        console.log('depositERC20', gasPriceWei);
+        return this.sendTransaction(
+            await this.exchangeContract.populateTransaction.depositAsset(this.getTokenAddress(currency), amountUnit),
+            DEPOSIT_ERC20_GAS_LIMIT,
+            gasPriceWei
+        )
+    }
+
+    async deposit(currency: string, amount: string): Promise<ethers.providers.TransactionResponse> {
+        try {
+            const bignumberAmount = new BigNumber(amount)
+            const amountUnit = this.numberToUnit(currency, bignumberAmount);
+            const gasPriceGwei = await this.chainApi.getGasPriceFromOrionBlockchain();
+            const gasPriceWei = new BigNumber(ethers.utils.parseUnits(gasPriceGwei, 'gwei').toString())
+
+            if (currency === this.blockchainInfo.baseCurrencyName) {
+                return this.depositETH(amountUnit, gasPriceWei)
+            } else {
+                return this.depositERC20(currency, amountUnit, gasPriceWei)
+            }
+        } catch (error) {
+            console.log('deposit error: ', error);
+            return error
+        }
+    }
+
+    async checkContractBalance(tokenSymbol: string, walletAddress: string) {
+        try {
+            const tokenAddress = this.getTokenAddress(tokenSymbol)
+            const balance = await this.exchangeContract.getBalance(tokenAddress, walletAddress)
+            return balance
+        } catch (error) {
+            console.log(error);
+            return error
+        }
+    }
+
+    async checkReservedBalance(walletAddress: string, asset = '') {
+        try {
+            const path = `/address/balance/reserved/${asset}?address=${walletAddress}`
+            return await this.chainApi.aggregatorApi(path, {}, 'GET')
+        } catch (error) {
+            console.log(error);
+            return error
         }
     }
 }

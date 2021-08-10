@@ -2,10 +2,8 @@ import { ethers } from 'ethers'
 import BigNumber from 'bignumber.js'
 import fetch from 'node-fetch'
 import {ETH_CHAIN_ID, parseTradeOrder} from '../utils/Helpers'
-import { BlockchainInfo, BlockchainOrder, PoolsConfig, TradeOrder, CancelOrderRequest } from '../utils/Models'
+import { BlockchainInfo, PoolsConfig, TradeOrder } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
-
-
 export class ChainApi {
     public readonly provider: ethers.providers.JsonRpcProvider 
     public readonly orionBlockchainUrl: string
@@ -45,6 +43,10 @@ export class ChainApi {
         return data;
     }
 
+    async getTokenAddress (token: string) {
+        return this.blockchainInfo.assetToAddress[token]
+    }
+
     public async orionBlockchainApi(url: string): Promise<any> {
         const mainUrl = this.orionBlockchainUrl + '/api' + url;
 
@@ -57,7 +59,7 @@ export class ChainApi {
         }
     }
 
-    private async aggregatorApi(url: string, request: any, method: string) {
+    public async aggregatorApi(url: string, request: any, method: string) {
         const mainUrl = this.aggregatorUrl + '/api/v1' + url;
 
         try {
@@ -134,18 +136,4 @@ export class ChainApi {
     disconnectWallet(): void {
         this.signer = undefined;
     }
-
-    async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<number | string> {
-        try {
-            return await this.aggregatorApi(isCreateInternalOrder ? '/order/maker' : '/order', order, 'POST')
-        } catch (error) {
-            console.log('ChainApi order error: ', error);
-            return error
-        }
-    }
-
-    async cancelOrder(order: CancelOrderRequest): Promise<void> {
-        return await this.aggregatorApi('/order', order, 'DELETE');
-    }
-
 }
