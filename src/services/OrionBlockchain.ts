@@ -8,11 +8,11 @@ import exchangeABI from '../abis/Exchange.json';
 import erc20ABI from '../abis/ERC20.json';
 import { ChainApi } from "./ChainApi";
 
-const DEFAULT_EXPIRATION: number = 29 * 24 * 60 * 60 * 1000; // 29 days
+export const DEFAULT_EXPIRATION: number = 29 * 24 * 60 * 60 * 1000; // 29 days
 
-const FEE_CURRENCY = 'ORN'
+export const FEE_CURRENCY = 'ORN'
 
-const ORDER_TYPES = {
+export const ORDER_TYPES = {
     Order: [
         {name: "senderAddress", type: "address"},
         {name: "matcherAddress", type: "address"},
@@ -28,7 +28,7 @@ const ORDER_TYPES = {
     ],
 }
 
-const DOMAIN_TYPE = [
+export const DOMAIN_TYPE = [
     {name: "name", type: "string"},
     {name: "version", type: "string"},
     {name: "chainId", type: "uint256"},
@@ -204,9 +204,7 @@ export class OrionBlockchain {
             const quoteAsset: string = this.getTokenAddress(params.toCurrency);
             const nonce: number = Date.now();
     
-            console.log('params: ', params);
-    
-            // console.log(side + ' ' + amount.toString() + ' ' + fromCurrency + '-' + toCurrency + ' by ' + price.toString() + ' with price deviation ' + priceDeviation.toString() + '%');
+            console.log('signOrder params: ', params);
     
             if (!params.price.gt(0)) throw new Error('Invalid price');
             if (!params.amount.gt(0)) throw new Error('Invalid amount');
@@ -305,7 +303,6 @@ export class OrionBlockchain {
             true,
         );
 
-        // console.log('ChainApi: ', ChainApi);
         const gasPriceGwei = await this.chainApi.getGasPriceFromOrionBlockchain();
         const gasPriceWei = new BigNumber(ethers.utils.parseUnits(gasPriceGwei, 'gwei').toString())
 

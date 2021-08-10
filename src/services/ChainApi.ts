@@ -1,8 +1,8 @@
 import { ethers } from 'ethers'
 import BigNumber from 'bignumber.js'
 import fetch from 'node-fetch'
-import {ETH_CHAIN_ID} from '../utils/Helpers'
-import { BlockchainInfo, BlockchainOrder, PoolsConfig } from '../utils/Models'
+import {ETH_CHAIN_ID, parseTradeOrder} from '../utils/Helpers'
+import { BlockchainInfo, BlockchainOrder, PoolsConfig, TradeOrder, CancelOrderRequest } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
 
 
@@ -67,7 +67,7 @@ export class ChainApi {
                 response = await fetch(mainUrl);
             } else {
                 response = await fetch(mainUrl, {
-                    method: method.toLowerCase(), 
+                    method, 
                     body: JSON.stringify(request),
                     headers: { 'Content-Type': 'application/json' },
                 });
@@ -105,23 +105,47 @@ export class ChainApi {
         return new BigNumber(gwei).toFixed(0);
     }
 
+    async getTradeHistory(walletAddress: string, fromCurrency?: string, toCurrency?: string): Promise<TradeOrder[]> {
+        let url = '/orderHistory?address=' + walletAddress + (fromCurrency ? '&baseAsset=' + fromCurrency : '') + (toCurrency ? '&quoteAsset=' + toCurrency : '');
+        if (process.env.REACT_APP_AGG_V2) {
+            url = '/order/history?address=' + walletAddress + (fromCurrency ? '&baseAsset=' + fromCurrency : '') + (toCurrency ? '&quoteAsset=' + toCurrency : '');
+        }
+        const data = await this.aggregatorApi(url, {}, 'GET');
+        return data.map(parseTradeOrder);
+    }
+
+    async getOrderStatus (walletAddress: string, orderId: number): Promise<string> {
+        try {
+            const history = await this.getTradeHistory(walletAddress)
+            const order = history.find(order => Number(order.id) === orderId)
+            return order?.status || ''
+        } catch (error) {
+            console.log('getOrderStatus error: ', error);
+            return error
+        }
+    }
+
     connectWallet(privateKey: string): boolean {
         const signer = new ethers.Wallet(privateKey).connect(this.provider)
         this.signer = signer;
         return !!signer
     }
 
-    disconnectWallet() {
+    disconnectWallet(): void {
         this.signer = undefined;
     }
 
-    async order(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<number | string> {
+    async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<number | string> {
         try {
             return await this.aggregatorApi(isCreateInternalOrder ? '/order/maker' : '/order', order, 'POST')
         } catch (error) {
             console.log('ChainApi order error: ', error);
             return error
         }
+    }
+
+    async cancelOrder(order: CancelOrderRequest): Promise<void> {
+        return await this.aggregatorApi('/order', order, 'DELETE');
     }
 
 }

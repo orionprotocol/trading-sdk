@@ -4,6 +4,8 @@
 export * from './services/ChainApi'
 export * from './services/OrionBlockchain'
 
+/* TEST SECTION BELOW */
+
 import { BigNumber } from 'bignumber.js'
 import { ChainApi } from './services/ChainApi'
 import { OrionBlockchain } from './services/OrionBlockchain'
@@ -11,7 +13,6 @@ import { OrionBlockchain } from './services/OrionBlockchain'
 import {SignOrderModel} from './utils/Models'
 import {getNumberFormat} from './utils/Helpers'
 
-/* TEST SECTION BELOW */
 
 // const ETH_RPC_URL = 'https://staging.orionprotocol.io/rpc'
 const BSC_RPC_URL = 'https://data-seed-prebsc-2-s1.binance.org:8545/'
@@ -30,16 +31,15 @@ const run = async () => {
     await provider.init()
     provider.connectWallet(privateKey)
     const orion = new OrionBlockchain(provider, walletAddress, '')
-    console.log('chain: ', Object.keys(orion))
 
     const format = getNumberFormat(provider.blockchainInfo, 'ORN', 'USDT')
 
     const order: SignOrderModel = {
-      fromCurrency: 'ORN', // '0xf223eca06261145b3287a0fefd8cfad371c7eb34', // ORN 
-      toCurrency: 'USDT', // '0xcb2951e90d8dcf16e1fa84ac0c83f48906d6a744', // USDT
+      fromCurrency: 'ORN', 
+      toCurrency: 'USDT',
       side: 'buy', 
-      price: new BigNumber(7), 
-      amount: new BigNumber(1), // .multipliedBy(new BigNumber(10).pow(8)), 
+      price: new BigNumber(12), 
+      amount: new BigNumber(20),
       senderAddress: walletAddress, 
       priceDeviation: new BigNumber(1), 
       numberFormat: format, 
@@ -48,8 +48,15 @@ const run = async () => {
 
     const signedOrder = await orion.signOrder(order)
     console.log('signedOrder: ', signedOrder);
-    const sendOrder = await provider.order(signedOrder, false)
+
+    const sendOrder = await provider.sendOrder(signedOrder, false)
     console.log('sendOrder: ', sendOrder);
+
+    const history = await provider.getTradeHistory(walletAddress)
+    // console.log('history: ', history);
+
+    const status = await provider.getOrderStatus(walletAddress, Number(history[0].id))
+    console.log('getOrderStatus: ', status);
 
   } catch (error) {
     console.log('run error: ', error);
