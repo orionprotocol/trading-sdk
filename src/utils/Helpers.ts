@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
 import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo, TradeOrder, TradeSubOrder, Side, 
     OrderbookItem, Pair, Transaction, Orderbook, OrderData } from "./Models";
-import { ChainApi } from "../main";
+import { ChainApi } from "../services/ChainApi";
 
 export const ETH_CHAIN_ID = 3
 

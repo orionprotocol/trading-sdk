@@ -8,11 +8,11 @@ import exchangeABI from '../abis/Exchange.json';
 import erc20ABI from '../abis/ERC20.json';
 import { ChainApi } from "./ChainApi";
 
-export const DEFAULT_EXPIRATION: number = 29 * 24 * 60 * 60 * 1000; // 29 days
+const DEFAULT_EXPIRATION: number = 29 * 24 * 60 * 60 * 1000; // 29 days
 
-export const FEE_CURRENCY = 'ORN'
+const FEE_CURRENCY = 'ORN'
 
-export const ORDER_TYPES = {
+const ORDER_TYPES = {
     Order: [
         {name: "senderAddress", type: "address"},
         {name: "matcherAddress", type: "address"},
@@ -28,14 +28,14 @@ export const ORDER_TYPES = {
     ],
 }
 
-export const DOMAIN_TYPE = [
+const DOMAIN_TYPE = [
     {name: "name", type: "string"},
     {name: "version", type: "string"},
     {name: "chainId", type: "uint256"},
     {name: "salt", type: "bytes32"},
 ]
 
-export function hashOrder(order: BlockchainOrder): string {
+function hashOrder(order: BlockchainOrder): string {
     return ethers.utils.solidityKeccak256(
         [
             'uint8',
