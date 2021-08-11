@@ -327,7 +327,7 @@ export class OrionBlockchain {
         try {
             return await this.chainApi.aggregatorApi(isCreateInternalOrder ? '/order/maker' : '/order', order, 'POST')
         } catch (error) {
-            console.log('ChainApi order error: ', error);
+            console.log('sendOrder error: ', error);
             return error
         }
     }
@@ -347,7 +347,6 @@ export class OrionBlockchain {
     }
 
     private async depositERC20(currency: string, amountUnit: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionResponse> {
-        console.log('depositERC20', gasPriceWei);
         return this.sendTransaction(
             await this.exchangeContract.populateTransaction.depositAsset(this.getTokenAddress(currency), amountUnit),
             DEPOSIT_ERC20_GAS_LIMIT,
@@ -365,7 +364,7 @@ export class OrionBlockchain {
             if (currency === this.blockchainInfo.baseCurrencyName) {
                 return this.depositETH(amountUnit, gasPriceWei)
             } else {
-                return this.depositERC20(currency, amountUnit, gasPriceWei)
+                return this.depositERC20(currency, amountUnit, new BigNumber(gasPriceWei))
             }
         } catch (error) {
             console.log('deposit error: ', error);
@@ -373,7 +372,7 @@ export class OrionBlockchain {
         }
     }
 
-    async checkContractBalance(tokenSymbol: string, walletAddress: string) {
+    async checkContractBalance(tokenSymbol: string, walletAddress: string): Promise<BigNumber> {
         try {
             const tokenAddress = this.getTokenAddress(tokenSymbol)
             const balance = await this.exchangeContract.getBalance(tokenAddress, walletAddress)

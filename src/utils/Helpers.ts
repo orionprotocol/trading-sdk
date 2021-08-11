@@ -11,8 +11,8 @@ export const MATCHER_FEE_PERCENT: BigNumber = new BigNumber(0.2).dividedBy(100);
 export const SWAP_THROUGH_ORION_POOL_GAS_LIMIT = 350000;
 export const FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT = 385000;
 export const FILL_ORDERS_GAS_LIMIT = 220000;
-export const DEPOSIT_ETH_GAS_LIMIT = 70000;
-export const DEPOSIT_ERC20_GAS_LIMIT = 150000;
+export const DEPOSIT_ETH_GAS_LIMIT = 220000;
+export const DEPOSIT_ERC20_GAS_LIMIT = 250000;
 
 export function getPriceWithDeviation(price: BigNumber, side: string, deviation: BigNumber): BigNumber {
     const d = deviation.dividedBy(100)
@@ -34,7 +34,7 @@ function toOrnPrice(currency: string, nameToPrice: Dictionary<BigNumber>): BigNu
     return price;
 }
 
-export function getPairNumberFormat(pairName: string, numberFormat: Dictionary<NumberFormat>) {
+export function getPairNumberFormat(pairName: string, numberFormat: Dictionary<NumberFormat>): NumberFormat {
     return numberFormat[pairName] || DEFAULT_NUMBER_FORMAT;
 }
 
