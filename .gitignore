@@ -1,4 +1,4 @@
 node_modules
-build
+dist
 .vscode
-src/keys.ts
+test/keys*

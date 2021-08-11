@@ -1,28 +1,37 @@
 {
-  "name": "orion-trading-sdk",
+  "name": "@orionprotocol/orion-trading-sdk",
   "version": "1.0.0",
-  "description": "Orion trading SDK",
-  "keywords": [
-    "orion",
-    "crypto",
-    "lib"
-  ],
-  "main": "build/main.js",
-  "scripts": {
-    "dev": "concurrently \"tsc --watch\" \"nodemon -q build/main.js\"",
-    "build": "rimraf ./build && tsc"
-  },
+  "description": "🛠 An SDK for trading with orionprotocol",
+  "repository": "https://github.com/orionprotocol/trading-sdk",
   "author": "peiko.tumakov.y@gmail.com",
   "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "module": "dist/sdk.esm.js",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "orionprotocol",
+    "ethereum",
+    "bsc",
+    "crypto"
+  ],
+  "scripts": {
+    "lint": "tsdx lint src test",
+    "build": "tsdx build",
+    "start": "tsdx watch --target node",
+    "test": "tsdx test",
+    "prepublishOnly": "tsdx build"
+  },
   "devDependencies": {
+    "@types/jest": "^25.2.3",
     "@types/node": "^16.4.10",
     "@types/node-fetch": "^2.5.12",
     "@typescript-eslint/eslint-plugin": "^4.29.0",
     "@typescript-eslint/parser": "^4.29.0",
-    "concurrently": "^6.2.0",
     "eslint": "^7.30.0",
-    "nodemon": "^2.0.12",
-    "typescript": "^4.3.5"
+    "tsdx": "^0.14.1"
   },
   "dependencies": {
     "@ethersproject/abstract-provider": "^5.4.0",
@@ -31,5 +40,8 @@
     "ethers": "^5.1.6",
     "node-fetch": "^2.6.1",
     "rimraf": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=10"
   }
 }

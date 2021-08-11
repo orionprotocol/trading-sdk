@@ -28,7 +28,7 @@ export function sumBigNumber(arr: BigNumber[]): BigNumber {
     return result;
 }
 
-function toOrnPrice(currency: string, nameToPrice: Dictionary<BigNumber>): BigNumber {
+export function toOrnPrice(currency: string, nameToPrice: Dictionary<BigNumber>): BigNumber {
     const price = nameToPrice[currency];
     if (!price) return new BigNumber(0);
     return price;
@@ -52,7 +52,7 @@ export function calculateMatcherFee(fromCurrency: string, amount: BigNumber, pri
     }
 }
 
-export function calculateNetworkFee(provider: ChainApi, gasPriceGwei: string, nameToPrice: Dictionary<BigNumber>, currency: string, needWithdraw: boolean, isPool = false): { networkFeeEth: BigNumber, networkFee: BigNumber } {
+export function calculateNetworkFee(api: ChainApi, gasPriceGwei: string, nameToPrice: Dictionary<BigNumber>, currency: string, needWithdraw: boolean, isPool = false): { networkFeeEth: BigNumber, networkFee: BigNumber } {
     if (gasPriceGwei === 'N/A') return {networkFeeEth: new BigNumber(0), networkFee: new BigNumber(0)};
 
     const gasPriceEth = new BigNumber(ethers.utils.formatUnits(gasPriceGwei, 'gwei'));
@@ -68,7 +68,7 @@ export function calculateNetworkFee(provider: ChainApi, gasPriceGwei: string, na
     }
     const networkFeeEth = gasPriceEth.multipliedBy(gasLimit);
 
-    const baseCurrencyName = provider.blockchainInfo.baseCurrencyName;
+    const baseCurrencyName = api.blockchainInfo.baseCurrencyName;
     const price = nameToPrice[currency] && nameToPrice[baseCurrencyName] ? nameToPrice[baseCurrencyName].dividedBy(nameToPrice[currency]) : new BigNumber(0);
     const networkFee = networkFeeEth.multipliedBy(price);
     return {networkFeeEth, networkFee};

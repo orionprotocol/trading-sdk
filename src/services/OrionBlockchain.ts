@@ -204,8 +204,6 @@ export class OrionBlockchain {
             const quoteAsset: string = this.getTokenAddress(params.toCurrency);
             const nonce: number = Date.now();
     
-            console.log('signOrder params: ', params);
-    
             if (!params.price.gt(0)) throw new Error('Invalid price');
             if (!params.amount.gt(0)) throw new Error('Invalid amount');
             if (!params.priceDeviation.gte(0)) throw new Error('Invalid priceDeviation');
@@ -213,12 +211,13 @@ export class OrionBlockchain {
             if (params.numberFormat.qtyPrecision === undefined || params.numberFormat.qtyPrecision === null) throw new Error('Invalid qtyPrecision');
             if (params.numberFormat.pricePrecision === undefined || params.numberFormat.pricePrecision === null) throw new Error('Invalid pricePrecision');
     
-            const gasPriceGwei = await this.chainApi.getGasPriceFromOrionBlockchain();
+            const gasPriceGwei = params.gasPriceGwei ? params.gasPriceGwei : await this.chainApi.getGasPriceFromOrionBlockchain();
             const blockchainPrices = await this.chainApi.getPricesFromBlockchain()
     
             const matcherFee = calculateMatcherFee(params.fromCurrency, params.amount, params.price, params.side, blockchainPrices, true);
             const {networkFee} = calculateNetworkFee(this.chainApi, gasPriceGwei, blockchainPrices, 'ORN', false);
             const totalFee = matcherFee.plus(networkFee)
+            
             console.log(`${matcherFee} + ${networkFee} = ${totalFee}`);
     
             const priceWithDeviation = params.priceDeviation.isZero() ? params.price : getPriceWithDeviation(params.price, params.side, params.priceDeviation);

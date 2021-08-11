@@ -41,7 +41,8 @@ export interface SignOrderModel {
     priceDeviation: BigNumber, 
     // feeCurrency: string, 
     numberFormat: NumberFormat, 
-    needWithdraw: boolean
+    needWithdraw: boolean,
+    gasPriceGwei?: string // in case if user knows this value
 }
 
 export interface BlockchainOrder {
