@@ -1,5 +1,5 @@
 import { ChainApi } from '../src/services/ChainApi'
-import { OrionBlockchain } from '../src/services/OrionBlockchain'
+// import { OrionBlockchain } from '../src/services/OrionBlockchain'
 // import {getNumberFormat} from './utils/Helpers'
 // import {CancelOrderRequest} from './utils/Models'
 
@@ -12,21 +12,12 @@ const BSC_RPC_URL = 'https://data-seed-prebsc-2-s1.binance.org:8545/'
 // const ETH_ORION_BLOCKCHAIN_PROD = 'https://trade.orionprotocol.io'
 const BSC_ORION_BLOCKCHAIN = 'https://dev-exp.orionprotocol.io'
 
-// const ETH_AGGREGATOR = 'https://staging.orionprotocol.io/backend'
-// const ETH_AGGREGATOR_PROD = 'https://trade.orionprotocol.io/backend'
-const BSC_AGGREGATOR = 'https://dev-exp.orionprotocol.io/backend'
-
-const wallet = {
-    address: '0xe309Fb49005D01Df5d815a06a939260Ef0fff9ac',
-    privateKey: 'a4b9a035914e7a5142943ea1c90f034d9a1d8659cafdaf035845d67af388475b'
-}
-
 describe('Api connect', () => {
     it('Connect and check', async () => {
-        const provider = new ChainApi(BSC_RPC_URL, BSC_ORION_BLOCKCHAIN, BSC_AGGREGATOR)
+        const provider = new ChainApi(BSC_RPC_URL, BSC_ORION_BLOCKCHAIN)
         await provider.init()
-        provider.connectWallet(wallet.privateKey)
-        const orion = new OrionBlockchain(provider, wallet.address, '')
+        // provider.connectWallet(wallet.privateKey)
+        // const orion = new OrionBlockchain(provider, wallet.address, '')
 
         // const format = getNumberFormat(provider.blockchainInfo, 'ORN', 'DAI')
 
@@ -42,8 +33,8 @@ describe('Api connect', () => {
         //   needWithdraw: false
         // }
 
-        const balance = await orion.checkContractBalance('ORN', wallet.address)
-        console.log('balance: ', balance.toString());
+        // const balance = await orion.checkContractBalance('ORN', wallet.address)
+        // console.log('balance: ', balance.toString());
 
         // const balanceReserved = await orion.checkReservedBalance(wallet.address)
         // console.log('balanceReserved: ', balanceReserved);
@@ -64,11 +55,11 @@ describe('Api connect', () => {
         // const canceledOrder = await orion.cancelOrder(cancelOrder)
         // console.log('cancelOrder: ', canceledOrder);
 
-        const history = await provider.getTradeHistory(wallet.address)
-        // console.log('history: ', history)
+        // const history = await provider.getTradeHistory(wallet.address)
+        // // console.log('history: ', history)
 
-        const status = await provider.getOrderStatus(wallet.address, Number(history[0].id))
-        console.log('getOrderStatus: ', history[0], status);
+        // const status = await provider.getOrderStatus(wallet.address, Number(history[0].id))
+        // console.log('getOrderStatus: ', history[0], status);
 
     })
 })

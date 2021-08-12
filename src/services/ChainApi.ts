@@ -6,7 +6,7 @@ import {ETH_CHAINS_ID} from '../utils/Constants'
 import { BlockchainInfo, PoolsConfig, TradeOrder } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
 export class ChainApi {
-    public readonly provider: ethers.providers.JsonRpcProvider 
+    public readonly provider: ethers.providers.JsonRpcProvider
     public readonly orionBlockchainUrl: string
     public readonly aggregatorUrl: string
     public signer: ethers.Signer | undefined;
@@ -15,10 +15,10 @@ export class ChainApi {
     private _tokens!: Tokens;
     private _poolsConfig?: PoolsConfig;
 
-    constructor(providerUrl: string, blockchainUrl: string, aggregatorUrl: string) {
+    constructor(providerUrl: string, blockchainUrl: string) {
         this.provider = new ethers.providers.JsonRpcProvider(providerUrl);
         this.orionBlockchainUrl = blockchainUrl
-        this.aggregatorUrl = aggregatorUrl
+        this.aggregatorUrl = `${blockchainUrl}/backend`
     }
 
     public async init(): Promise<void> {
@@ -70,7 +70,7 @@ export class ChainApi {
                 response = await fetch(mainUrl);
             } else {
                 response = await fetch(mainUrl, {
-                    method, 
+                    method,
                     body: JSON.stringify(request),
                     headers: { 'Content-Type': 'application/json' },
                 });
