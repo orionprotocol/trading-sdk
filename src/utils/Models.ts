@@ -31,18 +31,16 @@ export interface PoolConfig {
 }
 
 export interface SignOrderModel {
-    fromCurrency: string, 
-    toCurrency: string, 
-    side: string, 
-    price: BigNumber, 
-    amount: BigNumber, 
-    // matcherFee: BigNumber, 
-    senderAddress: string, 
-    priceDeviation: BigNumber, 
-    // feeCurrency: string, 
-    numberFormat: NumberFormat, 
+    fromCurrency: string,
+    toCurrency: string,
+    side: string,
+    price: number,
+    amount: number,
+    senderAddress: string,
+    priceDeviation: number,
+    numberFormat?: NumberFormat,
     needWithdraw: boolean,
-    gasPriceGwei?: string // in case if user knows this value
+    gasPriceGwei?: string // in case if user already knows this value
 }
 
 export interface BlockchainOrder {

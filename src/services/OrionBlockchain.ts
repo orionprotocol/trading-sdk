@@ -3,7 +3,7 @@ import {ethers} from "ethers";
 import {signTypedMessage} from 'eth-sig-util';
 import {arrayify, joinSignature, splitSignature} from "ethers/lib/utils";
 import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, CancelOrderRequest} from "../utils/Models";
-import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee } from '../utils/Helpers'
+import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat } from '../utils/Helpers'
 import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION} from '../utils/Constants'
 import exchangeABI from '../abis/Exchange.json';
 import erc20ABI from '../abis/ERC20.json';
@@ -171,12 +171,17 @@ export class OrionBlockchain {
         }
     }
 
-    async signOrder(params: SignOrderModel): Promise<BlockchainOrder> {
+    async signOrder(orderParams: SignOrderModel): Promise<BlockchainOrder> {
+        const params: any = { ...orderParams }
 
         try {
             const baseAsset: string = this.getTokenAddress(params.fromCurrency);
             const quoteAsset: string = this.getTokenAddress(params.toCurrency);
             const nonce: number = Date.now();
+            params.numberFormat = getNumberFormat(this.chainApi.blockchainInfo, params.fromCurrency, params.toCurrency)
+            params.price = new BigNumber(orderParams.price)
+            params.amount = new BigNumber(orderParams.amount)
+            params.priceDeviation = new BigNumber(orderParams.priceDeviation)
 
             if (!params.price.gt(0)) throw new Error('Invalid price');
             if (!params.amount.gt(0)) throw new Error('Invalid amount');
@@ -191,8 +196,6 @@ export class OrionBlockchain {
             const matcherFee = calculateMatcherFee(params.fromCurrency, params.amount, params.price, params.side, blockchainPrices, true);
             const {networkFee} = calculateNetworkFee(this.chainApi, gasPriceGwei, blockchainPrices, 'ORN', false);
             const totalFee = matcherFee.plus(networkFee)
-
-            console.log(`${matcherFee} + ${networkFee} = ${totalFee}`);
 
             const priceWithDeviation = params.priceDeviation.isZero() ? params.price : getPriceWithDeviation(params.price, params.side, params.priceDeviation);
 
@@ -294,7 +297,6 @@ export class OrionBlockchain {
             return !!transactionReceipt.status;
         }
     }
-
 
     async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<number | string> {
         try {
