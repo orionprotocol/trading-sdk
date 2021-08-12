@@ -3,37 +3,11 @@ import {ethers} from "ethers";
 import {signTypedMessage} from 'eth-sig-util';
 import {arrayify, joinSignature, splitSignature} from "ethers/lib/utils";
 import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, CancelOrderRequest} from "../utils/Models";
-import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT} from '../utils/Helpers'
+import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee } from '../utils/Helpers'
+import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION} from '../utils/Constants'
 import exchangeABI from '../abis/Exchange.json';
 import erc20ABI from '../abis/ERC20.json';
 import { ChainApi } from "./ChainApi";
-
-const DEFAULT_EXPIRATION: number = 29 * 24 * 60 * 60 * 1000; // 29 days
-
-const FEE_CURRENCY = 'ORN'
-
-const ORDER_TYPES = {
-    Order: [
-        {name: "senderAddress", type: "address"},
-        {name: "matcherAddress", type: "address"},
-        {name: "baseAsset", type: "address"},
-        {name: "quoteAsset", type: "address"},
-        {name: "matcherFeeAsset", type: "address"},
-        {name: "amount", type: "uint64"},
-        {name: "price", type: "uint64"},
-        {name: "matcherFee", type: "uint64"},
-        {name: "nonce", type: "uint64"},
-        {name: "expiration", type: "uint64"},
-        {name: "buySide", type: "uint8"},
-    ],
-}
-
-const DOMAIN_TYPE = [
-    {name: "name", type: "string"},
-    {name: "version", type: "string"},
-    {name: "chainId", type: "uint256"},
-    {name: "salt", type: "bytes32"},
-]
 
 function hashOrder(order: BlockchainOrder): string {
     return ethers.utils.solidityKeccak256(
@@ -123,7 +97,7 @@ export class OrionBlockchain {
 
     tokenAddressToName(address: string): string {
         for (const name in this.blockchainInfo.assetToAddress) {
-            if (this.blockchainInfo.assetToAddress.hasOwnProperty(name)) {
+            if (Object.prototype.hasOwnProperty.call(this.blockchainInfo.assetToAddress, name)) {
                 if (this.blockchainInfo.assetToAddress[name] === address.toLowerCase()) return name;
             }
         }
@@ -203,31 +177,31 @@ export class OrionBlockchain {
             const baseAsset: string = this.getTokenAddress(params.fromCurrency);
             const quoteAsset: string = this.getTokenAddress(params.toCurrency);
             const nonce: number = Date.now();
-    
+
             if (!params.price.gt(0)) throw new Error('Invalid price');
             if (!params.amount.gt(0)) throw new Error('Invalid amount');
             if (!params.priceDeviation.gte(0)) throw new Error('Invalid priceDeviation');
-    
+
             if (params.numberFormat.qtyPrecision === undefined || params.numberFormat.qtyPrecision === null) throw new Error('Invalid qtyPrecision');
             if (params.numberFormat.pricePrecision === undefined || params.numberFormat.pricePrecision === null) throw new Error('Invalid pricePrecision');
-    
+
             const gasPriceGwei = params.gasPriceGwei ? params.gasPriceGwei : await this.chainApi.getGasPriceFromOrionBlockchain();
             const blockchainPrices = await this.chainApi.getPricesFromBlockchain()
-    
+
             const matcherFee = calculateMatcherFee(params.fromCurrency, params.amount, params.price, params.side, blockchainPrices, true);
             const {networkFee} = calculateNetworkFee(this.chainApi, gasPriceGwei, blockchainPrices, 'ORN', false);
             const totalFee = matcherFee.plus(networkFee)
-            
+
             console.log(`${matcherFee} + ${networkFee} = ${totalFee}`);
-    
+
             const priceWithDeviation = params.priceDeviation.isZero() ? params.price : getPriceWithDeviation(params.price, params.side, params.priceDeviation);
-    
+
             const amountRounded: BigNumber = params.amount.decimalPlaces(params.numberFormat.qtyPrecision, BigNumber.ROUND_DOWN);
             const priceRounded: BigNumber = priceWithDeviation.decimalPlaces(params.numberFormat.pricePrecision, params.side === 'buy' ? BigNumber.ROUND_UP : BigNumber.ROUND_DOWN);
             const matcherFeeAsset: string = this.getTokenAddress(FEE_CURRENCY);
-    
+
             if (totalFee.isZero()) throw new Error('Zero fee');
-    
+
             const order: BlockchainOrder = {
                 id: '',
                 senderAddress: params.senderAddress,
@@ -321,7 +295,7 @@ export class OrionBlockchain {
         }
     }
 
-    
+
     async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<number | string> {
         try {
             return await this.chainApi.aggregatorApi(isCreateInternalOrder ? '/order/maker' : '/order', order, 'POST')
@@ -366,7 +340,6 @@ export class OrionBlockchain {
                 return this.depositERC20(currency, amountUnit, new BigNumber(gasPriceWei))
             }
         } catch (error) {
-            console.log('deposit error: ', error);
             return error
         }
     }
@@ -377,7 +350,6 @@ export class OrionBlockchain {
             const balance = await this.exchangeContract.getBalance(tokenAddress, walletAddress)
             return balance
         } catch (error) {
-            console.log(error);
             return error
         }
     }
@@ -387,7 +359,6 @@ export class OrionBlockchain {
             const path = `/address/balance/reserved/${asset}?address=${walletAddress}`
             return await this.chainApi.aggregatorApi(path, {}, 'GET')
         } catch (error) {
-            console.log(error);
             return error
         }
     }

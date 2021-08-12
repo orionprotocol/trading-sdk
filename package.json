@@ -1,5 +1,5 @@
 {
-  "name": "@orionprotocol/orion-trading-sdk",
+  "name": "@tumakot/orion-trading-sdk",
   "version": "1.0.0",
   "description": "🛠 An SDK for trading with orionprotocol",
   "repository": "https://github.com/orionprotocol/trading-sdk",
@@ -38,8 +38,7 @@
     "bignumber.js": "^9.0.1",
     "eth-sig-util": "^3.0.1",
     "ethers": "^5.1.6",
-    "node-fetch": "^2.6.1",
-    "rimraf": "^3.0.2"
+    "node-fetch": "^2.6.1"
   },
   "engines": {
     "node": ">=10"

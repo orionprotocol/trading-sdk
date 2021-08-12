@@ -1,18 +1,8 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
-import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo, TradeOrder, TradeSubOrder, Side, 
-    OrderbookItem, Pair, Transaction, Orderbook, OrderData } from "./Models";
+import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo, TradeOrder, TradeSubOrder, Side, Transaction,} from "./Models";
+import {MATCHER_FEE_PERCENT, SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT} from '../utils/Constants'
 import { ChainApi } from "../services/ChainApi";
-
-export const ETH_CHAIN_ID = 3
-
-export const MATCHER_FEE_PERCENT: BigNumber = new BigNumber(0.2).dividedBy(100); // 0.2%
-
-export const SWAP_THROUGH_ORION_POOL_GAS_LIMIT = 350000;
-export const FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT = 385000;
-export const FILL_ORDERS_GAS_LIMIT = 220000;
-export const DEPOSIT_ETH_GAS_LIMIT = 220000;
-export const DEPOSIT_ERC20_GAS_LIMIT = 250000;
 
 export function getPriceWithDeviation(price: BigNumber, side: string, deviation: BigNumber): BigNumber {
     const d = deviation.dividedBy(100)
@@ -32,10 +22,6 @@ export function toOrnPrice(currency: string, nameToPrice: Dictionary<BigNumber>)
     const price = nameToPrice[currency];
     if (!price) return new BigNumber(0);
     return price;
-}
-
-export function getPairNumberFormat(pairName: string, numberFormat: Dictionary<NumberFormat>): NumberFormat {
-    return numberFormat[pairName] || DEFAULT_NUMBER_FORMAT;
 }
 
 export function calculateMatcherFee(fromCurrency: string, amount: BigNumber, price: BigNumber, side: string, nameToPrice: Dictionary<BigNumber>, inOrn: boolean): BigNumber {
@@ -150,71 +136,6 @@ export function isOrderOpen(order: TradeOrder): boolean {
         order.status === 'DIRECT_SWAP_PENDING';
 }
 
-export function parseOrderbookItem(arr: any): OrderbookItem {
-    const price = new BigNumber(arr[0]);
-    const size = new BigNumber(arr[1]);
-    return {
-        price: price,
-        size: size,
-        total: price.multipliedBy(size),
-        cumulativeSize: new BigNumber(0),
-        cumulativeTotal: new BigNumber(0),
-        avgPrice: new BigNumber(0),
-        deltaSize: 0,
-        exchanges: (arr[2] as string[])?.map(s => s.toLowerCase())
-    }
-}
-
-export function defaultOrderbook(): Orderbook {
-    return {
-        asks: [],
-        bids: [],
-        maxAskSize: new BigNumber(0),
-        maxAskTotal: new BigNumber(0),
-        maxBidSize: new BigNumber(0),
-        maxBidTotal: new BigNumber(0),
-    }
-}
-
-export function fromMinToMax(a: OrderbookItem, b: OrderbookItem) {
-    if (a.price.gt(b.price)) return 1;
-    if (a.price.lt(b.price)) return -1;
-    return 0;
-}
-
-export function fromMaxToMin(a: OrderbookItem, b: OrderbookItem) {
-    if (a.price.gt(b.price)) return -1;
-    if (a.price.lt(b.price)) return 1;
-    return 0;
-}
-
-export function parsePair(arr: string[]): Pair {
-    const name = arr[0]; // "ETH-BTC"
-    const [fromCurrency, toCurrency] = name.split('-');
-    const lastPrice = new BigNumber(arr[1]);
-    const openPrice = new BigNumber(arr[2]);
-    const change24h = lastPrice.div(openPrice).minus(1).multipliedBy(100);
-    const high = new BigNumber(arr[3]);
-    const low = new BigNumber(arr[4]);
-    const vol24h = new BigNumber(arr[5]);
-    return {name, fromCurrency, toCurrency, lastPrice, openPrice, change24h, high, low, vol24h};
-}
-
-export const getDefaultPair = (name: string): Pair => {
-    const arr = name.split('-');
-    return {
-        name: name,
-        fromCurrency: arr[0],
-        toCurrency: arr[1],
-        lastPrice: new BigNumber(0),
-        openPrice: new BigNumber(0),
-        change24h: new BigNumber(0),
-        high: new BigNumber(0),
-        low: new BigNumber(0),
-        vol24h: new BigNumber(0),
-    }
-}
-
 export function parseTransaction(item: any): Transaction {
     const createdAt: number = item.createdAt;
     return {
@@ -226,11 +147,4 @@ export function parseTransaction(item: any): Transaction {
         transactionHash: item.transactionHash,
         user: item.user,
     }
-}
-
-export function orderDataEquals(a?: OrderData, b?: OrderData): boolean {
-    if (!a && !b) return true;
-    if (!a) return false;
-    if (!b) return false;
-    return a.price.eq(b.price) && a.amount.eq(b.amount) && a.total.eq(b.total);
 }

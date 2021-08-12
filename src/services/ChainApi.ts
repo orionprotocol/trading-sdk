@@ -1,7 +1,8 @@
 import { ethers } from 'ethers'
 import BigNumber from 'bignumber.js'
 import fetch from 'node-fetch'
-import {ETH_CHAIN_ID, parseTradeOrder} from '../utils/Helpers'
+import {parseTradeOrder} from '../utils/Helpers'
+import {ETH_CHAINS_ID} from '../utils/Constants'
 import { BlockchainInfo, PoolsConfig, TradeOrder } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
 export class ChainApi {
@@ -39,7 +40,7 @@ export class ChainApi {
 
     async getBlockchainInfo(): Promise<BlockchainInfo> {
         const data = await this.orionBlockchainApi('/info');
-        data.baseCurrencyName = data.chainId === ETH_CHAIN_ID ? 'ETH' : 'BNB';
+        data.baseCurrencyName = ETH_CHAINS_ID.includes(Number(data.chainId)) ? 'ETH' : 'BNB';
         return data;
     }
 
