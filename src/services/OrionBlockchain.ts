@@ -303,7 +303,7 @@ export class OrionBlockchain {
         }
     }
 
-    async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<number | string> {
+    async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<{orderId: number}> {
         try {
             return await this.chainApi.aggregatorApi(isCreateInternalOrder ? '/order/maker' : '/order', order, 'POST')
         } catch (error) {
