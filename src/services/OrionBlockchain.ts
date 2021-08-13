@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import {ethers} from "ethers";
 import {signTypedMessage} from 'eth-sig-util';
 import {arrayify, joinSignature, splitSignature} from "ethers/lib/utils";
-import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, CancelOrderRequest} from "../utils/Models";
+import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest} from "../utils/Models";
 import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat } from '../utils/Helpers'
 import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION} from '../utils/Constants'
 import exchangeABI from '../abis/Exchange.json';
@@ -171,17 +171,22 @@ export class OrionBlockchain {
         }
     }
 
-    async signOrder(orderParams: SignOrderModel): Promise<BlockchainOrder> {
-        const params: any = { ...orderParams }
+    formatRawOrder (order: SignOrderModelRaw): SignOrderModel {
+        const formattedOrder: any = { ...order }
+        formattedOrder.numberFormat = getNumberFormat(this.chainApi.blockchainInfo, formattedOrder.fromCurrency, formattedOrder.toCurrency)
+        formattedOrder.price = new BigNumber(order.price)
+        formattedOrder.amount = new BigNumber(order.amount)
+        formattedOrder.priceDeviation = new BigNumber(order.priceDeviation)
+        return formattedOrder
+    }
+
+    async signOrder(orderParams: SignOrderModelRaw): Promise<BlockchainOrder> {
+        const params = this.formatRawOrder(orderParams)
 
         try {
             const baseAsset: string = this.getTokenAddress(params.fromCurrency);
             const quoteAsset: string = this.getTokenAddress(params.toCurrency);
             const nonce: number = Date.now();
-            params.numberFormat = getNumberFormat(this.chainApi.blockchainInfo, params.fromCurrency, params.toCurrency)
-            params.price = new BigNumber(orderParams.price)
-            params.amount = new BigNumber(orderParams.amount)
-            params.priceDeviation = new BigNumber(orderParams.priceDeviation)
 
             if (!params.price.gt(0)) throw new Error('Invalid price');
             if (!params.amount.gt(0)) throw new Error('Invalid amount');
