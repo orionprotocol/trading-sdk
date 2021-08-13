@@ -86,3 +86,42 @@ const cancelOrderResponse = await orion.cancelOrder(orderToCancel)
 ```javascript
 const balance = await orion.checkContractBalance('ORN', walletAddress)
 ```
+## Testing
+To run the tests, follow these steps. You must have at least node v10 installed.
+
+Clone repository
+
+```sh
+git clone https://github.com/orionprotocol/trading-sdk
+```
+
+Move into the trading-sdk working directory
+
+```sh
+cd trading-sdk/
+```
+
+Install dependencies
+
+```sh
+npm install
+```
+
+Copy .env.example file to .env
+```sh
+cp .env.example .env
+```
+
+Fill environment variables. It's necessary for order testing.
+```sh
+WALLET_ADDRESS= # your wallet address
+PRIVATE_KEY= # your private key
+```
+
+Run tests
+
+```sh
+npm run test
+```
+
+You should see output like the following:
