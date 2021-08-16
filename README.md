@@ -77,6 +77,11 @@ const orderToCancel = {
 const cancelOrderResponse = await orion.cancelOrder(orderToCancel)
 ```
 
+**Check balance on smart contract:**
+```javascript
+const balance = await orion.checkContractBalance('ORN')
+```
+
 ## Websockets
 
 **To subscribe to the price feed:**
@@ -97,10 +102,6 @@ subscriberForAll.on('message', (message) => {
 })
 ```
 
-**Check balance on smart contract:**
-```javascript
-const balance = await orion.checkContractBalance('ORN', walletAddress)
-```
 ## Testing
 To run the tests, follow these steps. You must have at least node v10 installed.
 
