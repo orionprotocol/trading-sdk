@@ -77,7 +77,7 @@ const orderToCancel = {
 const cancelOrderResponse = await orion.cancelOrder(orderToCancel)
 ```
 
-##Websockets
+## Websockets
 
 **To subscribe to the price feed:**
 ```javascript
