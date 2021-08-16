@@ -82,6 +82,26 @@ const orderToCancel = {
 const cancelOrderResponse = await orion.cancelOrder(orderToCancel)
 ```
 
+##Websockets
+
+**To subscribe to the price feed:**
+```javascript
+import { WS } from '@tumakot/orion-trading-sdk'
+// Create ws instance
+const ws = new WS('wss://trade.orionprotocol.io/ws2')
+
+// Subscriber for all tickers
+const subscriberForAll = ws.priceFeedSubscriber()
+
+// Subscriber for specified ticker
+const subscriberForTicker = ws.priceFeedSubscriber('ORN')
+
+// Listen to feed
+subscriberForAll.on('message', (message) => {
+    // do something with message
+})
+```
+
 **Check balance on smart contract:**
 ```javascript
 const balance = await orion.checkContractBalance('ORN', walletAddress)
@@ -124,4 +144,4 @@ Run tests
 npm run test
 ```
 
-You should see output like the following:
+You should see output with all test passed
