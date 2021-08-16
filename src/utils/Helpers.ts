@@ -1,8 +1,8 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
-import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo, TradeOrder, TradeSubOrder, Side, Transaction,} from "./Models";
+import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo, TradeOrder, TradeSubOrder, Side} from "./Models";
 import {MATCHER_FEE_PERCENT, SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT} from '../utils/Constants'
-import { ChainApi } from "../services/ChainApi";
+import { Chain as ChainApi } from "../services/chain";
 
 export function getPriceWithDeviation(price: BigNumber, side: string, deviation: BigNumber): BigNumber {
     const d = deviation.dividedBy(100)
@@ -134,17 +134,4 @@ export function isOrderOpen(order: TradeOrder): boolean {
         order.status === 'FILLED' ||
         order.status === 'TX_PENDING' ||
         order.status === 'DIRECT_SWAP_PENDING';
-}
-
-export function parseTransaction(item: any): Transaction {
-    const createdAt: number = item.createdAt;
-    return {
-        type: item.type,
-        date: createdAt * 1000,
-        token: item.asset,
-        amount: new BigNumber(item.amountNumber),
-        status: 'Done',
-        transactionHash: item.transactionHash,
-        user: item.user,
-    }
 }

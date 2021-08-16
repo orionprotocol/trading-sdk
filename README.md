@@ -12,30 +12,26 @@ npm install @tumakot/orion-trading-sdk
 
 ## Usage
 
-**First step:** Initialize *sdk.Api*
+**First step:** Create *Chain* and *Orion* instances
 
 ```javascript
-import { Api, Orion } from '@tumakot/orion-trading-sdk'
+import { Chain, Orion } from '@tumakot/orion-trading-sdk'
 
 /* Urls for Api */
 const rpcUrl = 'https://trade.orionprotocol.io/rpc'
 const orionBlockchainApiUrl = 'https://trade.orionprotocol.io'
+const privateKey = 'your_private_key'
 
-const sdkApi = new Api(rpcUrl, orionBlockchainApiUrl)
+const chain = new Chain(rpcUrl, orionBlockchainApiUrl, privateKey)
 
-await sdkApi.init() // get blockchain info
+await chain.init() // get blockchain info
 ```
 
-**Second step:** Connect your wallet. It's necessary to sign transactions.
+
+**Second step:** Create Orion instance to interact with blockchain
 
 ```javascript
-sdkApi.connectWallet(privateKey)
-```
-
-**Third step:** Create Orion instance to interact with blockchain
-
-```javascript
-const orion = new Orion(sdkApi, walletAddress, '')
+const orion = new Orion(chain)
 ```
 Now you ready to go.
 
@@ -51,7 +47,6 @@ const order = {
     side: 'sell',
     price: 12,
     amount: 10,
-    senderAddress: walletAddress,
     priceDeviation: 1,
     needWithdraw: false
 }
@@ -65,9 +60,9 @@ const sentOrderResponse = await orion.sendOrder(signedOrder, false)
 
 **Get orders history/status:**
 ```javascript
-const history = await provider.getTradeHistory(walletAddress)
+const history = await chain.getTradeHistory()
 
-const status = await provider.getOrderStatus(walletAddress, orderId)
+const status = await chain.getOrderStatus(orderId)
 ```
 
 **Cancel order:**

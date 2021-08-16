@@ -14,22 +14,6 @@ export interface BlockchainInfo {
     assetToDecimals: Dictionary<number>;
     assetToIcons: Dictionary<string>;
 }
-
-export interface PoolsConfig {
-    governanceAddress: string;
-    votingAddress: string;
-    factoryAddress: string;
-    routerAddress: string;
-    pools: Record<string, PoolConfig>;
-}
-
-export interface PoolConfig {
-    stakingRewardAddress: string;
-    lpTokenAddress: string;
-    vote_rewards_disabled?: boolean;
-    rewardToken?: string;
-}
-
 export interface SignOrderModel {
     fromCurrency: string,
     toCurrency: string,
@@ -40,7 +24,7 @@ export interface SignOrderModel {
     priceDeviation: BigNumber,
     numberFormat: NumberFormat,
     needWithdraw: boolean,
-    gasPriceGwei?: string // in case if user already knows this value
+    gasPriceGwei: string // in case if user already knows this value
 }
 
 export interface SignOrderModelRaw {
@@ -49,7 +33,6 @@ export interface SignOrderModelRaw {
     side: string,
     price: number,
     amount: number,
-    senderAddress: string,
     priceDeviation: number,
     needWithdraw: boolean,
     gasPriceGwei?: string // in case if user already knows this value
@@ -113,48 +96,11 @@ export enum Side {
     BUY = 'buy',
     SELL = 'sell',
 }
-
-export enum OrderType {
-    LIMIT = 'LIMIT',
-    MARKET = 'MARKET',
-}
-
-export interface OrderbookItem {
-    price: BigNumber;
-    size: BigNumber;
-    total: BigNumber;
-    cumulativeSize: BigNumber;
-    cumulativeTotal: BigNumber;
-    avgPrice: BigNumber;
-    deltaSize: number;
-    exchanges: string[];
-}
-
-export interface Orderbook {
-    asks: OrderbookItem[];
-    bids: OrderbookItem[];
-    maxAskSize: BigNumber,
-    maxAskTotal: BigNumber,
-    maxBidSize: BigNumber,
-    maxBidTotal: BigNumber,
-}
-
 export interface OrderData {
     price: BigNumber;
     amount: BigNumber;
     total: BigNumber;
     isAsk: boolean;
-}
-export interface Pair {
-    name: string;
-    fromCurrency: string;
-    toCurrency: string;
-    lastPrice: BigNumber;
-    openPrice: BigNumber;
-    change24h: BigNumber;
-    high: BigNumber;
-    low: BigNumber;
-    vol24h: BigNumber;
 }
 export interface Transaction {
     type: 'deposit' | 'withdrawal';
@@ -220,5 +166,12 @@ export interface TradeOrder {
     price: BigNumber;
     total: BigNumber;
     subOrders: TradeSubOrder[];
+}
+
+export interface DomainData {
+    name: string;
+    version: string;
+    chainId: number;
+    salt: string;
 }
 

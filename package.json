@@ -36,11 +36,11 @@
   },
   "dependencies": {
     "@ethersproject/abstract-provider": "^5.4.0",
+    "axios": "^0.21.1",
     "bignumber.js": "^9.0.1",
     "dotenv": "^10.0.0",
     "eth-sig-util": "^3.0.1",
     "ethers": "^5.1.6",
-    "node-fetch": "^2.6.1",
     "ws": "^7.4.6"
   },
   "engines": {
