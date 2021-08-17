@@ -88,7 +88,7 @@ const balance = await orion.checkContractBalance('ORN')
 ```javascript
 import { WS } from '@tumakot/orion-trading-sdk'
 // Create ws instance
-const ws = new WS('wss://trade.orionprotocol.io/ws2')
+const ws = new WS('wss://trade.orionprotocol.io')
 
 // Subscriber for all tickers
 const subscriberForAll = ws.priceFeedSubscriber()
