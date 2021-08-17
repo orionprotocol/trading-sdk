@@ -130,7 +130,6 @@ cp .env.example .env
 
 Fill environment variables. It's necessary for order testing.
 ```sh
-WALLET_ADDRESS= # your wallet address
 PRIVATE_KEY= # your private key
 ```
 

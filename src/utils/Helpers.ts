@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
 import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo, TradeOrder, TradeSubOrder, Side} from "./Models";
 import {MATCHER_FEE_PERCENT, SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT} from '../utils/Constants'
-import { Chain as ChainApi } from "../services/chain";
+import { Chain as ChainApi } from "../index";
 
 export function getPriceWithDeviation(price: BigNumber, side: string, deviation: BigNumber): BigNumber {
     const d = deviation.dividedBy(100)

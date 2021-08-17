@@ -42,16 +42,16 @@ describe('Send order', () => {
 
     it('Send signed order', async () => {
         sentOrderResponse = await orion.sendOrder(signedOrder, false)
-        expect(typeof sentOrderResponse.orderId == 'number')
+        expect(sentOrderResponse.orderId).toBeTruthy()
     })
 
     it('Check order status', async () => {
         const status = await chain.getOrderStatus(sentOrderResponse.orderId)
-        expect(typeof status == 'string')
+        expect(status).toBeTruthy()
     })
 
     it('Check order history', async () => {
         const history = await chain.getTradeHistory()
-        expect(Array.isArray(history))
+        expect(history).toBeTruthy()
     })
 })

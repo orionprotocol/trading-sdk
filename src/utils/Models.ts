@@ -20,11 +20,10 @@ export interface SignOrderModel {
     side: string,
     price: BigNumber,
     amount: BigNumber,
-    senderAddress: string,
     priceDeviation: BigNumber,
     numberFormat: NumberFormat,
     needWithdraw: boolean,
-    gasPriceGwei: string // in case if user already knows this value
+    gasPriceGwei?: string // in case if user already knows this value
 }
 
 export interface SignOrderModelRaw {

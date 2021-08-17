@@ -1,6 +1,6 @@
 {
   "name": "@tumakot/orion-trading-sdk",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "🛠 An SDK for trading with orionprotocol",
   "repository": "https://github.com/orionprotocol/trading-sdk",
   "author": "peiko.tumakov.y@gmail.com",
@@ -21,7 +21,7 @@
     "lint": "tsdx lint src test",
     "build": "tsdx build",
     "start": "tsdx watch --target node",
-    "test": "tsdx test",
+    "test": "tsdx test --no-cache",
     "prepublishOnly": "tsdx build"
   },
   "devDependencies": {

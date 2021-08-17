@@ -1,11 +1,11 @@
-import BigNumber from "bignumber.js";
-import {ethers} from "ethers";
-import {signTypedMessage} from 'eth-sig-util';
-import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest, DomainData} from "../utils/Models";
+import BigNumber from "bignumber.js"
+import {ethers} from "ethers"
+import {signTypedMessage} from 'eth-sig-util'
+import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest, DomainData} from "../utils/Models"
 import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat } from '../utils/Helpers'
 import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION} from '../utils/Constants'
-import exchangeABI from '../abis/Exchange.json';
-import erc20ABI from '../abis/ERC20.json';
+import exchangeABI from '../abis/Exchange.json'
+import erc20ABI from '../abis/ERC20.json'
 import { Chain } from './chain'
 
 function hashOrder(order: BlockchainOrder): string {
@@ -182,6 +182,7 @@ export class Orion {
                 signature: '',
                 needWithdraw: params.needWithdraw || undefined
             }
+
             order.id = hashOrder(order);
             order.signature = await this._signOrder(order);
             if (!(await this.validateOrder(order))) {
@@ -260,7 +261,8 @@ export class Orion {
 
     async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<{orderId: number}> {
         try {
-            return await this.chain.api.aggregator.post(isCreateInternalOrder ? '/order/maker' : '/order', order)
+            const { data } =  await this.chain.api.aggregator.post(isCreateInternalOrder ? '/order/maker' : '/order', order)
+            return data
         } catch (error) {
             console.log('sendOrder error: ', error);
             return error

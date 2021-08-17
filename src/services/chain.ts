@@ -63,8 +63,8 @@ export class Chain {
      * @return gasPrice current gas price in gwei for order fee calculation (updated on backend once a minute)
      */
     async getGasPriceFromOrionBlockchain(): Promise<string> {
-        const dataRaw: string = await this.api.blockchain.get('/gasPrice');
-        const gwei: string = ethers.utils.formatUnits(dataRaw, 'gwei');
+        const {data}: {data: string} = await this.api.blockchain.get('/gasPrice');
+        const gwei: string = ethers.utils.formatUnits(data, 'gwei');
         return new BigNumber(gwei).toFixed(0);
     }
 
