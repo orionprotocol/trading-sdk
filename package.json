@@ -1,6 +1,6 @@
 {
   "name": "@tumakot/orion-trading-sdk",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "🛠 An SDK for trading with orionprotocol",
   "repository": "https://github.com/orionprotocol/trading-sdk",
   "author": "peiko.tumakov.y@gmail.com",
@@ -27,7 +27,6 @@
   "devDependencies": {
     "@types/jest": "^25.2.3",
     "@types/node": "^16.4.10",
-    "@types/node-fetch": "^2.5.12",
     "@types/ws": "^7.4.7",
     "@typescript-eslint/eslint-plugin": "^4.29.0",
     "@typescript-eslint/parser": "^4.29.0",

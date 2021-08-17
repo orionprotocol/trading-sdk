@@ -4,7 +4,8 @@ import { parseTradeOrder } from '../utils/Helpers'
 import { BlockchainInfo, TradeOrder } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
 import { Api } from './api'
-import { ETH_CHAINS_ID } from '../utils/Constants'
+
+const ETH_CHAINS_ID = [1,3,4,5]
 
 export class Chain {
     public readonly provider: ethers.providers.JsonRpcProvider

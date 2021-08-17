@@ -9,7 +9,9 @@ export class WS {
 
     /* Return listener for price feed */
     public priceFeedSubscriber (symbol?: string): WebSocket {
-        const wsUrl = symbol ? `${this.wsOrionUrl}/ticker/${symbol}` : `${this.wsOrionUrl}/allTickers`
+        const wsUrl = symbol
+            ? `${this.wsOrionUrl}/ws/ticker/${symbol}`
+            : `${this.wsOrionUrl}/ws2/allTickers`
 
         const socket = new WebSocket(wsUrl, {
             perMessageDeflate: false

@@ -1,7 +1,5 @@
 import BigNumber from "bignumber.js";
 
-export const ETH_CHAINS_ID = [1,3,4,5]
-
 export const MATCHER_FEE_PERCENT: BigNumber = new BigNumber(0.2).dividedBy(100); // 0.2%
 
 export const SWAP_THROUGH_ORION_POOL_GAS_LIMIT = 350000;

@@ -98,20 +98,14 @@ export function parseTradeOrder(item: any): TradeOrder {
 }
 
 export function parseTradeSubOrder(item: any, pair?: string, side?: Side): TradeSubOrder {
-    let symbol = '';
-    if (process.env.REACT_APP_AGG_V2) {
-        const fromCurrency = item.assetPair.amountAsset.asset;
-        const toCurrency = item.assetPair.priceAsset.asset;
-        symbol = fromCurrency + '-' + toCurrency;
-    }
     const sd = side ?? item.side.toLowerCase();
-    const pr = pair ?? symbol;
+    const pr = pair ?? '';
 
     return {
         pair: pr,
         exchange: item.exchange,
         id: Number(item.id),
-        amount: new BigNumber(process.env.REACT_APP_AGG_V2 ? item.amount : item.subOrdQty),
+        amount: new BigNumber(item.subOrdQty),
         price: new BigNumber(item.price),
         status: item.status || 'NEW', // todo: backend,
         subOrdQty: item.subOrdQty,

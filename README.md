@@ -94,12 +94,16 @@ const ws = new WS('wss://trade.orionprotocol.io/ws2')
 const subscriberForAll = ws.priceFeedSubscriber()
 
 // Subscriber for specified ticker
-const subscriberForTicker = ws.priceFeedSubscriber('ORN')
+const subscriberForTicker = ws.priceFeedSubscriber('ORN-USDT')
 
 // Listen to feed
 subscriberForAll.on('message', (message) => {
     // do something with message
 })
+
+// Unsubscribe
+subscriberForAll.close()
+subscriberForTicker.close()
 ```
 
 ## Testing
