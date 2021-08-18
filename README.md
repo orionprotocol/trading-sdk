@@ -97,9 +97,9 @@ const subscriberForAll = ws.priceFeedSubscriber()
 const subscriberForTicker = ws.priceFeedSubscriber('ORN-USDT')
 
 // Listen to feed
-subscriberForAll.on('message', (message) => {
-    // do something with message
-})
+subscriberForAll.onmessage = (message) => {
+    // do something with message.data
+}
 
 // Unsubscribe
 subscriberForAll.close()

@@ -40,7 +40,8 @@
     "dotenv": "^10.0.0",
     "eth-sig-util": "^3.0.1",
     "ethers": "^5.1.6",
-    "ws": "^7.4.6"
+    "reconnecting-websocket": "^4.4.0",
+    "ws": "^8.2.0"
   },
   "engines": {
     "node": ">=10"
