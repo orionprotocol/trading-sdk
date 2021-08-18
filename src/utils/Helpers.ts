@@ -71,7 +71,7 @@ export function getNumberFormat(info: BlockchainInfo, from: string, to: string):
 }
 
 export function parseTradeOrder(item: any): TradeOrder {
-    const amount = new BigNumber(process.env.REACT_APP_AGG_V2 ? item.amount : item.orderQty);
+    const amount = new BigNumber(item.orderQty);
     const price = new BigNumber(item.price);
     const [fromCurrency, toCurrency] = item.symbol.split('-');
     const subOrders = item.subOrders ? item.subOrders.map((sub: any) => parseTradeSubOrder(sub, item.symbol, item.side)) : [];
