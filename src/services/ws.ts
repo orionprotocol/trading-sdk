@@ -17,11 +17,17 @@ export class WS {
     }
 
     /* Return listener for price feed */
-    public priceFeedSubscriber (symbol?: string): ReconnectingWebSocket {
-        const feedUrl = symbol
+    public priceFeed (symbol?: string): ReconnectingWebSocket {
+        const url = symbol
             ? `${this.wsOrionUrl}/ws/ticker/${symbol}`
             : `${this.wsOrionUrl}/ws2/allTickers`
 
-        return this.connect(feedUrl)
+        return this.connect(url)
+    }
+
+    public orderBooks (symbol: string): ReconnectingWebSocket {
+        const url = `${this.wsOrionUrl}/ws/${symbol}`
+
+        return this.connect(url)
     }
 }

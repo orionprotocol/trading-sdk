@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
-import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo, TradeOrder, TradeSubOrder, Side} from "./Models";
+import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo, TradeOrder, TradeSubOrder, Side, OrderbookItem} from "./Models";
 import {MATCHER_FEE_PERCENT, SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT} from '../utils/Constants'
 import { Chain as ChainApi } from "../index";
 
@@ -128,4 +128,19 @@ export function isOrderOpen(order: TradeOrder): boolean {
         order.status === 'FILLED' ||
         order.status === 'TX_PENDING' ||
         order.status === 'DIRECT_SWAP_PENDING';
+}
+
+export function parseOrderbookItem(arr: any): OrderbookItem {
+    const price = new BigNumber(arr[0]);
+    const size = new BigNumber(arr[1]);
+    return {
+        price: price,
+        size: size,
+        total: price.multipliedBy(size),
+        cumulativeSize: new BigNumber(0),
+        cumulativeTotal: new BigNumber(0),
+        avgPrice: new BigNumber(0),
+        deltaSize: 0,
+        exchanges: (arr[2] as string[])?.map(s => s.toLowerCase())
+    }
 }

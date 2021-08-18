@@ -84,26 +84,54 @@ const balance = await orion.checkContractBalance('ORN')
 
 ## Websockets
 
-**To subscribe to the price feed:**
+**Create WS instance:**
 ```javascript
 import { WS } from '@tumakot/orion-trading-sdk'
 // Create ws instance
-const ws = new WS('wss://trade.orionprotocol.io')
+const ws = new WS('wss://dev-exp.orionprotocol.io')
+```
 
-// Subscriber for all tickers
-const subscriberForAll = ws.priceFeedSubscriber()
+**To subscribe to the price feed:**
+```javascript
+// Subscribe for all tickers
+const subscriberForAll = ws.priceFeed()
 
-// Subscriber for specified ticker
-const subscriberForTicker = ws.priceFeedSubscriber('ORN-USDT')
+// Subscribe for specified ticker
+const subscriberForTicker = ws.priceFeed('ORN-USDT')
 
 // Listen to feed
 subscriberForAll.onmessage = (message) => {
     // do something with message.data
 }
 
+subscriberForTicker.onmessage = (message) => {
+    // do something with message.data
+    const { asks, bids } = JSON.parse(message.data)
+}
+
 // Unsubscribe
 subscriberForAll.close()
 subscriberForTicker.close()
+```
+
+**To subscribe to the orderbooks:**
+```javascript
+import { Helpers } from '@tumakot/orion-trading-sdk'
+
+// Subscribe for orderbooks
+const subscriberForOrderbooks = ws.orderBooks('ORN-USDT')
+
+// Listen
+subscriberForOrderbooks.onmessage = (message) => {
+    // do something with message.data
+    // for example:
+    const { asks, bids } = JSON.parse(message.data)
+    const asksParsed = asks.map(Helpers.parseOrderbookItem)
+    const bidsParsed = bids.map(Helpers.parseOrderbookItem)
+}
+
+// Unsubscribe
+subscriberForOrderbooks.close()
 ```
 
 ## Testing

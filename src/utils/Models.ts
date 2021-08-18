@@ -174,3 +174,14 @@ export interface DomainData {
     salt: string;
 }
 
+export interface OrderbookItem {
+    price: BigNumber;
+    size: BigNumber;
+    total: BigNumber;
+    cumulativeSize: BigNumber;
+    cumulativeTotal: BigNumber;
+    avgPrice: BigNumber;
+    deltaSize: number;
+    exchanges: string[];
+}
+
