@@ -15,14 +15,18 @@ npm install @tumakot/orion-trading-sdk
 **First step:** Create *Chain* and *Orion* instances
 
 ```javascript
-import { Chain, Orion } from '@tumakot/orion-trading-sdk'
+import { Chain, Orion, Constants } from '@tumakot/orion-trading-sdk'
 
-/* Urls for Api */
-const rpcUrl = 'https://trade.orionprotocol.io/rpc'
-const orionBlockchainApiUrl = 'https://trade.orionprotocol.io'
+// Set params for Chain constructor
+
 const privateKey = 'your_private_key'
 
-const chain = new Chain(rpcUrl, orionBlockchainApiUrl, privateKey)
+// in Constants.NETWORK you should choose mode (MAIN | TEST) and then chain (BSC | ETH)
+const networkParams = Constants.NETWORK.TEST.BSC
+
+// By default networkParams is NETWORK.TEST.BSC
+
+const chain = new Chain(privateKey, networkParams)
 
 await chain.init() // get blockchain info
 ```
@@ -56,25 +60,21 @@ const signedOrder = await orion.signOrder(order)
 
 // send order
 const sentOrderResponse = await orion.sendOrder(signedOrder, false)
+// Should return order id if successful
+```
+
+**Cancel order:**
+```javascript
+const orderCancelation = await orion.cancelOrder(sentOrderResponse.orderId)
+// Should return order id if cancelation is successful
 ```
 
 **Get orders history/status:**
 ```javascript
 const history = await chain.getTradeHistory()
 
-const status = await chain.getOrderStatus(orderId)
-```
-
-**Cancel order:**
-```javascript
-const orderToCancel = {
-  id: 9327, // order id
-  senderAddress: '0xe309Fb49005D01Df5d815a06a939345Ef0fff444', // wallet address
-  signature: '0xedf401f8842fdfe36cd88da2200ec3fcc53e936803f3a1dea8b3c1e61137af3b3c065d82671664b8bdfef7a2a5488d84e600d8c8f297576b97196326cb19dfe41b', // signature from order
-  isPersonalSign: false // from order
-}
-
-const cancelOrderResponse = await orion.cancelOrder(orderToCancel)
+const order = await chain.getOrderById(sentOrderResponse.orderId)
+const status = order.status
 ```
 
 **Check balance on smart contract:**
@@ -86,9 +86,15 @@ const balance = await orion.checkContractBalance('ORN')
 
 **Create WS instance:**
 ```javascript
-import { WS } from '@tumakot/orion-trading-sdk'
+import { WS, Constants } from '@tumakot/orion-trading-sdk'
+
 // Create ws instance
-const ws = new WS('wss://dev-exp.orionprotocol.io')
+
+// in Constants.ORION_WS you should choose mode (MAIN | TEST) and then chain (BSC | ETH)
+const wsUrl = Constants.ORION_WS.TEST.BSC
+
+// wsUrl by default is ORION_WS.TEST.BSC
+const ws = new WS(wsUrl)
 ```
 
 **To subscribe to the price feed:**

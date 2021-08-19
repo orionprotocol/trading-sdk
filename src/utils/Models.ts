@@ -185,3 +185,8 @@ export interface OrderbookItem {
     exchanges: string[];
 }
 
+export interface NetworkEntity {
+    RPC: string,
+    ORION: string,
+}
+

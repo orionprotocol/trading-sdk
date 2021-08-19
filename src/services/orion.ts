@@ -3,7 +3,7 @@ import {ethers} from "ethers"
 import {signTypedMessage} from 'eth-sig-util'
 import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest, DomainData} from "../utils/Models"
 import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat } from '../utils/Helpers'
-import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION} from '../utils/Constants'
+import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION, CANCEL_ORDER_TYPES} from '../utils/Constants'
 import exchangeABI from '../abis/Exchange.json'
 import erc20ABI from '../abis/ERC20.json'
 import { Chain } from './chain'
@@ -116,6 +116,29 @@ export class Orion {
                 domain: this.getDomainData(),
                 primaryType: 'Order',
                 message: order,
+            };
+
+            const msgParams = {data};
+            const bufferKey = Buffer.from((this.chain.signer as ethers.Wallet).privateKey.substr(2), 'hex');
+            return signTypedMessage(bufferKey, msgParams as any, 'V4');
+        } else {
+            throw new Error('privateKey is required!')
+        }
+    }
+
+    private async _signCancelOrder(cancelOrderRequest: CancelOrderRequest): Promise<string> {
+        const signer = this.chain.signer as any;
+
+        if (signer.privateKey) {
+
+            const data = {
+                types: {
+                    EIP712Domain: DOMAIN_TYPE,
+                    DeleteOrder: CANCEL_ORDER_TYPES.DeleteOrder,
+                },
+                domain: this.getDomainData(),
+                primaryType: 'DeleteOrder',
+                message: cancelOrderRequest,
             };
 
             const msgParams = {data};
@@ -269,10 +292,31 @@ export class Orion {
         }
     }
 
-    async cancelOrder(order: CancelOrderRequest): Promise<void> {
-        return await this.chain.api.aggregator.delete('/order', {
-            data: order
-        });
+    async cancelOrder(orderId: number): Promise<{orderId: number}> {
+        try {
+            const order = await this.chain.getOrderById(orderId)
+
+            const cancelationSubject = this.getCancelationSubject(order)
+
+            cancelationSubject.signature = await this._signCancelOrder(cancelationSubject)
+
+            const { data } =  await this.chain.api.aggregator.delete('/order', {
+                data: cancelationSubject
+            });
+            return data
+        } catch (error) {
+            return error
+        }
+    }
+
+    private getCancelationSubject (order: any): CancelOrderRequest {
+        const { id, blockchainOrder }: {id: number, blockchainOrder: BlockchainOrder} = order
+        return {
+            id,
+            senderAddress: blockchainOrder.senderAddress,
+            signature: '',
+            isPersonalSign: blockchainOrder.isPersonalSign
+        }
     }
 
     private async depositETH(amountUnit: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionResponse> {

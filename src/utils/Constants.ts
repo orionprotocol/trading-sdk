@@ -1,5 +1,39 @@
 import BigNumber from "bignumber.js";
 
+export const NETWORK = {
+    TEST: {
+        BSC: {
+            RPC: 'https://data-seed-prebsc-2-s1.binance.org:8545',
+            ORION: 'https://dev-exp.orionprotocol.io',
+        },
+        ETH: {
+            RPC: 'https://staging.orionprotocol.io/rpc',
+            ORION: 'https://staging.orionprotocol.io',
+        }
+    },
+    MAIN: {
+        BSC: {
+            RPC: 'https://bsc-dataseed.binance.org',
+            ORION: 'https://trade-exp.orionprotocol.io',
+        },
+        ETH: {
+            RPC: 'https://trade.orionprotocol.io/rpc',
+            ORION: 'https://trade.orionprotocol.io',
+        }
+    }
+}
+
+export const ORION_WS = {
+    TEST: {
+        BSC: 'wss://dev-exp.orionprotocol.io',
+        ETH: 'wss://staging.orionprotocol.io',
+    },
+    MAIN: {
+        BSC: 'wss://trade-exp.orionprotocol.io',
+        ETH: 'wss://trade.orionprotocol.io',
+    }
+}
+
 export const MATCHER_FEE_PERCENT: BigNumber = new BigNumber(0.2).dividedBy(100); // 0.2%
 
 export const SWAP_THROUGH_ORION_POOL_GAS_LIMIT = 350000;
@@ -32,9 +66,30 @@ export const ORDER_TYPES = {
     ],
 }
 
+export const CANCEL_ORDER_TYPES = {
+    DeleteOrder: [
+        {name: "senderAddress", type: "address"},
+        {name: "id", type: process.env.REACT_APP_AGG_V2 ? "string" : "uint64"},
+    ],
+};
+
 export const DOMAIN_TYPE = [
     {name: "name", type: "string"},
     {name: "version", type: "string"},
     {name: "chainId", type: "uint256"},
     {name: "salt", type: "bytes32"},
+]
+
+export const ORDER_STATUSES = [
+    "NEW",
+    "ACCEPTED",
+    "DIRECT_SWAP_PENDING",
+    "ROUTING",
+    "PARTIALLY_FILLED",
+    "FILLED",
+    "TX_PENDING",
+    "REJECTED",
+    "SETTLED",
+    "CANCELED",
+    "FAILED"
 ]

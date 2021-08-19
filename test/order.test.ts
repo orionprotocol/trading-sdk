@@ -1,12 +1,11 @@
+import 'jest-extended'
 import { Chain, Orion } from '../src/index'
 import { SignOrderModelRaw, BlockchainOrder } from '../src/utils/Models'
+import { ORDER_STATUSES, NETWORK } from '../src/utils/Constants'
 import dotenv from 'dotenv';
 dotenv.config()
 
 const { PRIVATE_KEY } = process.env
-
-const rpcUrl = 'https://data-seed-prebsc-2-s1.binance.org:8545/'
-const orionBlockchainUrl  = 'https://dev-exp.orionprotocol.io'
 
 describe('Send order', () => {
     let chain: Chain
@@ -18,12 +17,15 @@ describe('Send order', () => {
     if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY is required for this test!')
 
     it('Create chain instance and init', async () => {
-        chain = new Chain(rpcUrl, orionBlockchainUrl, PRIVATE_KEY)
+        chain = new Chain(PRIVATE_KEY, NETWORK.TEST.BSC)
         await chain.init()
+        expect(chain.blockchainInfo).toHaveProperty('chainName')
+        expect(chain.signer).toHaveProperty('address')
     })
 
     it('Create orion instance', async () => {
         orion = new Orion(chain)
+        expect(orion).toHaveProperty('chain')
     })
 
     it('Sign order', async () => {
@@ -31,27 +33,33 @@ describe('Send order', () => {
             fromCurrency: 'ORN',
             toCurrency: 'DAI',
             side: 'sell',
-            price: 12,
-            amount: 10,
+            price: 20000,
+            amount: 100,
             priceDeviation: 1,
             needWithdraw: false
         }
 
         signedOrder = await orion.signOrder(order)
+        expect(signedOrder).toHaveProperty('id')
     })
 
     it('Send signed order', async () => {
         sentOrderResponse = await orion.sendOrder(signedOrder, false)
-        expect(sentOrderResponse.orderId).toBeTruthy()
+        expect(sentOrderResponse.orderId).toBeNumber()
+    })
+
+    it('Cancel order', async () => {
+        const orderCancelation = await orion.cancelOrder(sentOrderResponse.orderId)
+        expect(orderCancelation.orderId).toBeNumber()
     })
 
     it('Check order status', async () => {
-        const status = await chain.getOrderStatus(sentOrderResponse.orderId)
-        expect(status).toBeTruthy()
+        const order = await chain.getOrderById(sentOrderResponse.orderId)
+        expect(ORDER_STATUSES).toContain(order.status)
     })
 
     it('Check order history', async () => {
         const history = await chain.getTradeHistory()
-        expect(history).toBeTruthy()
+        expect(history).toBeArray()
     })
 })

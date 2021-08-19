@@ -1,12 +1,12 @@
 import { ethers } from 'ethers'
 import BigNumber from 'bignumber.js'
 import { parseTradeOrder } from '../utils/Helpers'
-import { BlockchainInfo, TradeOrder } from '../utils/Models'
+import { BlockchainInfo, TradeOrder, NetworkEntity } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
+import { NETWORK } from '../utils/Constants'
 import { Api } from './api'
 
-const ETH_CHAINS_ID = [1,3,4,5]
-
+const ETH_CHAINS_ID = [1,3]
 export class Chain {
     public readonly provider: ethers.providers.JsonRpcProvider
     public signer: ethers.Wallet
@@ -15,9 +15,9 @@ export class Chain {
     private _blockchainInfo!: BlockchainInfo
     private _tokens!: Tokens
 
-    constructor(providerUrl: string, blockchainUrl: string, privateKey: string) {
-        this.provider = new ethers.providers.JsonRpcProvider(providerUrl);
-        this.api = new Api(blockchainUrl)
+    constructor(privateKey: string, network: NetworkEntity = NETWORK.TEST.BSC) {
+        this.provider = new ethers.providers.JsonRpcProvider(network.RPC);
+        this.api = new Api(network.ORION)
         this.signer = new ethers.Wallet(privateKey).connect(this.provider)
     }
 
@@ -81,11 +81,12 @@ export class Chain {
         return data.map(parseTradeOrder);
     }
 
-    async getOrderStatus (orderId: number): Promise<string> {
+    async getOrderById (orderId: number): Promise<any> {
+        const path = `/order?orderId=${orderId}`
+
         try {
-            const history = await this.getTradeHistory()
-            const order = history.find(order => Number(order.id) === orderId)
-            return order?.status || ''
+            const { data } = await this.api.aggregator.get(path)
+            return data
         } catch (error) {
             return error
         }

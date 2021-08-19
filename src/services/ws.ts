@@ -1,10 +1,11 @@
 import Websocket from 'ws';
 import ReconnectingWebSocket from 'reconnecting-websocket';
+import { ORION_WS } from '../utils/Constants'
 
 export class WS {
     public readonly wsOrionUrl: string
 
-    constructor(url: string) {
+    constructor(url: string = ORION_WS.TEST.BSC) {
         this.wsOrionUrl = url
     }
 

@@ -1,10 +1,10 @@
-import { WS }  from '../src/index'
+import { WS, Constants }  from '../src/index'
 
 describe('Subscriber', () => {
-    const wsUrl = 'wss://dev-exp.orionprotocol.io'
+    const wsUrl = Constants.ORION_WS.TEST.BSC
+    const ws = new WS(wsUrl)
 
     it('Subscribe for all tickers price feed', async (done) => {
-        const ws = new WS(wsUrl)
 
         // Create subscriber
         const subscriberForAll = ws.priceFeed()
@@ -18,7 +18,6 @@ describe('Subscriber', () => {
     })
 
     it('Subscribe for specific ticker price feed', async (done) => {
-        const ws = new WS(wsUrl)
 
         // Create another subscriber ORN-USDT
         const subscriberOrnUsdt = ws.priceFeed('ORN-USDT')
@@ -34,7 +33,6 @@ describe('Subscriber', () => {
     })
 
     it('Subscribe for orderbooks', async (done) => {
-        const ws = new WS(wsUrl)
 
         // Create subscriber
         const orderBooksSubscriber = ws.orderBooks('ORN-USDT')
