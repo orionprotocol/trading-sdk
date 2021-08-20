@@ -2,7 +2,7 @@ import 'jest-extended'
 import { WS, Constants }  from '../src/index'
 import { Pair }  from '../src/utils/Models'
 
-describe('Subscriber', () => {
+describe.skip('Subscriber', () => {
     const wsUrl = Constants.ORION_WS.TEST.BSC
     const ws = new WS(wsUrl)
 

@@ -203,3 +203,18 @@ export interface NetworkEntity {
     CHAIN_ID: number
 }
 
+export interface BalanceContract {
+    total: {
+        bignumber: BigNumber,
+        decimal: number
+    },
+    locked: {
+        bignumber: BigNumber,
+        decimal: number
+    },
+    available: {
+        bignumber: BigNumber,
+        decimal: number
+    }
+}
+

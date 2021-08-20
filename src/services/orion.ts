@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js"
 import {ethers} from "ethers"
 import {signTypedMessage} from 'eth-sig-util'
-import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest, DomainData} from "../utils/Models"
+import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest, DomainData, BalanceContract} from "../utils/Models"
 import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat } from '../utils/Helpers'
 import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION, CANCEL_ORDER_TYPES} from '../utils/Constants'
 import exchangeABI from '../abis/Exchange.json'
@@ -89,6 +89,10 @@ export class Orion {
 
     getTokenAddress(name: string): string {
         return this.blockchainInfo.assetToAddress[name];
+    }
+
+    getContractTokens(): string[] {
+        return Object.keys(this.blockchainInfo.assetToAddress)
     }
 
     tokenAddressToName(address: string): string {
@@ -235,12 +239,7 @@ export class Orion {
     }
 
     numberTo8(n: BigNumber.Value): number {
-        return Number(new BigNumber(n).multipliedBy(1e8).toFixed(0)); // todo: можно ли не оборачивать в Number?
-    }
-
-    async getBalance(address: string): Promise<BigNumber> {
-        const wei: ethers.BigNumber = await this.provider.getBalance(address);
-        return new BigNumber(ethers.utils.formatEther(wei));
+        return Number(new BigNumber(n).multipliedBy(1e8).toFixed(0));
     }
 
     private async sendTransaction(unsignedTx: ethers.PopulatedTransaction, gasLimit: number, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionResponse> {
@@ -354,20 +353,53 @@ export class Orion {
         }
     }
 
-    async checkContractBalance(tokenSymbol: string): Promise<BigNumber> {
+    async getBalance(address: string): Promise<BigNumber> {
+        const wei: ethers.BigNumber = await this.provider.getBalance(address);
+        return new BigNumber(ethers.utils.formatEther(wei));
+    }
+
+    async checkContractBalance(tokenSymbol: string): Promise<BalanceContract> {
+        const token = tokenSymbol.toUpperCase()
+
+        if (!this.getContractTokens().includes(token)) throw new Error('Invalid token')
+
         try {
             const tokenAddress = this.getTokenAddress(tokenSymbol)
-            const balance = await this.exchangeContract.getBalance(tokenAddress, this.walletAddress)
-            return balance
+
+            const total: BigNumber = await this.exchangeContract.getBalance(tokenAddress, this.walletAddress)
+            const totalBignumber = new BigNumber(total.toString())
+
+            const locked = await this.checkReservedBalance(tokenSymbol)
+            const lockedBignumber = new BigNumber(this.numberToUnit(token, new BigNumber(locked[token])))
+
+            const availableBignumber = totalBignumber.minus(lockedBignumber)
+
+            const balanceSummary = {
+                total: {
+                    bignumber: totalBignumber,
+                    decimal: Number(this.unitToNumber(token, totalBignumber).toString())
+                },
+                locked: {
+                    bignumber: lockedBignumber,
+                    decimal: Number(locked[token])
+                },
+                available: {
+                    bignumber: availableBignumber,
+                    decimal: Number(this.unitToNumber(token, availableBignumber).toString())
+                }
+            }
+
+            return balanceSummary
         } catch (error) {
             return error
         }
     }
 
-    async checkReservedBalance(asset = '') {
+    async checkReservedBalance(asset = ''): Promise<{[key: string]: string}> {
         try {
             const path = `/address/balance/reserved/${asset}?address=${this.walletAddress}`
-            return await this.chain.api.aggregator.get(path)
+            const { data } = await this.chain.api.aggregator.get(path)
+            return data
         } catch (error) {
             return error
         }
