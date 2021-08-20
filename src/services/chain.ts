@@ -9,8 +9,9 @@ import { Api } from './api'
 const ETH_CHAINS_ID = [1,3]
 export class Chain {
     public readonly provider: ethers.providers.JsonRpcProvider
-    public signer: ethers.Wallet
-    public api: Api
+    public readonly signer: ethers.Wallet
+    public readonly api: Api
+    public readonly network: NetworkEntity
 
     private _blockchainInfo!: BlockchainInfo
     private _tokens!: Tokens
@@ -19,6 +20,7 @@ export class Chain {
         this.provider = new ethers.providers.JsonRpcProvider(network.RPC);
         this.api = new Api(network.ORION)
         this.signer = new ethers.Wallet(privateKey).connect(this.provider)
+        this.network = network
     }
 
     public async init(): Promise<void> {
@@ -38,9 +40,13 @@ export class Chain {
         return this.blockchainInfo.assetToAddress[token]
     }
 
+    getBaseCurrnecy (chainId: number): string {
+        return ETH_CHAINS_ID.includes(chainId) ? 'ETH' : 'BNB';
+    }
+
     async getBlockchainInfo(): Promise<BlockchainInfo> {
-        const { data } = await this.api.blockchain.get('/info');
-        data.baseCurrencyName = ETH_CHAINS_ID.includes(Number(data.chainId)) ? 'ETH' : 'BNB';
+        const { data } = await this.api.blockchain.get('/info')
+        data.baseCurrencyName = this.getBaseCurrnecy(this.network.CHAIN_ID)
         return data;
     }
 

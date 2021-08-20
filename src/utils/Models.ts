@@ -200,5 +200,6 @@ export interface Pair {
 export interface NetworkEntity {
     RPC: string,
     ORION: string,
+    CHAIN_ID: number
 }
 
