@@ -28,9 +28,9 @@ describe('Subscriber', () => {
         // Listen
         subscriberOrnUsdt.on('message', (message) => {
             subscriberOrnUsdt.close()
-            const { asks, bids }: {asks: Array<[]>, bids: Array<[]>} = message
-            expect(asks).toBeArray()
-            expect(bids).toBeArray()
+            const keys = Object.keys(message)
+            expect(keys).toBeArray()
+            expect(keys.length).toBeTruthy()
             done()
         });
 

@@ -36,6 +36,8 @@ export class WS {
         const localEmitter = new WsEmitter(socket);
 
         socket.onmessage = (message) => {
+            if (!message.data) return
+
             let handledMessage = JSON.parse(message.data)
 
             if (middleware) handledMessage = middleware(handledMessage)
@@ -52,10 +54,10 @@ export class WS {
         return this.connect(url, parsePairs)
     }
 
-    public priceFeedTicker (symbol?: string): WsEmitter {
-        const url = `${this.wsOrionUrl}/ws/ticker/${symbol}`
+    public priceFeedTicker (symbol: string): WsEmitter {
+        const url = `${this.wsOrionUrl}/ws2/ticker/${symbol}`
 
-        return this.connect(url, parseOrderbookItems)
+        return this.connect(url, parsePairs)
     }
 
     public orderBooks (symbol: string): WsEmitter {
