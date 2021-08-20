@@ -1,5 +1,6 @@
 import 'jest-extended'
 import { WS, Constants }  from '../src/index'
+import { Pair }  from '../src/utils/Models'
 
 describe('Subscriber', () => {
     const wsUrl = Constants.ORION_WS.TEST.BSC
@@ -26,11 +27,14 @@ describe('Subscriber', () => {
         const subscriberOrnUsdt = ws.priceFeedTicker('ORN-USDT')
 
         // Listen
-        subscriberOrnUsdt.on('message', (message) => {
+        subscriberOrnUsdt.on('message', (message: Record<string, Pair>) => {
             subscriberOrnUsdt.close()
             const keys = Object.keys(message)
+            const value: Pair = Object.values(message)[0]
             expect(keys).toBeArray()
             expect(keys.length).toBeTruthy()
+            expect(value.lastPrice.gt(0)).toBeTruthy()
+            expect(value.name === 'ORN-USDT').toBeTruthy()
             done()
         });
 
