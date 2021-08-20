@@ -185,6 +185,18 @@ export interface OrderbookItem {
     exchanges: string[];
 }
 
+export interface Pair {
+    name: string;
+    fromCurrency: string;
+    toCurrency: string;
+    lastPrice: BigNumber;
+    openPrice: BigNumber;
+    change24h: BigNumber;
+    high: BigNumber;
+    low: BigNumber;
+    vol24h: BigNumber;
+}
+
 export interface NetworkEntity {
     RPC: string,
     ORION: string,

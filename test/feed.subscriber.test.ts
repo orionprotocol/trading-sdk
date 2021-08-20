@@ -1,3 +1,4 @@
+import 'jest-extended'
 import { WS, Constants }  from '../src/index'
 
 describe('Subscriber', () => {
@@ -7,29 +8,32 @@ describe('Subscriber', () => {
     it('Subscribe for all tickers price feed', async (done) => {
 
         // Create subscriber
-        const subscriberForAll = ws.priceFeed()
+        const subscriberForAll = ws.priceFeedAll()
 
         // Listen
-        subscriberForAll.onmessage = (message) => {
+        subscriberForAll.on('message', (message) => {
             subscriberForAll.close()
-            expect(message.data.length).toBeTruthy()
+            const keys = Object.keys(message)
+            expect(keys).toBeArray()
+            expect(keys.length).toBeTruthy()
             done()
-        }
+        });
     })
 
     it('Subscribe for specific ticker price feed', async (done) => {
 
         // Create another subscriber ORN-USDT
-        const subscriberOrnUsdt = ws.priceFeed('ORN-USDT')
+        const subscriberOrnUsdt = ws.priceFeedTicker('ORN-USDT')
 
         // Listen
-        subscriberOrnUsdt.onmessage = (message) => {
+        subscriberOrnUsdt.on('message', (message) => {
             subscriberOrnUsdt.close()
-            const { asks, bids }: {asks: [], bids: []} = JSON.parse(message.data)
-            expect(asks.length).toBeTruthy()
-            expect(bids.length).toBeTruthy()
+            const { asks, bids }: {asks: Array<[]>, bids: Array<[]>} = message
+            expect(asks).toBeArray()
+            expect(bids).toBeArray()
             done()
-        }
+        });
+
     })
 
     it('Subscribe for orderbooks', async (done) => {
@@ -38,12 +42,13 @@ describe('Subscriber', () => {
         const orderBooksSubscriber = ws.orderBooks('ORN-USDT')
 
         // Listen
-        orderBooksSubscriber.onmessage = (message) => {
+        orderBooksSubscriber.on('message', (message) => {
             orderBooksSubscriber.close()
-            const { asks, bids }: {asks: [], bids: []} = JSON.parse(message.data)
-            expect(asks.length).toBeTruthy()
-            expect(bids.length).toBeTruthy()
+            const { asks, bids }: {asks: [], bids: []} = message
+            expect(asks).toBeArray()
+            expect(bids).toBeArray()
             done()
-        }
+        });
+
     })
 })

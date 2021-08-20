@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
-import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo, TradeOrder, TradeSubOrder, Side, OrderbookItem} from "./Models";
+import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo, TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair} from "./Models";
 import {MATCHER_FEE_PERCENT, SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT} from '../utils/Constants'
 import { Chain as ChainApi } from "../index";
 
@@ -143,4 +143,32 @@ export function parseOrderbookItem(arr: any): OrderbookItem {
         deltaSize: 0,
         exchanges: (arr[2] as string[])?.map(s => s.toLowerCase())
     }
+}
+
+export function parseOrderbookItems (message: {asks: Array<[]>, bids: Array<[]>}): {asks: OrderbookItem[], bids: OrderbookItem[]} {
+    const { asks, bids } = message
+    return {asks: asks.map(parseOrderbookItem), bids: bids.map(parseOrderbookItem)}
+}
+
+export function parsePair(arr: string[]): Pair {
+    const name = arr[0]; // "ETH-BTC"
+    const [fromCurrency, toCurrency] = name.split('-');
+    const lastPrice = new BigNumber(arr[1]);
+    const openPrice = new BigNumber(arr[2]);
+    const change24h = lastPrice.div(openPrice).minus(1).multipliedBy(100);
+    const high = new BigNumber(arr[3]);
+    const low = new BigNumber(arr[4]);
+    const vol24h = new BigNumber(arr[5]);
+    return {name, fromCurrency, toCurrency, lastPrice, openPrice, change24h, high, low, vol24h};
+}
+
+export function parsePairs (data: any[]): Record<string, Pair> {
+    const newNameToPair: Record<string, Pair> = {};
+
+    for (let i = 1; i < data.length; i++) {
+        const arr: string[] = data[i];
+        const pair = parsePair(arr);
+        newNameToPair[pair.name] = pair;
+    }
+    return newNameToPair
 }

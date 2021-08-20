@@ -100,20 +100,18 @@ const ws = new WS(wsUrl)
 **To subscribe to the price feed:**
 ```javascript
 // Subscribe for all tickers
-const subscriberForAll = ws.priceFeed()
+const subscriberForAll = ws.priceFeedAll()
 
 // Subscribe for specified ticker
-const subscriberForTicker = ws.priceFeed('ORN-USDT')
+const subscriberForTicker = ws.priceFeedTicker('ORN-USDT')
 
-// Listen to feed
-subscriberForAll.onmessage = (message) => {
-    // do something with message.data
-}
+subscriberForAll.on('message', (message) => {
+    // do something with message data
+});
 
-subscriberForTicker.onmessage = (message) => {
-    // do something with message.data
-    const { asks, bids } = JSON.parse(message.data)
-}
+subscriberForTicker.on('message', (message) => {
+    // do something with message data
+});
 
 // Unsubscribe
 subscriberForAll.close()
@@ -122,19 +120,12 @@ subscriberForTicker.close()
 
 **To subscribe to the orderbooks:**
 ```javascript
-import { Helpers } from '@tumakot/orion-trading-sdk'
-
 // Subscribe for orderbooks
 const subscriberForOrderbooks = ws.orderBooks('ORN-USDT')
 
-// Listen
-subscriberForOrderbooks.onmessage = (message) => {
-    // do something with message.data
-    // for example:
-    const { asks, bids } = JSON.parse(message.data)
-    const asksParsed = asks.map(Helpers.parseOrderbookItem)
-    const bidsParsed = bids.map(Helpers.parseOrderbookItem)
-}
+subscriberForOrderbooks.on('message', (message) => {
+    // do something with message data
+});
 
 // Unsubscribe
 subscriberForOrderbooks.close()
