@@ -95,6 +95,10 @@ export class Orion {
         return Object.keys(this.blockchainInfo.assetToAddress)
     }
 
+    getContractTokenAddresses(): string[] {
+        return Object.values(this.blockchainInfo.assetToAddress)
+    }
+
     tokenAddressToName(address: string): string {
         for (const name in this.blockchainInfo.assetToAddress) {
             if (Object.prototype.hasOwnProperty.call(this.blockchainInfo.assetToAddress, name)) {
@@ -390,6 +394,44 @@ export class Orion {
             }
 
             return balanceSummary
+        } catch (error) {
+            return error
+        }
+    }
+
+    async checkContractBalances(): Promise<[]> {
+
+        if (!this.getContractTokens()) throw new Error('Invalid token')
+
+        try {
+            const tokenAddresses = this.getContractTokenAddresses()
+
+            const total = await this.exchangeContract.getBalances(tokenAddresses, this.walletAddress)
+            const locked = await this.checkReservedBalance()
+
+            console.log(total, locked)
+
+            // const totalBignumber = new BigNumber(total.toString())
+            // const lockedBignumber = new BigNumber(this.numberToUnit(token, new BigNumber(locked[token])))
+
+            // const availableBignumber = totalBignumber.minus(lockedBignumber)
+
+            // const balanceSummary = {
+            //     total: {
+            //         bignumber: totalBignumber,
+            //         decimal: Number(this.unitToNumber(token, totalBignumber).toString())
+            //     },
+            //     locked: {
+            //         bignumber: lockedBignumber,
+            //         decimal: Number(locked[token])
+            //     },
+            //     available: {
+            //         bignumber: availableBignumber,
+            //         decimal: Number(this.unitToNumber(token, availableBignumber).toString())
+            //     }
+            // }
+
+            return []
         } catch (error) {
             return error
         }
