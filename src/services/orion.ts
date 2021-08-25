@@ -155,6 +155,15 @@ export class Orion {
         formattedOrder.price = new BigNumber(order.price)
         formattedOrder.amount = new BigNumber(order.amount)
         formattedOrder.priceDeviation = new BigNumber(order.priceDeviation)
+
+        if(formattedOrder.chainPrices) {
+            const gwei: string = ethers.utils.formatUnits(formattedOrder.chainPrices.gasGwei, 'gwei');
+            formattedOrder.chainPrices.gasGwei = new BigNumber(gwei).toFixed(0);
+
+            if (typeof formattedOrder.chainPrices.orn === 'number') formattedOrder.chainPrices.orn.toString()
+            if (typeof formattedOrder.chainPrices.baseCurrency === 'number') formattedOrder.chainPrices.baseCurrency.toString()
+        }
+
         return formattedOrder
     }
 
@@ -173,8 +182,16 @@ export class Orion {
             if (params.numberFormat.qtyPrecision === undefined || params.numberFormat.qtyPrecision === null) throw new Error('Invalid qtyPrecision');
             if (params.numberFormat.pricePrecision === undefined || params.numberFormat.pricePrecision === null) throw new Error('Invalid pricePrecision');
 
-            const gasPriceGwei = params.gasPriceGwei ? params.gasPriceGwei : await this.chain.getGasPriceFromOrionBlockchain();
-            const blockchainPrices = await this.chain.getPricesFromBlockchain()
+            let gasPriceGwei, blockchainPrices
+
+            if (params.chainPrices) {
+                gasPriceGwei = params.chainPrices.gasGwei
+                blockchainPrices ={ ORN: new BigNumber(params.chainPrices.orn), [this.blockchainInfo.baseCurrencyName]: new BigNumber(params.chainPrices.baseCurrency) }
+            } else {
+                gasPriceGwei = await this.chain.getGasPriceFromOrionBlockchain();
+                blockchainPrices = await this.chain.getPricesFromBlockchain()
+            }
+
 
             const matcherFee = calculateMatcherFee(params.fromCurrency, params.amount, params.price, params.side, blockchainPrices, true);
             const {networkFee} = calculateNetworkFee(this.chain, gasPriceGwei, blockchainPrices, 'ORN', false);

@@ -52,7 +52,14 @@ const order = {
     price: 12,
     amount: 10,
     priceDeviation: 1,
-    needWithdraw: false
+    needWithdraw: false,
+    // chainPrices is optional, use it when prices are already known
+    // to increase request speed
+    chainPrices: {
+        orn: 1,
+        baseCurrency: 57,
+        gasGwei: '10000000000'
+    }
 }
 
 // sign order

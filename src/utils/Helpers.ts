@@ -57,6 +57,7 @@ export function calculateNetworkFee(api: ChainApi, gasPriceGwei: string, nameToP
     const baseCurrencyName = api.blockchainInfo.baseCurrencyName;
     const price = nameToPrice[currency] && nameToPrice[baseCurrencyName] ? nameToPrice[baseCurrencyName].dividedBy(nameToPrice[currency]) : new BigNumber(0);
     const networkFee = networkFeeEth.multipliedBy(price);
+
     return {networkFeeEth, networkFee};
 }
 
