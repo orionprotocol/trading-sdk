@@ -38,10 +38,11 @@ export function calculateMatcherFee(fromCurrency: string, amount: BigNumber, pri
     }
 }
 
-export function calculateNetworkFee(api: ChainApi, gasPriceGwei: string, nameToPrice: Dictionary<BigNumber>, currency: string, needWithdraw: boolean, isPool = false): { networkFeeEth: BigNumber, networkFee: BigNumber } {
-    if (gasPriceGwei === 'N/A') return {networkFeeEth: new BigNumber(0), networkFee: new BigNumber(0)};
+export function calculateNetworkFee(api: ChainApi, gasPriceWei: string, nameToPrice: Dictionary<BigNumber>, currency: string, needWithdraw: boolean, isPool = false): { networkFeeEth: BigNumber, networkFee: BigNumber } {
+    if (gasPriceWei === 'N/A') return {networkFeeEth: new BigNumber(0), networkFee: new BigNumber(0)};
 
-    const gasPriceEth = new BigNumber(ethers.utils.formatUnits(gasPriceGwei, 'gwei'));
+    const gasPriceEth = new BigNumber(ethers.utils.formatUnits(gasPriceWei, 18));
+
     let gasLimit: number;
     if (isPool) {
         gasLimit = SWAP_THROUGH_ORION_POOL_GAS_LIMIT;
