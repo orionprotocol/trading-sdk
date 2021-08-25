@@ -25,9 +25,16 @@ describe('Send order', () => {
         expect(orion).toHaveProperty('chain')
     })
 
-    it('Check wallet balance', async () => {
+    it('Check wallet balance', async(done) => {
+        const balance = await orion.getWalletBalance()
+        console.log('wallet balance', balance);
+        done()
+    })
+
+    it('Check contract balance', async (done) => {
         const balance = await orion.checkContractBalance('ORN')
-        console.log(balance);
+        console.log('contract balance', balance);
+        done()
     })
 
 })

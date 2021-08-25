@@ -374,9 +374,44 @@ export class Orion {
         }
     }
 
-    async getBalance(address: string): Promise<BigNumber> {
-        const wei: ethers.BigNumber = await this.provider.getBalance(address);
+    async getBalance(): Promise<BigNumber> {
+        const wei: ethers.BigNumber = await this.provider.getBalance(this.walletAddress);
         return new BigNumber(ethers.utils.formatEther(wei));
+    }
+
+    async getTokenBalance (token: string): Promise<Array<[]>> {
+        const balance = await this.tokensContracts[token].balanceOf(this.walletAddress)
+        return [token, balance.toString()]
+    }
+
+    async getWalletBalance (): Promise<Dictionary<string>> {
+        return new Promise((resolve, reject) => {
+            const promises: Array<Promise<Array<[]>>> = []
+
+            try {
+                const tokens = this.getContractTokens()
+
+                tokens.forEach(token => {
+                    if (token === this.blockchainInfo.baseCurrencyName) return
+                    promises.push(this.getTokenBalance(token))
+                })
+
+                Promise.all(promises).then((values) => {
+                    const result: Dictionary<string> = {}
+
+                    values.forEach((el: string[]) => {
+                        console.log(el);
+                        const name = el[0]
+                        const value = el[1]
+                        result[name] = result[value]
+                    })
+                    resolve(result)
+                })
+            } catch (error) {
+                reject(error)
+            }
+
+        })
     }
 
     async checkContractBalance(tokenSymbol: string): Promise<BalanceContract> {
@@ -454,7 +489,7 @@ export class Orion {
         }
     }
 
-    async checkReservedBalance(asset = ''): Promise<{[key: string]: string}> {
+    async checkReservedBalance(asset = ''): Promise<Dictionary<string>> {
         try {
             const path = `/address/balance/reserved/${asset}?address=${this.walletAddress}`
             const { data } = await this.chain.api.aggregator.get(path)
