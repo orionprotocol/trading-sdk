@@ -156,14 +156,6 @@ export class Orion {
         formattedOrder.amount = new BigNumber(order.amount)
         formattedOrder.priceDeviation = new BigNumber(order.priceDeviation)
 
-        if(formattedOrder.chainPrices) {
-            const gwei: string = ethers.utils.formatUnits(formattedOrder.chainPrices.gasGwei, 'gwei');
-            formattedOrder.chainPrices.gasGwei = new BigNumber(gwei).toFixed(0);
-
-            if (typeof formattedOrder.chainPrices.orn === 'number') formattedOrder.chainPrices.orn.toString()
-            if (typeof formattedOrder.chainPrices.baseCurrency === 'number') formattedOrder.chainPrices.baseCurrency.toString()
-        }
-
         return formattedOrder
     }
 
@@ -186,7 +178,10 @@ export class Orion {
 
             if (params.chainPrices) {
                 gasPriceGwei = params.chainPrices.gasGwei
-                blockchainPrices ={ ORN: new BigNumber(params.chainPrices.orn), [this.blockchainInfo.baseCurrencyName]: new BigNumber(params.chainPrices.baseCurrency) }
+                blockchainPrices = { ORN: new BigNumber(params.chainPrices.orn), [this.blockchainInfo.baseCurrencyName]: new BigNumber(params.chainPrices.baseCurrency) }
+
+                if (!blockchainPrices.ORN.gt(0)) throw new Error('Invalid chainPrices orn')
+                if (!blockchainPrices[this.blockchainInfo.baseCurrencyName].gt(0)) throw new Error('Invalid chainPrices baseCurrency')
             } else {
                 gasPriceGwei = await this.chain.getGasPriceFromOrionBlockchain();
                 blockchainPrices = await this.chain.getPricesFromBlockchain()

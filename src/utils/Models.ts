@@ -25,8 +25,8 @@ export interface SignOrderModel {
     needWithdraw: boolean,
     chainPrices?: {     // // in case if user already knows chain prices
         gasGwei: string
-        orn: string
-        baseCurrency: string
+        orn:  string | number
+        baseCurrency:  string | number
     }
 }
 
