@@ -58,7 +58,7 @@ const order = {
     chainPrices: {
         orn: 1,
         baseCurrency: 57,
-        gasGwei: '10000000000'
+        gasWei: '10000000000'
     }
 }
 

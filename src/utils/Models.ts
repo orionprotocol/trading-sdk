@@ -23,10 +23,10 @@ export interface SignOrderModel {
     priceDeviation: BigNumber,
     numberFormat: NumberFormat,
     needWithdraw: boolean,
-    chainPrices?: {     // // in case if user already knows chain prices
-        gasGwei: string
-        orn: string
-        baseCurrency: string
+    chainPrices?: {     // in case if user already knows chain prices
+        gasWei: string
+        orn:  string | number
+        baseCurrency:  string | number
     }
 }
 
@@ -39,7 +39,7 @@ export interface SignOrderModelRaw {
     priceDeviation: number,
     needWithdraw: boolean,
     chainPrices?: {  // in case if user already knows chain prices
-        gasGwei: string
+        gasWei: string
         orn: string | number
         baseCurrency: string | number
     }

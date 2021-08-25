@@ -164,14 +164,6 @@ export class Orion {
         formattedOrder.amount = new BigNumber(order.amount)
         formattedOrder.priceDeviation = new BigNumber(order.priceDeviation)
 
-        if(formattedOrder.chainPrices) {
-            const gwei: string = ethers.utils.formatUnits(formattedOrder.chainPrices.gasGwei, 'gwei');
-            formattedOrder.chainPrices.gasGwei = new BigNumber(gwei).toFixed(0);
-
-            if (typeof formattedOrder.chainPrices.orn === 'number') formattedOrder.chainPrices.orn.toString()
-            if (typeof formattedOrder.chainPrices.baseCurrency === 'number') formattedOrder.chainPrices.baseCurrency.toString()
-        }
-
         return formattedOrder
     }
 
@@ -190,19 +182,22 @@ export class Orion {
             if (params.numberFormat.qtyPrecision === undefined || params.numberFormat.qtyPrecision === null) throw new Error('Invalid qtyPrecision');
             if (params.numberFormat.pricePrecision === undefined || params.numberFormat.pricePrecision === null) throw new Error('Invalid pricePrecision');
 
-            let gasPriceGwei, blockchainPrices
+            let gasPriceWei, blockchainPrices
 
             if (params.chainPrices) {
-                gasPriceGwei = params.chainPrices.gasGwei
-                blockchainPrices ={ ORN: new BigNumber(params.chainPrices.orn), [this.blockchainInfo.baseCurrencyName]: new BigNumber(params.chainPrices.baseCurrency) }
+                gasPriceWei = params.chainPrices.gasWei
+
+                blockchainPrices = { ORN: new BigNumber(params.chainPrices.orn), [this.blockchainInfo.baseCurrencyName]: new BigNumber(params.chainPrices.baseCurrency) }
+
+                if (!blockchainPrices.ORN.gt(0)) throw new Error('Invalid chainPrices orn')
+                if (!blockchainPrices[this.blockchainInfo.baseCurrencyName].gt(0)) throw new Error('Invalid chainPrices baseCurrency')
             } else {
-                gasPriceGwei = await this.chain.getGasPriceFromOrionBlockchain();
+                gasPriceWei = await this.chain.getGasPriceFromOrionBlockchain();
                 blockchainPrices = await this.chain.getPricesFromBlockchain()
             }
 
-
             const matcherFee = calculateMatcherFee(params.fromCurrency, params.amount, params.price, params.side, blockchainPrices, true);
-            const {networkFee} = calculateNetworkFee(this.chain, gasPriceGwei, blockchainPrices, 'ORN', false);
+            const {networkFee} = calculateNetworkFee(this.chain, gasPriceWei, blockchainPrices, 'ORN', false);
             const totalFee = matcherFee.plus(networkFee)
 
             const priceWithDeviation = params.priceDeviation.isZero() ? params.price : getPriceWithDeviation(params.price, params.side, params.priceDeviation);
@@ -284,7 +279,14 @@ export class Orion {
             true,
         );
 
-        const gasPriceWeiLocal = gasPriceWei ? gasPriceWei : await this.chain.getGasPriceWei()
+        let gasPriceWeiLocal
+
+        if (gasPriceWei) {
+            gasPriceWeiLocal = gasPriceWei
+        } else {
+            const priceWei = await this.chain.getGasPriceFromOrionBlockchain()
+            gasPriceWeiLocal = new BigNumber(priceWei)
+        }
 
         return this.sendTransaction(
             txRequest,
@@ -362,10 +364,10 @@ export class Orion {
             const bignumberAmount = new BigNumber(amount)
             const amountUnit = this.numberToUnit(currency, bignumberAmount);
 
-            const gasPriceWei = await this.chain.getGasPriceWei()
+            const gasPriceWei = await this.chain.getGasPriceFromOrionBlockchain()
 
             if (currency === this.blockchainInfo.baseCurrencyName) {
-                return this.depositETH(amountUnit, gasPriceWei)
+                return this.depositETH(amountUnit, new BigNumber(gasPriceWei))
             } else {
                 return this.depositERC20(currency, amountUnit, new BigNumber(gasPriceWei))
             }
