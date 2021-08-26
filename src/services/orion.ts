@@ -2,8 +2,8 @@ import BigNumber from "bignumber.js"
 import {ethers} from "ethers"
 import {signTypedMessage} from 'eth-sig-util'
 import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest, DomainData, BalanceContract} from "../utils/Models"
-import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat } from '../utils/Helpers'
-import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION, CANCEL_ORDER_TYPES} from '../utils/Constants'
+import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat, getInfiniteApprovalValue } from '../utils/Helpers'
+import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION, CANCEL_ORDER_TYPES, APPROVE_ERC20_GAS_LIMIT} from '../utils/Constants'
 import exchangeABI from '../abis/Exchange.json'
 import erc20ABI from '../abis/ERC20.json'
 import { Chain } from './chain'
@@ -369,6 +369,13 @@ export class Orion {
 
             const gasPriceWei = await this.chain.getGasPriceFromOrionBlockchain()
 
+            const allowance = await this.getAllowanceERC20(currency)
+            console.log(allowance);
+
+            if (allowance.lt(bignumberAmount)) {
+                await this.approve(currency, new BigNumber(gasPriceWei))
+            }
+
             if (currency === this.blockchainInfo.baseCurrencyName) {
                 return this.depositETH(amountUnit, new BigNumber(gasPriceWei))
             } else {
@@ -377,6 +384,50 @@ export class Orion {
         } catch (error) {
             return error
         }
+    }
+
+    async getAllowanceERC20( currency: string, toAddress?: string ): Promise<BigNumber> {
+        const decimals = this.blockchainInfo.assetToDecimals[currency]
+        const currentTokenContract = this.tokensContracts[currency]
+
+        if(!decimals || !currentTokenContract) throw new Error('Currency is invaild!')
+
+        if (!toAddress) {
+            toAddress = this.blockchainInfo.exchangeContractAddress;
+        }
+        const unit: ethers.BigNumber = await currentTokenContract.allowance(this.walletAddress, toAddress);
+        return new BigNumber(unit.toString()).dividedBy(10 ** decimals);
+
+    }
+
+    async approve(currency: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionResponse> {
+        const amountUnit = getInfiniteApprovalValue();
+
+        const tokenContract = this.tokensContracts[currency]
+
+        const toAddress = this.blockchainInfo.exchangeContractAddress;
+
+        return this.approveERC20({
+            amountUnit,
+            gasPriceWei,
+            toAddress,
+            tokenContract,
+        });
+    }
+
+    private async approveERC20({amountUnit, gasPriceWei, toAddress, tokenContract}: {
+        amountUnit: string,
+        gasPriceWei: BigNumber,
+        toAddress: string,
+        tokenContract: ethers.Contract
+    }): Promise<ethers.providers.TransactionResponse> {
+
+        const unsignedTx = await tokenContract.populateTransaction.approve(toAddress, amountUnit);
+        return this.sendTransaction(
+            unsignedTx,
+            APPROVE_ERC20_GAS_LIMIT,
+            gasPriceWei,
+        )
     }
 
     async getTokenBalance (token: string): Promise<Array<[]>> {

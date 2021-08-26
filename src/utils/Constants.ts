@@ -50,6 +50,8 @@ export const DEPOSIT_ETH_GAS_LIMIT = 220000;
 
 export const DEPOSIT_ERC20_GAS_LIMIT = 220000;
 
+export const APPROVE_ERC20_GAS_LIMIT = 70000;
+
 export const DEFAULT_EXPIRATION: number = 29 * 24 * 60 * 60 * 1000; // 29 days
 
 export const FEE_CURRENCY = 'ORN'
