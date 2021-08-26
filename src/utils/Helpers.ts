@@ -24,26 +24,20 @@ export function toOrnPrice(currency: string, nameToPrice: Dictionary<BigNumber>)
     return price;
 }
 
-export function calculateMatcherFee(fromCurrency: string, amount: BigNumber, price: BigNumber, side: string, nameToPrice: Dictionary<BigNumber>, inOrn: boolean): BigNumber {
-    if (inOrn) {
-        const feeValue = amount.multipliedBy(MATCHER_FEE_PERCENT);
-        const feeValueInOrn = feeValue.multipliedBy(toOrnPrice(fromCurrency, nameToPrice));
-        return feeValueInOrn;
-    } else {
-        if (side === 'buy') {
-            return amount.multipliedBy(MATCHER_FEE_PERCENT)
-        } else {
-            return amount.multipliedBy(price).multipliedBy(MATCHER_FEE_PERCENT);
-        }
-    }
+export function calculateMatcherFee(fromCurrency: string, amount: BigNumber, nameToPrice: Dictionary<BigNumber>): BigNumber {
+    const feeValue = amount.multipliedBy(MATCHER_FEE_PERCENT);
+    const feeValueInOrn = feeValue.multipliedBy(toOrnPrice(fromCurrency, nameToPrice));
+
+    return feeValueInOrn;
 }
 
-export function calculateNetworkFee(api: ChainApi, gasPriceWei: string, nameToPrice: Dictionary<BigNumber>, currency: string, needWithdraw: boolean, isPool = false): { networkFeeEth: BigNumber, networkFee: BigNumber } {
+export function calculateNetworkFee(api: ChainApi, gasPriceWei: string, nameToPrice: Dictionary<BigNumber>, needWithdraw: boolean, isPool = false): { networkFeeEth: BigNumber, networkFee: BigNumber } {
     if (gasPriceWei === 'N/A') return {networkFeeEth: new BigNumber(0), networkFee: new BigNumber(0)};
 
-    const gasPriceEth = new BigNumber(ethers.utils.formatUnits(gasPriceWei, 18));
+    const gasPriceEth = new BigNumber(ethers.utils.formatUnits(gasPriceWei, 'ether'));
 
     let gasLimit: number;
+
     if (isPool) {
         gasLimit = SWAP_THROUGH_ORION_POOL_GAS_LIMIT;
     } else {
@@ -56,7 +50,7 @@ export function calculateNetworkFee(api: ChainApi, gasPriceWei: string, nameToPr
     const networkFeeEth = gasPriceEth.multipliedBy(gasLimit);
 
     const baseCurrencyName = api.blockchainInfo.baseCurrencyName;
-    const price = nameToPrice[currency] && nameToPrice[baseCurrencyName] ? nameToPrice[baseCurrencyName].dividedBy(nameToPrice[currency]) : new BigNumber(0);
+    const price = nameToPrice[baseCurrencyName] ? nameToPrice[baseCurrencyName] : new BigNumber(0);
     const networkFee = networkFeeEth.multipliedBy(price);
 
     return {networkFeeEth, networkFee};
