@@ -38,8 +38,8 @@ describe('Send order with known chain prices', () => {
             priceDeviation: 1,
             needWithdraw: false,
             chainPrices: {
-                orn: 1,
-                baseCurrency: 57,
+                networkAsset: 57,
+                baseAsset: 1,
                 gasWei: '10000000000'
             }
         }

@@ -179,17 +179,20 @@ export class Orion {
             if (params.chainPrices) {
                 gasPriceWei = params.chainPrices.gasWei
 
-                blockchainPrices = { ORN: new BigNumber(params.chainPrices.orn), [this.blockchainInfo.baseCurrencyName]: new BigNumber(params.chainPrices.baseCurrency) }
+                blockchainPrices = {
+                    [this.blockchainInfo.baseCurrencyName]: new BigNumber(params.chainPrices.networkAsset),
+                    [params.fromCurrency]: new BigNumber(params.chainPrices.baseAsset)
+                }
 
-                if (!blockchainPrices.ORN.gt(0)) throw new Error('Invalid chainPrices orn')
-                if (!blockchainPrices[this.blockchainInfo.baseCurrencyName].gt(0)) throw new Error('Invalid chainPrices baseCurrency')
+                if (!blockchainPrices[this.blockchainInfo.baseCurrencyName].gt(0)) throw new Error('Invalid chainPrices networkAsset')
+                if (!blockchainPrices[params.fromCurrency].gt(0)) throw new Error('Invalid chainPrices baseAsset')
             } else {
                 gasPriceWei = await this.chain.getGasPriceFromOrionBlockchain();
                 blockchainPrices = await this.chain.getPricesFromBlockchain()
             }
 
-            const matcherFee = calculateMatcherFee(params.fromCurrency, params.amount, params.price, params.side, blockchainPrices, true);
-            const {networkFee} = calculateNetworkFee(this.chain, gasPriceWei, blockchainPrices, 'ORN', false);
+            const matcherFee = calculateMatcherFee(params.fromCurrency, params.amount, blockchainPrices);
+            const {networkFee} = calculateNetworkFee(this.chain, gasPriceWei, blockchainPrices, params.needWithdraw);
             const totalFee = matcherFee.plus(networkFee)
 
             const priceWithDeviation = params.priceDeviation.isZero() ? params.price : getPriceWithDeviation(params.price, params.side, params.priceDeviation);

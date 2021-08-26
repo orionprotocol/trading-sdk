@@ -56,8 +56,8 @@ const order = {
     // chainPrices is optional, use it when prices are already known
     // to increase request speed
     chainPrices: {
-        orn: 1,
-        baseCurrency: 57,
+        networkAsset: 57,
+        baseAsset: 1,    // price of fromCurrency to ORN
         gasWei: '10000000000'
     }
 }
