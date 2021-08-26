@@ -379,22 +379,21 @@ export class Orion {
         }
     }
 
-    async getBalance(): Promise<BigNumber> {
-        const wei: ethers.BigNumber = await this.provider.getBalance(this.walletAddress);
-        return new BigNumber(ethers.utils.formatEther(wei));
-    }
-
     async getTokenBalance (token: string): Promise<Array<[]>> {
         const balance = await this.tokensContracts[token].balanceOf(this.walletAddress)
         return [token, balance.toString()]
     }
 
-    async getWalletBalance (): Promise<Dictionary<string>> {
+    async getWalletBalance (ticker?: string): Promise<Dictionary<string>> {
         return new Promise((resolve, reject) => {
-            const promises: Array<Promise<Array<[]>>> = []
+            const promises: Array<Promise<string[][]>> = []
 
             try {
-                const tokens = this.getContractTokens()
+                let tokens = this.getContractTokens()
+
+                if (ticker) {
+                    tokens = tokens.filter(el => el === ticker.toUpperCase())
+                }
 
                 tokens.forEach(token => {
                     if (token === this.blockchainInfo.baseCurrencyName) return
@@ -404,11 +403,10 @@ export class Orion {
                 Promise.all(promises).then((values) => {
                     const result: Dictionary<string> = {}
 
-                    values.forEach((el: string[]) => {
-                        console.log(el);
-                        const name = el[0]
-                        const value = el[1]
-                        result[name] = result[value]
+                    values.forEach((el: string[][]) => {
+                        const name = el[0].toString()
+                        const value = el[1].toString()
+                        result[name] = value
                     })
                     resolve(result)
                 })
@@ -419,76 +417,29 @@ export class Orion {
         })
     }
 
-    async checkContractBalance(tokenSymbol: string): Promise<BalanceContract> {
-        const token = tokenSymbol.toUpperCase()
+    async getContractBalance(tokenSymbol?: string): Promise<Dictionary<BalanceContract>> {
+        const token = tokenSymbol ? tokenSymbol.toUpperCase() : ''
 
-        if (!this.getContractTokens().includes(token)) throw new Error('Invalid token')
-
-        try {
-            const tokenAddress = this.getTokenAddress(tokenSymbol)
-
-            const total: BigNumber = await this.exchangeContract.getBalance(tokenAddress, this.walletAddress)
-            const totalBignumber = new BigNumber(total.toString())
-
-            const locked = await this.checkReservedBalance(tokenSymbol)
-            const lockedBignumber = new BigNumber(this.numberToUnit(token, new BigNumber(locked[token])))
-
-            const availableBignumber = totalBignumber.minus(lockedBignumber)
-
-            const balanceSummary = {
-                total: {
-                    bignumber: totalBignumber,
-                    decimal: Number(this.unitToNumber(token, totalBignumber).toString())
-                },
-                locked: {
-                    bignumber: lockedBignumber,
-                    decimal: Number(locked[token])
-                },
-                available: {
-                    bignumber: availableBignumber,
-                    decimal: Number(this.unitToNumber(token, availableBignumber).toString())
-                }
-            }
-
-            return balanceSummary
-        } catch (error) {
-            return error
-        }
-    }
-
-    async checkContractBalances(): Promise<[]> {
-
-        if (!this.getContractTokens()) throw new Error('Invalid token')
+        if (token && !this.getContractTokens().includes(token)) throw new Error('Invalid token')
 
         try {
-            const tokenAddresses = this.getContractTokenAddresses()
+            const result: Dictionary<BalanceContract> = {}
 
-            const total = await this.exchangeContract.getBalances(tokenAddresses, this.walletAddress)
+            const tokenAddresses = token
+                ? this.getContractTokenAddresses().filter(el => el === this.getTokenAddress(token))
+                : this.getContractTokenAddresses()
+
+            const tokens = token ? this.getContractTokens().filter(el => el === token) : this.getContractTokens()
+
+            const total: BigNumber[] = await this.exchangeContract.getBalances(tokenAddresses, this.walletAddress)
             const locked = await this.checkReservedBalance()
 
-            console.log(total, locked)
+            total.forEach((totalBalance, i) => {
+                const lockedValue = locked[tokens[i]] || 0
+                result[tokens[i]] = this.parseContractBalance(tokens[i], totalBalance, lockedValue)
+            })
 
-            // const totalBignumber = new BigNumber(total.toString())
-            // const lockedBignumber = new BigNumber(this.numberToUnit(token, new BigNumber(locked[token])))
-
-            // const availableBignumber = totalBignumber.minus(lockedBignumber)
-
-            // const balanceSummary = {
-            //     total: {
-            //         bignumber: totalBignumber,
-            //         decimal: Number(this.unitToNumber(token, totalBignumber).toString())
-            //     },
-            //     locked: {
-            //         bignumber: lockedBignumber,
-            //         decimal: Number(locked[token])
-            //     },
-            //     available: {
-            //         bignumber: availableBignumber,
-            //         decimal: Number(this.unitToNumber(token, availableBignumber).toString())
-            //     }
-            // }
-
-            return []
+            return result
         } catch (error) {
             return error
         }
@@ -502,5 +453,29 @@ export class Orion {
         } catch (error) {
             return error
         }
+    }
+
+    private parseContractBalance(token: string, total: BigNumber, locked: string | number): BalanceContract {
+        const totalBignumber = new BigNumber(total.toString())
+        const lockedBignumber = new BigNumber(this.numberToUnit(token, new BigNumber(locked)))
+
+        const availableBignumber = totalBignumber.minus(lockedBignumber)
+
+        const balanceSummary = {
+            total: {
+                bignumber: totalBignumber,
+                decimal: Number(this.unitToNumber(token, totalBignumber).toString())
+            },
+            locked: {
+                bignumber: lockedBignumber,
+                decimal: Number(locked)
+            },
+            available: {
+                bignumber: availableBignumber,
+                decimal: Number(this.unitToNumber(token, availableBignumber).toString())
+            }
+        }
+
+        return balanceSummary
     }
 }

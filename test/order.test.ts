@@ -7,7 +7,7 @@ dotenv.config()
 
 const { PRIVATE_KEY } = process.env
 
-describe.skip('Send order', () => {
+describe('Send order', () => {
     let chain: Chain
     let orion: Orion
     let order: SignOrderModelRaw

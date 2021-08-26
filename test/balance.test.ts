@@ -7,7 +7,7 @@ dotenv.config()
 
 const { PRIVATE_KEY } = process.env
 
-describe('Send order', () => {
+describe('Get balances', () => {
     let chain: Chain
     let orion: Orion
 
@@ -25,16 +25,28 @@ describe('Send order', () => {
         expect(orion).toHaveProperty('chain')
     })
 
-    it('Check wallet balance', async(done) => {
+    it('Check wallet balance summary', async() => {
         const balance = await orion.getWalletBalance()
-        console.log('wallet balance', balance);
-        done()
+        expect(Object.keys(balance).length).toBeTruthy()
     })
 
-    it('Check contract balance', async (done) => {
-        const balance = await orion.checkContractBalance('ORN')
-        console.log('contract balance', balance);
-        done()
+    it('Check wallet balance by ticker', async() => {
+        const balance = await orion.getWalletBalance('ORN')
+        expect(Object.keys(balance).length).toBeTruthy()
+    })
+
+    it('Check contract balance summary', async () => {
+        const balance = await orion.getContractBalance()
+        const firstKey = Object.keys(balance)[0]
+        expect(Object.keys(balance)[0]).toBeTruthy()
+        expect(balance[firstKey].total && balance[firstKey].locked && balance[firstKey].available).toBeTruthy()
+    })
+
+    it('Check contract balance by ticker', async () => {
+        const balance = await orion.getContractBalance('ORN')
+        const firstKey = Object.keys(balance)[0]
+        expect(Object.keys(balance)[0]).toBeTruthy()
+        expect(balance[firstKey].total && balance[firstKey].locked && balance[firstKey].available).toBeTruthy()
     })
 
 })

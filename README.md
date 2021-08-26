@@ -84,9 +84,34 @@ const order = await chain.getOrderById(sentOrderResponse.orderId)
 const status = order.status
 ```
 
-**Check balance on smart contract:**
+**Get smart contract balance:**
 ```javascript
-const balance = await orion.checkContractBalance('ORN')
+const contractBalance = await orion.getContractBalance('ORN') // by ticker
+
+const contractBalanceSummary = await orion.getContractBalance() // summary
+
+/*
+    Example:
+     {
+        ORN: {
+          total: { bignumber: [BigNumber], decimal: 11100 },
+          locked: { bignumber: [BigNumber], decimal: 944.59062003 },
+          available: { bignumber: [BigNumber], decimal: 10155.40937997 }
+        }
+      }
+*/
+```
+
+**Get wallet balance:**
+```javascript
+const walletBalance = await orion.getWalletBalance('ORN') // by ticker
+
+const walletBalanceSummary = await orion.getWalletBalance() // summary
+
+/*
+    Example:
+    { ORN: '13890000000000' }
+*/
 ```
 
 ## Websockets
