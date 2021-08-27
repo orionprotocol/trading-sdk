@@ -170,5 +170,5 @@ export function parsePairs (data: any[]): Record<string, Pair> {
 }
 
 export function getInfiniteApprovalValue(): string {
-    return '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+    return ethers.constants.MaxUint256.toString()
 }

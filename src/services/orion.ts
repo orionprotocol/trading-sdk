@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js"
 import {ethers} from "ethers"
 import {signTypedMessage} from 'eth-sig-util'
 import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest, DomainData, BalanceContract} from "../utils/Models"
-import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat, getInfiniteApprovalValue } from '../utils/Helpers'
+import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat } from '../utils/Helpers'
 import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION, CANCEL_ORDER_TYPES, APPROVE_ERC20_GAS_LIMIT} from '../utils/Constants'
 import exchangeABI from '../abis/Exchange.json'
 import erc20ABI from '../abis/ERC20.json'
@@ -106,6 +106,10 @@ export class Orion {
             }
         }
         return '';
+    }
+
+    isNetworkAsset (asset: string): boolean {
+        return this.blockchainInfo.baseCurrencyName.toUpperCase() === asset.toUpperCase()
     }
 
     private async validateOrder(order: BlockchainOrder): Promise<boolean> {
@@ -366,23 +370,72 @@ export class Orion {
         try {
             const bignumberAmount = new BigNumber(amount)
             const amountUnit = this.numberToUnit(currency, bignumberAmount);
+            const currencyBalance = await this.getWalletBalance(currency)
+
+            console.log(new BigNumber(currencyBalance[currency]), bignumberAmount)
+
+            if (new BigNumber(currencyBalance[currency]).lt(bignumberAmount)) throw new Error('Wallet balance is lower then deposit amount!')
 
             const gasPriceWei = await this.chain.getGasPriceFromOrionBlockchain()
 
-            const allowance = await this.getAllowanceERC20(currency)
-            console.log(allowance);
-
-            if (allowance.lt(bignumberAmount)) {
-                await this.approve(currency, new BigNumber(gasPriceWei))
-            }
-
-            if (currency === this.blockchainInfo.baseCurrencyName) {
+            if (this.isNetworkAsset(currency)) {
                 return this.depositETH(amountUnit, new BigNumber(gasPriceWei))
             } else {
+                await this.allowanceChecker(currency, amount, gasPriceWei)
                 return this.depositERC20(currency, amountUnit, new BigNumber(gasPriceWei))
             }
         } catch (error) {
             return error
+        }
+    }
+
+    async withdraw(currency: string, amount: string, gasPriceWei: string): Promise<ethers.providers.TransactionResponse> {
+        const amountUnit = this.numberToUnit(currency, new BigNumber(amount));
+
+        /* TODO:
+            check available balance for asset
+        */
+
+        return this.sendTransaction(
+            await this.exchangeContract.populateTransaction.withdraw(this.getTokenAddress(currency), amountUnit),
+            DEPOSIT_ERC20_GAS_LIMIT,
+            new BigNumber(gasPriceWei),
+        );
+    }
+
+    async allowanceChecker (currency: string, amount: string, gasPriceWei: string): Promise<ethers.providers.TransactionResponse | void> {
+        if (this.isNetworkAsset(currency)) return
+
+        const bignumberAmount = new BigNumber(amount)
+        const tokenContract = this.tokensContracts[currency]
+
+        const allowance = await this.getAllowanceERC20(currency)
+
+        if (allowance.lt(bignumberAmount)) {
+            console.log('allowance.lt(bignumberAmount)');
+            const needReset = await this.checkNeedZeroReset(tokenContract)
+
+            if (needReset) {
+                console.log('need Reset');
+                await this.approve(currency, gasPriceWei, ethers.constants.Zero.toString())
+                return this.approve(currency, gasPriceWei, ethers.constants.MaxUint256.toString())
+            } else {
+                console.log('no need Reset');
+                return this.approve(currency, gasPriceWei, ethers.constants.MaxUint256.toString())
+            }
+        }
+    }
+
+    async checkNeedZeroReset (contract: ethers.Contract): Promise<boolean> {
+        const unsignedTx = await contract.populateTransaction.approve(
+            this.walletAddress,
+            ethers.constants.MaxUint256,
+        );
+        try {
+            await this.chain.signer.estimateGas(unsignedTx);
+            return false;
+        } catch (e) {
+            return true;
         }
     }
 
@@ -397,12 +450,9 @@ export class Orion {
         }
         const unit: ethers.BigNumber = await currentTokenContract.allowance(this.walletAddress, toAddress);
         return new BigNumber(unit.toString()).dividedBy(10 ** decimals);
-
     }
 
-    async approve(currency: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionResponse> {
-        const amountUnit = getInfiniteApprovalValue();
-
+    async approve(currency: string, gasPriceWei: string, amountUnit: string): Promise<ethers.providers.TransactionResponse> {
         const tokenContract = this.tokensContracts[currency]
 
         const toAddress = this.blockchainInfo.exchangeContractAddress;
@@ -417,7 +467,7 @@ export class Orion {
 
     private async approveERC20({amountUnit, gasPriceWei, toAddress, tokenContract}: {
         amountUnit: string,
-        gasPriceWei: BigNumber,
+        gasPriceWei: string,
         toAddress: string,
         tokenContract: ethers.Contract
     }): Promise<ethers.providers.TransactionResponse> {
@@ -426,7 +476,7 @@ export class Orion {
         return this.sendTransaction(
             unsignedTx,
             APPROVE_ERC20_GAS_LIMIT,
-            gasPriceWei,
+            new BigNumber(gasPriceWei),
         )
     }
 
@@ -435,36 +485,48 @@ export class Orion {
         return [token, balance.toString()]
     }
 
+    async getNetworkBalance(): Promise<BigNumber> {
+        const wei: ethers.BigNumber = await this.chain.provider.getBalance(this.walletAddress);
+        return new BigNumber(ethers.utils.formatEther(wei));
+    }
+
     async getWalletBalance (ticker?: string): Promise<Dictionary<string>> {
         return new Promise((resolve, reject) => {
-            const promises: Array<Promise<string[][]>> = []
-
-            try {
-                let tokens = this.getContractTokens()
-
-                if (ticker) {
-                    tokens = tokens.filter(el => el === ticker.toUpperCase())
-                }
-
-                tokens.forEach(token => {
-                    if (token === this.blockchainInfo.baseCurrencyName) return
-                    promises.push(this.getTokenBalance(token))
-                })
-
-                Promise.all(promises).then((values) => {
-                    const result: Dictionary<string> = {}
-
-                    values.forEach((el: string[][]) => {
-                        const name = el[0].toString()
-                        const value = el[1].toString()
-                        result[name] = value
+            if (ticker === this.blockchainInfo.baseCurrencyName) {
+                this.getNetworkBalance()
+                    .then((balance) => {
+                        resolve({ [this.blockchainInfo.baseCurrencyName]: balance.toString() })
                     })
-                    resolve(result)
-                })
-            } catch (error) {
-                reject(error)
-            }
+                    .catch(error => error)
+            } else {
+                const promises: Array<Promise<string[][]>> = []
 
+                try {
+                    let tokens = this.getContractTokens()
+
+                    if (ticker) {
+                        tokens = tokens.filter(el => el === ticker.toUpperCase())
+                    }
+
+                    tokens.forEach(token => {
+                        if (token === this.blockchainInfo.baseCurrencyName) return
+                        promises.push(this.getTokenBalance(token))
+                    })
+
+                    Promise.all(promises).then((values) => {
+                        const result: Dictionary<string> = {}
+
+                        values.forEach((el: string[][]) => {
+                            const name = el[0].toString()
+                            const value = el[1].toString()
+                            result[name] = value
+                        })
+                        resolve(result)
+                    })
+                } catch (error) {
+                    reject(error)
+                }
+            }
         })
     }
 
