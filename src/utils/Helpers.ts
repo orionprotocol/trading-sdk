@@ -168,7 +168,3 @@ export function parsePairs (data: any[]): Record<string, Pair> {
     }
     return newNameToPair
 }
-
-export function getInfiniteApprovalValue(): string {
-    return ethers.constants.MaxUint256.toString()
-}

@@ -1,13 +1,12 @@
 import 'jest-extended'
 import { Chain, Orion } from '../src/index'
-// import { SignOrderModelRaw, BlockchainOrder } from '../src/utils/Models'
 import { NETWORK } from '../src/utils/Constants'
 import dotenv from 'dotenv';
 dotenv.config()
 
 const { PRIVATE_KEY } = process.env
 
-describe.skip('Get balances', () => {
+describe('Get balances', () => {
     let chain: Chain
     let orion: Orion
 

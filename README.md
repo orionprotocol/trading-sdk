@@ -42,6 +42,51 @@ Now you ready to go.
 ## Examples
 (*previous steps are required*)
 
+For further operations, network tokens are required to pay for transactions, as well as tokens for deposit / withdrawal / exchange.
+
+
+**Get wallet balance:**
+```javascript
+const walletBalance = await orion.getWalletBalance('ORN') // by ticker
+
+const walletBalanceSummary = await orion.getWalletBalance() // summary
+
+/*
+    Example:
+    { ORN: '13890000000000' } // uint
+*/
+```
+
+**Deposit token:**
+```javascript
+const deposit = await orion.deposit('ORN', '10')
+// Should return transaction object
+```
+
+**Get smart contract balance:**
+```javascript
+const contractBalance = await orion.getContractBalance('ORN') // by ticker
+
+const contractBalanceSummary = await orion.getContractBalance() // summary
+
+/*
+    Example:
+     {
+        ORN: {
+          total: { bignumber: [BigNumber], decimal: 11100 },
+          locked: { bignumber: [BigNumber], decimal: 944.59062003 },
+          available: { bignumber: [BigNumber], decimal: 10155.40937997 }
+        }
+      }
+*/
+```
+
+**Withdraw token:**
+```javascript
+const withdraw = await orion.withdraw('ORN', '10')
+// Should return transaction object
+```
+
 **Create, sign and send order to OrionBlockchain:**
 ```javascript
 // create order
@@ -53,11 +98,11 @@ const order = {
     amount: 10,
     priceDeviation: 1,
     needWithdraw: false,
-    // chainPrices is optional, use it when prices are already known
+    // 'chainPrices' is optional, use it when prices are already known
     // to increase request speed
     chainPrices: {
-        networkAsset: 57,
-        baseAsset: 1,    // price of fromCurrency to ORN
+        networkAsset: 57,  // // 'networkAsset' price against ORN
+        baseAsset: 1,    // 'fromCurrency' price against ORN
         gasWei: '10000000000'
     }
 }
@@ -82,36 +127,6 @@ const history = await chain.getTradeHistory()
 
 const order = await chain.getOrderById(sentOrderResponse.orderId)
 const status = order.status
-```
-
-**Get smart contract balance:**
-```javascript
-const contractBalance = await orion.getContractBalance('ORN') // by ticker
-
-const contractBalanceSummary = await orion.getContractBalance() // summary
-
-/*
-    Example:
-     {
-        ORN: {
-          total: { bignumber: [BigNumber], decimal: 11100 },
-          locked: { bignumber: [BigNumber], decimal: 944.59062003 },
-          available: { bignumber: [BigNumber], decimal: 10155.40937997 }
-        }
-      }
-*/
-```
-
-**Get wallet balance:**
-```javascript
-const walletBalance = await orion.getWalletBalance('ORN') // by ticker
-
-const walletBalanceSummary = await orion.getWalletBalance() // summary
-
-/*
-    Example:
-    { ORN: '13890000000000' }
-*/
 ```
 
 ## Websockets

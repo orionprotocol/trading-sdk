@@ -112,6 +112,31 @@ export class Orion {
         return this.blockchainInfo.baseCurrencyName.toUpperCase() === asset.toUpperCase()
     }
 
+    numberToUnit(currency: string, n: BigNumber): string {
+        if (currency === this.blockchainInfo.baseCurrencyName) {
+            return ethers.utils.parseEther(n.toString()).toString();
+        } else {
+            const decimals = this.blockchainInfo.assetToDecimals[currency];
+            if (decimals === undefined) throw new Error('no decimals for ' + currency)
+            return n.multipliedBy(Math.pow(10, decimals)).toFixed(0, BigNumber.ROUND_DOWN);
+        }
+    }
+
+    unitToNumber(currency: string, n: BigNumber, tokenDecimals?: number): BigNumber {
+        const decimals = currency === "ETH" || currency === "BNB" ? 18 : tokenDecimals || this.blockchainInfo.assetToDecimals[currency];
+        if (decimals === undefined) throw new Error('no decimals for ' + currency)
+        return n.dividedBy(Math.pow(10, decimals));
+    }
+
+    numberTo8(n: BigNumber.Value): number {
+        return Number(new BigNumber(n).multipliedBy(1e8).toFixed(0));
+    }
+
+    async checkNetworkTokens (): Promise<void> {
+        const networkAssetBalance = await this.getNetworkBalance()
+        if (!networkAssetBalance.gt(0)) throw new Error('A non-zero balance of network tokens is required!')
+    }
+
     private async validateOrder(order: BlockchainOrder): Promise<boolean> {
         return this.exchangeContract.validateOrder(order);
     }
@@ -240,29 +265,8 @@ export class Orion {
             }
             return order;
         } catch (error) {
-            console.log('signOrder error: ', error);
             return error
         }
-    }
-
-    numberToUnit(currency: string, n: BigNumber): string {
-        if (currency === this.blockchainInfo.baseCurrencyName) {
-            return ethers.utils.parseEther(n.toString()).toString();
-        } else {
-            const decimals = this.blockchainInfo.assetToDecimals[currency];
-            if (decimals === undefined) throw new Error('no decimals for ' + currency)
-            return n.multipliedBy(Math.pow(10, decimals)).toFixed(0, BigNumber.ROUND_DOWN);
-        }
-    }
-
-    unitToNumber(currency: string, n: BigNumber, tokenDecimals?: number): BigNumber {
-        const decimals = currency === "ETH" || currency === "BNB" ? 18 : tokenDecimals || this.blockchainInfo.assetToDecimals[currency];
-        if (decimals === undefined) throw new Error('no decimals for ' + currency)
-        return n.dividedBy(Math.pow(10, decimals));
-    }
-
-    numberTo8(n: BigNumber.Value): number {
-        return Number(new BigNumber(n).multipliedBy(1e8).toFixed(0));
     }
 
     private async sendTransaction(unsignedTx: ethers.PopulatedTransaction, gasLimit: number, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionResponse> {
@@ -272,51 +276,11 @@ export class Orion {
         return this.chain.signer.sendTransaction(unsignedRequest);
     }
 
-    async swapThroughOrionPool(
-        amountSpend: string,
-        amountReceive: string,
-        path: string[],
-        gasLimit = 600000,
-        gasPriceWei?: BigNumber
-    ): Promise<ethers.providers.TransactionResponse> {
-        const txRequest = await this.exchangeContract.populateTransaction.swapThroughOrionPool(
-            ethers.BigNumber.from(amountSpend),
-            ethers.BigNumber.from(amountReceive),
-            path,
-            true,
-        );
-
-        let gasPriceWeiLocal
-
-        if (gasPriceWei) {
-            gasPriceWeiLocal = gasPriceWei
-        } else {
-            const priceWei = await this.chain.getGasPriceFromOrionBlockchain()
-            gasPriceWeiLocal = new BigNumber(priceWei)
-        }
-
-        return this.sendTransaction(
-            txRequest,
-            gasLimit,
-            gasPriceWeiLocal
-        )
-    }
-
-    async isTransactionDone(transactionHash: string): Promise<boolean> {
-        const transactionReceipt = await this.provider.getTransactionReceipt(transactionHash);
-        if (!transactionReceipt) {
-            return false;
-        } else {
-            return !!transactionReceipt.status;
-        }
-    }
-
     async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<{orderId: number}> {
         try {
             const { data } =  await this.chain.api.aggregator.post(isCreateInternalOrder ? '/order/maker' : '/order', order)
             return data
         } catch (error) {
-            console.log('sendOrder error: ', error);
             return error
         }
     }
@@ -366,67 +330,72 @@ export class Orion {
         )
     }
 
-    async deposit(currency: string, amount: string): Promise<ethers.providers.TransactionResponse> {
+    async deposit(currency: string, amount: string, gasPriceWei?: string): Promise<ethers.providers.TransactionResponse> {
         try {
+            await this.checkNetworkTokens()
+
             const bignumberAmount = new BigNumber(amount)
             const amountUnit = this.numberToUnit(currency, bignumberAmount);
-            const currencyBalance = await this.getWalletBalance(currency)
 
-            console.log(new BigNumber(currencyBalance[currency]), bignumberAmount)
+            const walletBalanceUint = await this.getWalletBalance(currency)
+            const walletBalance = this.unitToNumber(currency, new BigNumber(walletBalanceUint[currency]))
 
-            if (new BigNumber(currencyBalance[currency]).lt(bignumberAmount)) throw new Error('Wallet balance is lower then deposit amount!')
+            if (walletBalance.lt(bignumberAmount)) throw new Error(`The wallet balance (${walletBalance}) is lower than the deposit amount (${amount})!`)
 
-            const gasPriceWei = await this.chain.getGasPriceFromOrionBlockchain()
+            const gasPriceWeiLocal = gasPriceWei ? gasPriceWei : await this.chain.getGasPriceFromOrionBlockchain()
 
             if (this.isNetworkAsset(currency)) {
-                return this.depositETH(amountUnit, new BigNumber(gasPriceWei))
+                return this.depositETH(amountUnit, new BigNumber(gasPriceWeiLocal))
             } else {
-                await this.allowanceChecker(currency, amount, gasPriceWei)
-                return this.depositERC20(currency, amountUnit, new BigNumber(gasPriceWei))
+                await this.allowanceHandler(currency, amount, gasPriceWeiLocal)
+                return this.depositERC20(currency, amountUnit, new BigNumber(gasPriceWeiLocal))
             }
         } catch (error) {
             return error
         }
     }
 
-    async withdraw(currency: string, amount: string, gasPriceWei: string): Promise<ethers.providers.TransactionResponse> {
-        const amountUnit = this.numberToUnit(currency, new BigNumber(amount));
+    async withdraw(currency: string, amount: string, gasPriceWei?: string): Promise<ethers.providers.TransactionResponse> {
+        try {
+            await this.checkNetworkTokens()
 
-        /* TODO:
-            check available balance for asset
-        */
+            const amountUnit = this.numberToUnit(currency, new BigNumber(amount));
+            const balance = await this.getContractBalance(currency)
+            const gasPriceWeiLocal = gasPriceWei ? gasPriceWei : await this.chain.getGasPriceFromOrionBlockchain()
 
-        return this.sendTransaction(
-            await this.exchangeContract.populateTransaction.withdraw(this.getTokenAddress(currency), amountUnit),
-            DEPOSIT_ERC20_GAS_LIMIT,
-            new BigNumber(gasPriceWei),
-        );
+            if (balance[currency].available.bignumber.lt(new BigNumber(amount))) throw new Error(`The available contract balance (${balance[currency].available.bignumber}) is less than the withdrawal amount (${new BigNumber(amount)})! `)
+
+            return this.sendTransaction(
+                await this.exchangeContract.populateTransaction.withdraw(this.getTokenAddress(currency), amountUnit),
+                DEPOSIT_ERC20_GAS_LIMIT,
+                new BigNumber(gasPriceWeiLocal),
+            );
+        } catch (error) {
+            return error
+        }
     }
 
-    async allowanceChecker (currency: string, amount: string, gasPriceWei: string): Promise<ethers.providers.TransactionResponse | void> {
+    private async allowanceHandler (currency: string, amount: string, gasPriceWei: string): Promise<ethers.providers.TransactionResponse | void> {
         if (this.isNetworkAsset(currency)) return
 
         const bignumberAmount = new BigNumber(amount)
         const tokenContract = this.tokensContracts[currency]
 
-        const allowance = await this.getAllowanceERC20(currency)
+        const allowance = await this.getAllowance(currency)
 
         if (allowance.lt(bignumberAmount)) {
-            console.log('allowance.lt(bignumberAmount)');
             const needReset = await this.checkNeedZeroReset(tokenContract)
 
             if (needReset) {
-                console.log('need Reset');
-                await this.approve(currency, gasPriceWei, ethers.constants.Zero.toString())
-                return this.approve(currency, gasPriceWei, ethers.constants.MaxUint256.toString())
+                await this.approve(currency, ethers.constants.Zero.toString(), gasPriceWei)
+                return this.approve(currency, ethers.constants.MaxUint256.toString(), gasPriceWei)
             } else {
-                console.log('no need Reset');
-                return this.approve(currency, gasPriceWei, ethers.constants.MaxUint256.toString())
+                return this.approve(currency, ethers.constants.MaxUint256.toString(), gasPriceWei)
             }
         }
     }
 
-    async checkNeedZeroReset (contract: ethers.Contract): Promise<boolean> {
+    private async checkNeedZeroReset (contract: ethers.Contract): Promise<boolean> {
         const unsignedTx = await contract.populateTransaction.approve(
             this.walletAddress,
             ethers.constants.MaxUint256,
@@ -439,30 +408,42 @@ export class Orion {
         }
     }
 
-    async getAllowanceERC20( currency: string, toAddress?: string ): Promise<BigNumber> {
-        const decimals = this.blockchainInfo.assetToDecimals[currency]
-        const currentTokenContract = this.tokensContracts[currency]
+    async getAllowance( currency: string, toAddress?: string ): Promise<BigNumber> {
+        try {
+            const decimals = this.blockchainInfo.assetToDecimals[currency]
+            const currentTokenContract = this.tokensContracts[currency]
 
-        if(!decimals || !currentTokenContract) throw new Error('Currency is invaild!')
+            if(!decimals || !currentTokenContract) throw new Error('Currency is invaild!')
 
-        if (!toAddress) {
-            toAddress = this.blockchainInfo.exchangeContractAddress;
+            if (!toAddress) {
+                toAddress = this.blockchainInfo.exchangeContractAddress;
+            }
+            const unit: ethers.BigNumber = await currentTokenContract.allowance(this.walletAddress, toAddress);
+            return new BigNumber(unit.toString()).dividedBy(10 ** decimals);
+        } catch (error) {
+            return error
         }
-        const unit: ethers.BigNumber = await currentTokenContract.allowance(this.walletAddress, toAddress);
-        return new BigNumber(unit.toString()).dividedBy(10 ** decimals);
     }
 
-    async approve(currency: string, gasPriceWei: string, amountUnit: string): Promise<ethers.providers.TransactionResponse> {
-        const tokenContract = this.tokensContracts[currency]
+    async approve(currency: string, amountUnit: string, gasPriceWei?: string): Promise<ethers.providers.TransactionResponse> {
+        try {
+            await this.checkNetworkTokens()
 
-        const toAddress = this.blockchainInfo.exchangeContractAddress;
+            const gasPriceWeiLocal = gasPriceWei ? gasPriceWei : await this.chain.getGasPriceFromOrionBlockchain()
 
-        return this.approveERC20({
-            amountUnit,
-            gasPriceWei,
-            toAddress,
-            tokenContract,
-        });
+            const tokenContract = this.tokensContracts[currency]
+
+            const toAddress = this.blockchainInfo.exchangeContractAddress;
+
+            return this.approveERC20({
+                amountUnit,
+                gasPriceWei: gasPriceWeiLocal,
+                toAddress,
+                tokenContract,
+            });
+        } catch (error) {
+            return error
+        }
     }
 
     private async approveERC20({amountUnit, gasPriceWei, toAddress, tokenContract}: {
@@ -480,12 +461,12 @@ export class Orion {
         )
     }
 
-    async getTokenBalance (token: string): Promise<Array<[]>> {
+    async getTokenBalance (token: string): Promise<string[]> {
         const balance = await this.tokensContracts[token].balanceOf(this.walletAddress)
         return [token, balance.toString()]
     }
 
-    async getNetworkBalance(): Promise<BigNumber> {
+    async getNetworkBalance (): Promise<BigNumber> {
         const wei: ethers.BigNumber = await this.chain.provider.getBalance(this.walletAddress);
         return new BigNumber(ethers.utils.formatEther(wei));
     }
@@ -499,7 +480,7 @@ export class Orion {
                     })
                     .catch(error => error)
             } else {
-                const promises: Array<Promise<string[][]>> = []
+                const promises: Array<Promise<string[]>> = []
 
                 try {
                     let tokens = this.getContractTokens()
@@ -516,7 +497,7 @@ export class Orion {
                     Promise.all(promises).then((values) => {
                         const result: Dictionary<string> = {}
 
-                        values.forEach((el: string[][]) => {
+                        values.forEach((el: string[]) => {
                             const name = el[0].toString()
                             const value = el[1].toString()
                             result[name] = value
@@ -533,9 +514,9 @@ export class Orion {
     async getContractBalance(tokenSymbol?: string): Promise<Dictionary<BalanceContract>> {
         const token = tokenSymbol ? tokenSymbol.toUpperCase() : ''
 
-        if (token && !this.getContractTokens().includes(token)) throw new Error('Invalid token')
-
         try {
+            if (token && !this.getContractTokens().includes(token)) throw new Error('Invalid token')
+
             const result: Dictionary<BalanceContract> = {}
 
             const tokenAddresses = token
@@ -558,7 +539,7 @@ export class Orion {
         }
     }
 
-    async checkReservedBalance(asset = ''): Promise<Dictionary<string>> {
+    private async checkReservedBalance(asset = ''): Promise<Dictionary<string>> {
         try {
             const path = `/address/balance/reserved/${asset}?address=${this.walletAddress}`
             const { data } = await this.chain.api.aggregator.get(path)
@@ -568,24 +549,24 @@ export class Orion {
         }
     }
 
-    private parseContractBalance(token: string, total: BigNumber, locked: string | number): BalanceContract {
-        const totalBignumber = new BigNumber(total.toString())
-        const lockedBignumber = new BigNumber(this.numberToUnit(token, new BigNumber(locked)))
+    private parseContractBalance(token: string, totalWei: BigNumber, locked: string | number): BalanceContract {
+        const totalBignumberWei = new BigNumber(totalWei.toString())
+        const lockedBignumberWei = new BigNumber(this.numberToUnit(token, new BigNumber(locked)))
 
-        const availableBignumber = totalBignumber.minus(lockedBignumber)
+        const availableBignumberWei = totalBignumberWei.minus(lockedBignumberWei)
 
         const balanceSummary = {
             total: {
-                bignumber: totalBignumber,
-                decimal: Number(this.unitToNumber(token, totalBignumber).toString())
+                bignumber: this.unitToNumber(token, totalBignumberWei),
+                decimal: Number(this.unitToNumber(token, totalBignumberWei).toString())
             },
             locked: {
-                bignumber: lockedBignumber,
+                bignumber: this.unitToNumber(token, lockedBignumberWei),
                 decimal: Number(locked)
             },
             available: {
-                bignumber: availableBignumber,
-                decimal: Number(this.unitToNumber(token, availableBignumber).toString())
+                bignumber: this.unitToNumber(token, availableBignumberWei),
+                decimal: Number(this.unitToNumber(token, availableBignumberWei).toString())
             }
         }
 
