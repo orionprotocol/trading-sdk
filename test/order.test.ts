@@ -9,6 +9,8 @@ import { ORDER_STATUSES, NETWORK } from '../src/utils/Constants'
 import dotenv from 'dotenv';
 dotenv.config()
 
+jest.setTimeout(30000)
+
 const { PRIVATE_KEY } = process.env
 
 describe('Send order', () => {
