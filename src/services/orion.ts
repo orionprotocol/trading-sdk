@@ -137,6 +137,16 @@ export class Orion {
         if (!networkAssetBalance.gt(0)) throw new Error('A non-zero balance of network tokens is required!')
     }
 
+    async checkBalanceForOrder (order: SignOrderModel): Promise<void> {
+        const asset = order.side === 'buy' ? order.toCurrency.toUpperCase() : order.fromCurrency.toUpperCase()
+        const amount = order.side === 'buy' ? order.amount.multipliedBy(order.price) : order.amount
+        const balance = await this.getContractBalance(asset)
+
+        if (balance[asset].available.bignumber.lt(amount)) {
+            throw new Error(`The available contract balance (${balance[asset].available.bignumber}) is less than the order amount (${amount})!`)
+        }
+    }
+
     private async validateOrder(order: BlockchainOrder): Promise<boolean> {
         return this.exchangeContract.validateOrder(order);
     }
@@ -239,6 +249,10 @@ export class Orion {
             const matcherFeeAsset: string = this.getTokenAddress(FEE_CURRENCY);
 
             if (totalFee.isZero()) throw new Error('Zero fee');
+
+            await this.checkNetworkTokens()
+
+            await this.checkBalanceForOrder(params)
 
             const order: BlockchainOrder = {
                 id: '',

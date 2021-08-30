@@ -208,7 +208,7 @@ Fill environment variables. It's necessary for order testing.
 ```sh
 PRIVATE_KEY= # your private key
 ```
-**Also network tokens are required to pay for transactions, as well as tokens for deposit / withdrawal / exchange.**
+**Also network tokens are required to pay for transactions, as well as tokens for deposit / withdrawal / exchange. (10 ORN in test cases)**
 
 Run tests
 

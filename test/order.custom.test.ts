@@ -9,6 +9,8 @@ import { ORDER_STATUSES, NETWORK } from '../src/utils/Constants'
 import dotenv from 'dotenv';
 dotenv.config()
 
+jest.setTimeout(30000)
+
 const { PRIVATE_KEY } = process.env
 
 describe('Send order with known chain prices', () => {
@@ -69,5 +71,22 @@ describe('Send order with known chain prices', () => {
     it('Check order status', async () => {
         const order = await chain.getOrderById(sentOrderResponse.orderId)
         expect(ORDER_STATUSES).toContain(order.status)
+    })
+
+    it('Send order with empty token balance', async () => {
+        // Empty balance for DAI token required
+
+        order = {
+            fromCurrency: 'DAI',
+            toCurrency: 'USDT',
+            side: 'sell',
+            price: 2000,
+            amount: 100,
+            priceDeviation: 1,
+            needWithdraw: false
+        }
+
+        const response = await orion.signOrder(order)
+        expect(response instanceof Error).toBeTruthy()
     })
 })
