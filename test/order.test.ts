@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import 'jest-extended'
 import { Chain, Orion } from '../src/index'
 import { SignOrderModelRaw, BlockchainOrder } from '../src/utils/Models'

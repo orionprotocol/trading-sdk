@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import 'jest-extended'
 import { Chain, Orion } from '../src/index'
 import { SignOrderModelRaw, BlockchainOrder } from '../src/utils/Models'
@@ -29,6 +33,10 @@ describe('Send order with known chain prices', () => {
     })
 
     it('Sign order with known ornPrice and gasPrice', async () => {
+        // Get current price for network asset
+        const prices = await chain.getPricesFromBlockchain()
+        const networkAssetPrice = prices[chain.blockchainInfo.baseCurrencyName].toString()
+
         order = {
             fromCurrency: 'ORN',
             toCurrency: 'DAI',
@@ -38,7 +46,7 @@ describe('Send order with known chain prices', () => {
             priceDeviation: 1,
             needWithdraw: false,
             chainPrices: {
-                networkAsset: 57,
+                networkAsset: networkAssetPrice,
                 baseAsset: 1,
                 gasWei: '10000000000'
             }

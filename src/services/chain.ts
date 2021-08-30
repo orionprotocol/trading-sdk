@@ -40,13 +40,13 @@ export class Chain {
         return this.blockchainInfo.assetToAddress[token]
     }
 
-    getBaseCurrnecy (chainId: number): string {
+    getBaseCurrency (chainId: number): string {
         return ETH_CHAINS_ID.includes(chainId) ? 'ETH' : 'BNB';
     }
 
     async getBlockchainInfo(): Promise<BlockchainInfo> {
         const { data } = await this.api.blockchain.get('/info')
-        data.baseCurrencyName = this.getBaseCurrnecy(this.network.CHAIN_ID)
+        data.baseCurrencyName = this.getBaseCurrency(this.network.CHAIN_ID)
         return data;
     }
 

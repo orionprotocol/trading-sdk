@@ -1,7 +1,6 @@
 import 'jest-extended'
 import { Chain, Orion } from '../src/index'
 import { NETWORK } from '../src/utils/Constants'
-import { ethers } from 'ethers';
 import dotenv from 'dotenv';
 dotenv.config()
 
@@ -9,6 +8,7 @@ jest.setTimeout(40000)
 
 const { PRIVATE_KEY } = process.env
 
+// For this test, network tokens are required to pay for transactions, as well as tokens for deposit / withdrawal / approve.
 describe('Deposit and withdraw', () => {
     let chain: Chain
     let orion: Orion
@@ -25,16 +25,6 @@ describe('Deposit and withdraw', () => {
     it('Create orion instance', async () => {
         orion = new Orion(chain)
         expect(orion).toHaveProperty('chain')
-    })
-
-    it('Get allowance', async() => {
-        const allowance = await orion.getAllowance('ORN')
-        expect(allowance).toBeTruthy()
-    })
-
-    it('Call approve', async() => {
-        const approve = await orion.approve('ORN', ethers.constants.MaxUint256.toString())
-        expect(approve.nonce).toBeTruthy()
     })
 
     it('Deposit token', async() => {
