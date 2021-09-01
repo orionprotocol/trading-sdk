@@ -5,6 +5,7 @@ import { BlockchainInfo, TradeOrder, NetworkEntity } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
 import { NETWORK } from '../utils/Constants'
 import { Api } from './api'
+import axios from 'axios'
 
 const ETH_CHAINS_ID = [1,3]
 export class Chain {
@@ -12,6 +13,7 @@ export class Chain {
     public readonly signer: ethers.Wallet
     public readonly api: Api
     public readonly network: NetworkEntity
+    public readonly isEthereum: boolean;
 
     private _blockchainInfo!: BlockchainInfo
     private _tokens!: Tokens
@@ -21,6 +23,7 @@ export class Chain {
         this.api = new Api(network.ORION)
         this.signer = new ethers.Wallet(privateKey).connect(this.provider)
         this.network = network
+        this.isEthereum = ETH_CHAINS_ID.includes(network.CHAIN_ID)
     }
 
     public async init(): Promise<void> {
@@ -67,9 +70,39 @@ export class Chain {
     }
 
     /**
+     * @return gasPrice current gas price in wei
+     */
+    async getGasPrice(): Promise<string> {
+        if (this.isEthereum) {
+            return this.getGasPriceEthereum();
+        }
+        return this.getGasPriceBinance();
+    }
+
+    /**
+     * @return gasPrice current gas price in wei
+     */
+    private async getGasPriceEthereum(): Promise<string> {
+        return this.getGasPriceFromOrionBlockchain();
+    }
+
+    /**
+     * @return gasPrice current gas price in wei
+     */
+    private async getGasPriceBinance(): Promise<string> {
+        const { data }: { data: { jsonrpc: string, id: number, result: string} } = await axios.post(this.network.RPC, {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'eth_gasPrice',
+            params: []
+        })
+        return new BigNumber(data.result).toString()
+    }
+
+    /**
      * @return gasPrice current gas price in wei for order fee calculation (updated on backend once a minute)
      */
-    async getGasPriceFromOrionBlockchain(): Promise<string> {
+    private async getGasPriceFromOrionBlockchain(): Promise<string> {
         const {data}: {data: string} = await this.api.blockchain.get('/gasPrice');
         return data
     }

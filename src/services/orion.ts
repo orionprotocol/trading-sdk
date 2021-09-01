@@ -234,7 +234,7 @@ export class Orion {
                 if (!blockchainPrices[this.blockchainInfo.baseCurrencyName].gt(0)) throw new Error('Invalid chainPrices networkAsset')
                 if (!blockchainPrices[params.fromCurrency].gt(0)) throw new Error('Invalid chainPrices baseAsset')
             } else {
-                gasPriceWei = await this.chain.getGasPriceFromOrionBlockchain();
+                gasPriceWei = await this.chain.getGasPrice();
                 blockchainPrices = await this.chain.getPricesFromBlockchain()
             }
 
@@ -356,7 +356,7 @@ export class Orion {
 
             if (walletBalance.lt(bignumberAmount)) throw new Error(`The wallet balance (${walletBalance}) is lower than the deposit amount (${amount})!`)
 
-            const gasPriceWeiLocal = gasPriceWei ? gasPriceWei : await this.chain.getGasPriceFromOrionBlockchain()
+            const gasPriceWeiLocal = gasPriceWei ? gasPriceWei : await this.chain.getGasPrice()
 
             if (this.isNetworkAsset(currency)) {
                 return this.depositETH(amountUnit, new BigNumber(gasPriceWeiLocal))
@@ -375,7 +375,7 @@ export class Orion {
 
             const amountUnit = this.numberToUnit(currency, new BigNumber(amount));
             const balance = await this.getContractBalance(currency)
-            const gasPriceWeiLocal = gasPriceWei ? gasPriceWei : await this.chain.getGasPriceFromOrionBlockchain()
+            const gasPriceWeiLocal = gasPriceWei ? gasPriceWei : await this.chain.getGasPrice()
 
             if (balance[currency].available.bignumber.lt(new BigNumber(amount))) throw new Error(`The available contract balance (${balance[currency].available.bignumber}) is less than the withdrawal amount (${new BigNumber(amount)})! `)
 
@@ -443,7 +443,7 @@ export class Orion {
         try {
             await this.checkNetworkTokens()
 
-            const gasPriceWeiLocal = gasPriceWei ? gasPriceWei : await this.chain.getGasPriceFromOrionBlockchain()
+            const gasPriceWeiLocal = gasPriceWei ? gasPriceWei : await this.chain.getGasPrice()
 
             const tokenContract = this.tokensContracts[currency]
 
