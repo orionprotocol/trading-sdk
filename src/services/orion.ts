@@ -137,13 +137,23 @@ export class Orion {
         if (!networkAssetBalance.gt(0)) throw new Error('A non-zero balance of network tokens is required!')
     }
 
-    async checkBalanceForOrder (order: SignOrderModel): Promise<void> {
+    async checkBalanceForOrder (order: SignOrderModel, feeAsset: string, feeAmount: BigNumber): Promise<void> {
         const asset = order.side === 'buy' ? order.toCurrency.toUpperCase() : order.fromCurrency.toUpperCase()
         const amount = order.side === 'buy' ? order.amount.multipliedBy(order.price) : order.amount
-        const balance = await this.getContractBalance(asset)
+        const balance = await this.getContractBalance()
 
-        if (balance[asset].available.bignumber.lt(amount)) {
-            throw new Error(`The available contract balance (${balance[asset].available.bignumber}) is less than the order amount (${amount})!`)
+        if (asset === feeAsset) {
+            if (balance[asset].available.lt(amount.plus(feeAmount))) {
+                throw new Error(`The available contract balance (${balance[asset].available} ${asset}) is less than the order amount+fee (${amount.plus(feeAmount)} ${asset})!`)
+            }
+        } else {
+            if (balance[asset].available.lt(amount)) {
+                throw new Error(`The available contract balance (${balance[asset].available} ${asset}) is less than the order amount (${amount} ${asset})!`)
+            }
+
+            if (balance[feeAsset].available.lt(feeAmount)) {
+                throw new Error(`The available contract balance (${balance[feeAsset].available} ${feeAsset}) is less than the order fee amount (${feeAmount} ${feeAsset})!`)
+            }
         }
     }
 
@@ -252,7 +262,7 @@ export class Orion {
 
             await this.checkNetworkTokens()
 
-            await this.checkBalanceForOrder(params)
+            await this.checkBalanceForOrder(params, FEE_CURRENCY, totalFee)
 
             const order: BlockchainOrder = {
                 id: '',
@@ -377,7 +387,7 @@ export class Orion {
             const balance = await this.getContractBalance(currency)
             const gasPriceWeiLocal = gasPriceWei ? gasPriceWei : await this.chain.getGasPrice()
 
-            if (balance[currency].available.bignumber.lt(new BigNumber(amount))) throw new Error(`The available contract balance (${balance[currency].available.bignumber}) is less than the withdrawal amount (${new BigNumber(amount)})! `)
+            if (balance[currency].available.lt(new BigNumber(amount))) throw new Error(`The available contract balance (${balance[currency].available}) is less than the withdrawal amount (${new BigNumber(amount)})! `)
 
             return this.sendTransaction(
                 await this.exchangeContract.populateTransaction.withdraw(this.getTokenAddress(currency), amountUnit),
@@ -492,7 +502,7 @@ export class Orion {
                     .then((balance) => {
                         resolve({ [this.blockchainInfo.baseCurrencyName]: balance.toString() })
                     })
-                    .catch(error => error)
+                    .catch(error => reject(error))
             } else {
                 const promises: Array<Promise<string[]>> = []
 
@@ -534,10 +544,10 @@ export class Orion {
             const result: Dictionary<BalanceContract> = {}
 
             const tokenAddresses = token
-                ? this.getContractTokenAddresses().filter(el => el === this.getTokenAddress(token))
+                ? [this.getTokenAddress(token)]
                 : this.getContractTokenAddresses()
 
-            const tokens = token ? this.getContractTokens().filter(el => el === token) : this.getContractTokens()
+            const tokens = token ? [token] : this.getContractTokens()
 
             const total: BigNumber[] = await this.exchangeContract.getBalances(tokenAddresses, this.walletAddress)
             const locked = await this.checkReservedBalance()
@@ -554,13 +564,9 @@ export class Orion {
     }
 
     private async checkReservedBalance(asset = ''): Promise<Dictionary<string>> {
-        try {
-            const path = `/address/balance/reserved/${asset}?address=${this.walletAddress}`
-            const { data } = await this.chain.api.aggregator.get(path)
-            return data
-        } catch (error) {
-            return error
-        }
+        const path = `/address/balance/reserved/${asset}?address=${this.walletAddress}`
+        const { data } = await this.chain.api.aggregator.get(path)
+        return data
     }
 
     private parseContractBalance(token: string, totalWei: BigNumber, locked: string | number): BalanceContract {
@@ -570,18 +576,9 @@ export class Orion {
         const availableBignumberWei = totalBignumberWei.minus(lockedBignumberWei)
 
         const balanceSummary = {
-            total: {
-                bignumber: this.unitToNumber(token, totalBignumberWei),
-                decimal: Number(this.unitToNumber(token, totalBignumberWei).toString())
-            },
-            locked: {
-                bignumber: this.unitToNumber(token, lockedBignumberWei),
-                decimal: Number(locked)
-            },
-            available: {
-                bignumber: this.unitToNumber(token, availableBignumberWei),
-                decimal: Number(this.unitToNumber(token, availableBignumberWei).toString())
-            }
+            total: this.unitToNumber(token, totalBignumberWei),
+            locked: this.unitToNumber(token, lockedBignumberWei),
+            available: this.unitToNumber(token, availableBignumberWei)
         }
 
         return balanceSummary

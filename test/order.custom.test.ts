@@ -44,7 +44,7 @@ describe('Send order with known chain prices', () => {
             toCurrency: 'DAI',
             side: 'sell',
             price: 20000,
-            amount: 100,
+            amount: 10,
             priceDeviation: 1,
             needWithdraw: false,
             chainPrices: {

@@ -212,17 +212,8 @@ export interface NetworkEntity {
 }
 
 export interface BalanceContract {
-    total: {
-        bignumber: BigNumber,
-        decimal: number
-    },
-    locked: {
-        bignumber: BigNumber,
-        decimal: number
-    },
-    available: {
-        bignumber: BigNumber,
-        decimal: number
-    }
+    total: BigNumber,
+    locked: BigNumber,
+    available: BigNumber
 }
 
