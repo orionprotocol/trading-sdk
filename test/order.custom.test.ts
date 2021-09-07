@@ -44,7 +44,7 @@ describe('Send order with known chain prices', () => {
             toCurrency: 'DAI',
             side: 'sell',
             price: 20000,
-            amount: 100,
+            amount: 10,
             priceDeviation: 1,
             needWithdraw: false,
             chainPrices: {
@@ -86,7 +86,10 @@ describe('Send order with known chain prices', () => {
             needWithdraw: false
         }
 
-        const response = await orion.signOrder(order)
-        expect(response instanceof Error).toBeTruthy()
+        try {
+            await orion.signOrder(order)
+        } catch (error) {
+            expect(error instanceof Error).toBeTruthy();
+        }
     })
 })

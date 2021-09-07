@@ -1,7 +1,6 @@
 import { ethers } from 'ethers'
 import BigNumber from 'bignumber.js'
-import { parseTradeOrder } from '../utils/Helpers'
-import { BlockchainInfo, TradeOrder, NetworkEntity } from '../utils/Models'
+import { BlockchainInfo, NetworkEntity } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
 import { NETWORK } from '../utils/Constants'
 import { getApi } from './api'
@@ -48,25 +47,33 @@ export class Chain {
     }
 
     async getBlockchainInfo(): Promise<BlockchainInfo> {
-        const { data } = await this.api.blockchain.get('/info')
-        data.baseCurrencyName = this.getBaseCurrency(this.network.CHAIN_ID)
-        return data;
+        try {
+            const { data } = await this.api.blockchain.get('/info')
+            data.baseCurrencyName = this.getBaseCurrency(this.network.CHAIN_ID)
+            return data;
+        } catch (error) {
+            return Promise.reject(error)
+        }
     }
 
     /**
      * @return {'ETH' -> 1.23}  currency to price in ORN; for order fee calculation
      */
     async getPricesFromBlockchain(): Promise<Record<string, BigNumber>> {
-        const { data } = await this.api.blockchain.get('/prices');
-        const result: Record<string, BigNumber> = {};
+        try {
+            const { data } = await this.api.blockchain.get('/prices');
+            const result: Record<string, BigNumber> = {};
 
-        for (const key in data) {
-            const assetName = this.tokens.addressToName(key);
-            if (assetName) {
-                result[assetName] = new BigNumber(data[key]);
+            for (const key in data) {
+                const assetName = this.tokens.addressToName(key);
+                if (assetName) {
+                    result[assetName] = new BigNumber(data[key]);
+                }
             }
+            return result;
+        } catch (error) {
+            return Promise.reject(error)
         }
-        return result;
     }
 
     /**
@@ -103,7 +110,11 @@ export class Chain {
      * @return gasPrice current gas price in wei for order fee calculation (updated on backend once a minute)
      */
     private async getGasPriceFromOrionBlockchain(): Promise<string> {
-        const {data}: {data: string} = await this.api.blockchain.get('/gasPrice');
-        return data
+        try {
+            const {data}: {data: string} = await this.api.blockchain.get('/gasPrice');
+            return data
+        } catch (error) {
+            return Promise.reject(error)
+        }
     }
 }
