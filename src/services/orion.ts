@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js"
 import {ethers} from "ethers"
 import {signTypedMessage} from 'eth-sig-util'
-import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest, DomainData, BalanceContract} from "../utils/Models"
+import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest, DomainData, BalanceContract, TradeOrder} from "../utils/Models"
 import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat } from '../utils/Helpers'
 import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION, CANCEL_ORDER_TYPES, APPROVE_ERC20_GAS_LIMIT} from '../utils/Constants'
 import exchangeABI from '../abis/Exchange.json'
@@ -138,22 +138,26 @@ export class Orion {
     }
 
     async checkBalanceForOrder (order: SignOrderModel, feeAsset: string, feeAmount: BigNumber): Promise<void> {
-        const asset = order.side === 'buy' ? order.toCurrency.toUpperCase() : order.fromCurrency.toUpperCase()
-        const amount = order.side === 'buy' ? order.amount.multipliedBy(order.price) : order.amount
-        const balance = await this.getContractBalance()
+        try {
+            const asset = order.side === 'buy' ? order.toCurrency.toUpperCase() : order.fromCurrency.toUpperCase()
+            const amount = order.side === 'buy' ? order.amount.multipliedBy(order.price) : order.amount
+            const balance = await this.getContractBalance()
 
-        if (asset === feeAsset) {
-            if (balance[asset].available.lt(amount.plus(feeAmount))) {
-                throw new Error(`The available contract balance (${balance[asset].available} ${asset}) is less than the order amount+fee (${amount.plus(feeAmount)} ${asset})!`)
-            }
-        } else {
-            if (balance[asset].available.lt(amount)) {
-                throw new Error(`The available contract balance (${balance[asset].available} ${asset}) is less than the order amount (${amount} ${asset})!`)
-            }
+            if (asset === feeAsset) {
+                if (balance[asset].available.lt(amount.plus(feeAmount))) {
+                    throw new Error(`The available contract balance (${balance[asset].available} ${asset}) is less than the order amount+fee (${amount.plus(feeAmount)} ${asset})!`)
+                }
+            } else {
+                if (balance[asset].available.lt(amount)) {
+                    throw new Error(`The available contract balance (${balance[asset].available} ${asset}) is less than the order amount (${amount} ${asset})!`)
+                }
 
-            if (balance[feeAsset].available.lt(feeAmount)) {
-                throw new Error(`The available contract balance (${balance[feeAsset].available} ${feeAsset}) is less than the order fee amount (${feeAmount} ${feeAsset})!`)
+                if (balance[feeAsset].available.lt(feeAmount)) {
+                    throw new Error(`The available contract balance (${balance[feeAsset].available} ${feeAsset}) is less than the order fee amount (${feeAmount} ${feeAsset})!`)
+                }
             }
+        } catch (error) {
+            return Promise.reject(error)
         }
     }
 
@@ -184,7 +188,7 @@ export class Orion {
     }
 
     private async _signCancelOrder(cancelOrderRequest: CancelOrderRequest): Promise<string> {
-        const signer = this.chain.signer as any;
+        const signer = this.chain.signer as ethers.Wallet;
 
         if (signer.privateKey) {
 
@@ -289,15 +293,19 @@ export class Orion {
             }
             return order;
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
     private async sendTransaction(unsignedTx: ethers.PopulatedTransaction, gasLimit: number, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionResponse> {
-        if(gasLimit > 0) unsignedTx.gasLimit = ethers.BigNumber.from(gasLimit);
-        unsignedTx.gasPrice = ethers.BigNumber.from(gasPriceWei.toString());
-        const unsignedRequest: ethers.providers.TransactionRequest = await this.chain.signer.populateTransaction(unsignedTx); // NOTE: validate transaction when estimate gas
-        return this.chain.signer.sendTransaction(unsignedRequest);
+        try {
+            if(gasLimit > 0) unsignedTx.gasLimit = ethers.BigNumber.from(gasLimit);
+            unsignedTx.gasPrice = ethers.BigNumber.from(gasPriceWei.toString());
+            const unsignedRequest: ethers.providers.TransactionRequest = await this.chain.signer.populateTransaction(unsignedTx); // NOTE: validate transaction when estimate gas
+            return this.chain.signer.sendTransaction(unsignedRequest);
+        } catch (error) {
+            return Promise.reject(error)
+        }
     }
 
     async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<{orderId: number}> {
@@ -305,7 +313,7 @@ export class Orion {
             const { data } =  await this.chain.api.aggregator.post(isCreateInternalOrder ? '/order/maker' : '/order', order)
             return data
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
@@ -322,12 +330,12 @@ export class Orion {
             });
             return data
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
-    private getCancelationSubject (order: any): CancelOrderRequest {
-        const { id, blockchainOrder }: {id: number, blockchainOrder: BlockchainOrder} = order
+    private getCancelationSubject (order: TradeOrder): CancelOrderRequest {
+        const { id, blockchainOrder } = order
         return {
             id,
             senderAddress: blockchainOrder.senderAddress,
@@ -375,7 +383,7 @@ export class Orion {
                 return this.depositERC20(currency, amountUnit, new BigNumber(gasPriceWeiLocal))
             }
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
@@ -395,27 +403,31 @@ export class Orion {
                 new BigNumber(gasPriceWeiLocal),
             );
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
     private async allowanceHandler (currency: string, amount: string, gasPriceWei: string): Promise<ethers.providers.TransactionResponse | void> {
         if (this.isNetworkAsset(currency)) return
 
-        const bignumberAmount = new BigNumber(amount)
-        const tokenContract = this.tokensContracts[currency]
+        try {
+            const bignumberAmount = new BigNumber(amount)
+            const tokenContract = this.tokensContracts[currency]
 
-        const allowance = await this.getAllowance(currency)
+            const allowance = await this.getAllowance(currency)
 
-        if (allowance.lt(bignumberAmount)) {
-            const needReset = await this.checkNeedZeroReset(tokenContract)
+            if (allowance.lt(bignumberAmount)) {
+                const needReset = await this.checkNeedZeroReset(tokenContract)
 
-            if (needReset) {
-                await this.approve(currency, ethers.constants.Zero.toString(), gasPriceWei)
-                return this.approve(currency, ethers.constants.MaxUint256.toString(), gasPriceWei)
-            } else {
-                return this.approve(currency, ethers.constants.MaxUint256.toString(), gasPriceWei)
+                if (needReset) {
+                    await this.approve(currency, ethers.constants.Zero.toString(), gasPriceWei)
+                    return this.approve(currency, ethers.constants.MaxUint256.toString(), gasPriceWei)
+                } else {
+                    return this.approve(currency, ethers.constants.MaxUint256.toString(), gasPriceWei)
+                }
             }
+        } catch (error) {
+            return Promise.reject(error)
         }
     }
 
@@ -445,7 +457,7 @@ export class Orion {
             const unit: ethers.BigNumber = await currentTokenContract.allowance(this.walletAddress, toAddress);
             return new BigNumber(unit.toString()).dividedBy(10 ** decimals);
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
@@ -466,7 +478,7 @@ export class Orion {
                 tokenContract,
             });
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
@@ -476,23 +488,34 @@ export class Orion {
         toAddress: string,
         tokenContract: ethers.Contract
     }): Promise<ethers.providers.TransactionResponse> {
-
-        const unsignedTx = await tokenContract.populateTransaction.approve(toAddress, amountUnit);
-        return this.sendTransaction(
-            unsignedTx,
-            APPROVE_ERC20_GAS_LIMIT,
-            new BigNumber(gasPriceWei),
-        )
+        try {
+            const unsignedTx = await tokenContract.populateTransaction.approve(toAddress, amountUnit);
+            return this.sendTransaction(
+                unsignedTx,
+                APPROVE_ERC20_GAS_LIMIT,
+                new BigNumber(gasPriceWei),
+            )
+        } catch (error) {
+            return Promise.reject(error)
+        }
     }
 
     async getTokenBalance (token: string): Promise<string[]> {
-        const balance = await this.tokensContracts[token].balanceOf(this.walletAddress)
-        return [token, balance.toString()]
+        try {
+            const balance = await this.tokensContracts[token].balanceOf(this.walletAddress)
+            return [token, balance.toString()]
+        } catch (error) {
+            return Promise.reject(error)
+        }
     }
 
     async getNetworkBalance (): Promise<BigNumber> {
-        const wei: ethers.BigNumber = await this.chain.provider.getBalance(this.walletAddress);
-        return new BigNumber(ethers.utils.formatEther(wei));
+        try {
+            const wei: ethers.BigNumber = await this.chain.provider.getBalance(this.walletAddress);
+            return new BigNumber(ethers.utils.formatEther(wei));
+        } catch (error) {
+            return Promise.reject(error)
+        }
     }
 
     async getWalletBalance (ticker?: string): Promise<Dictionary<string>> {
@@ -559,14 +582,18 @@ export class Orion {
 
             return result
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
     private async checkReservedBalance(asset = ''): Promise<Dictionary<string>> {
-        const path = `/address/balance/reserved/${asset}?address=${this.walletAddress}`
-        const { data } = await this.chain.api.aggregator.get(path)
-        return data
+        try {
+            const path = `/address/balance/reserved/${asset}?address=${this.walletAddress}`
+            const { data } = await this.chain.api.aggregator.get(path)
+            return data
+        } catch (error) {
+            return Promise.reject(error)
+        }
     }
 
     private parseContractBalance(token: string, totalWei: BigNumber, locked: string | number): BalanceContract {

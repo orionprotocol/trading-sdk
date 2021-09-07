@@ -86,7 +86,10 @@ describe('Send order with known chain prices', () => {
             needWithdraw: false
         }
 
-        const response = await orion.signOrder(order)
-        expect(response instanceof Error).toBeTruthy()
+        try {
+            await orion.signOrder(order)
+        } catch (error) {
+            expect(error instanceof Error).toBeTruthy();
+        }
     })
 })

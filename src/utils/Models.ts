@@ -160,7 +160,7 @@ export type OrderStatus =
   | "FAILED";
 
 export interface TradeOrder {
-    blockchainOrder?: Record<string, unknown>,
+    blockchainOrder: BlockchainOrder,
     status: OrderStatus;
     date: number;
     clientOrdId: string;
