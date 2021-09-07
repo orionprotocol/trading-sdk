@@ -4,14 +4,14 @@ import { parseTradeOrder } from '../utils/Helpers'
 import { BlockchainInfo, TradeOrder, NetworkEntity } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
 import { NETWORK } from '../utils/Constants'
-import { Api } from './api'
-import axios from 'axios'
+import { getApi } from './api'
+import axios, { AxiosInstance } from "axios"
 
 const ETH_CHAINS_ID = [1,3]
 export class Chain {
     public readonly provider: ethers.providers.JsonRpcProvider
     public readonly signer: ethers.Wallet
-    public readonly api: Api
+    public readonly api: {[key: string]: AxiosInstance}
     public readonly network: NetworkEntity
     public readonly isEthereum: boolean;
 
@@ -20,7 +20,7 @@ export class Chain {
 
     constructor(privateKey: string, network: NetworkEntity = NETWORK.TEST.BSC) {
         this.provider = new ethers.providers.JsonRpcProvider(network.RPC);
-        this.api = new Api(network.ORION)
+        this.api = getApi(network.ORION)
         this.signer = new ethers.Wallet(privateKey).connect(this.provider)
         this.network = network
         this.isEthereum = ETH_CHAINS_ID.includes(network.CHAIN_ID)
@@ -105,22 +105,5 @@ export class Chain {
     private async getGasPriceFromOrionBlockchain(): Promise<string> {
         const {data}: {data: string} = await this.api.blockchain.get('/gasPrice');
         return data
-    }
-
-    async getTradeHistory(fromCurrency?: string, toCurrency?: string): Promise<TradeOrder[]> {
-        const url = '/orderHistory?address=' + this.signer.address + (fromCurrency ? '&baseAsset=' + fromCurrency : '') + (toCurrency ? '&quoteAsset=' + toCurrency : '');
-        const { data } = await this.api.aggregator.get(url);
-        return data.map(parseTradeOrder);
-    }
-
-    async getOrderById (orderId: number): Promise<any> {
-        const path = `/order?orderId=${orderId}`
-
-        try {
-            const { data } = await this.api.aggregator.get(path)
-            return data
-        } catch (error) {
-            return error
-        }
     }
 }

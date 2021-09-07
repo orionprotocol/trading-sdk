@@ -1,9 +1,11 @@
 import BigNumber from "bignumber.js"
 import {ethers} from "ethers"
 import {signTypedMessage} from 'eth-sig-util'
-import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest, DomainData, BalanceContract} from "../utils/Models"
+import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw,
+    CancelOrderRequest, DomainData, BalanceContract, TradeOrder} from "../utils/Models"
 import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat } from '../utils/Helpers'
-import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION, CANCEL_ORDER_TYPES, APPROVE_ERC20_GAS_LIMIT} from '../utils/Constants'
+import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY,
+    DEFAULT_EXPIRATION, CANCEL_ORDER_TYPES, APPROVE_ERC20_GAS_LIMIT} from '../utils/Constants'
 import exchangeABI from '../abis/Exchange.json'
 import erc20ABI from '../abis/ERC20.json'
 import { Chain } from './chain'
@@ -585,5 +587,22 @@ export class Orion {
         }
 
         return balanceSummary
+    }
+
+    async getTradeHistory(fromCurrency?: string, toCurrency?: string): Promise<TradeOrder[]> {
+        const url = '/orderHistory?address=' + this.signer.address + (fromCurrency ? '&baseAsset=' + fromCurrency : '') + (toCurrency ? '&quoteAsset=' + toCurrency : '');
+        const { data } = await this.api.aggregator.get(url);
+        return data.map(parseTradeOrder);
+    }
+
+    async getOrderById (orderId: number): Promise<any> {
+        const path = `/order?orderId=${orderId}`
+
+        try {
+            const { data } = await this.api.aggregator.get(path)
+            return data
+        } catch (error) {
+            return error
+        }
     }
 }
