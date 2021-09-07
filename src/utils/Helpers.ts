@@ -1,8 +1,8 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
-import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo, TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair} from "./Models";
-import {MATCHER_FEE_PERCENT, SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT} from '../utils/Constants'
-import { Chain as ChainApi } from "../index";
+import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo,
+    TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs } from "./Models";
+import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT} from '../utils/Constants'
 
 export function getPriceWithDeviation(price: BigNumber, side: string, deviation: BigNumber): BigNumber {
     const d = deviation.dividedBy(100)
@@ -18,20 +18,34 @@ export function sumBigNumber(arr: BigNumber[]): BigNumber {
     return result;
 }
 
-export function toOrnPrice(currency: string, nameToPrice: Dictionary<BigNumber>): BigNumber {
-    const price = nameToPrice[currency];
-    if (!price) return new BigNumber(0);
-    return price;
+export function toFeePrice(currency: string, nameToPrice: Dictionary<BigNumber>, feeAsset: string): BigNumber {
+    const price = nameToPrice[currency].dividedBy(nameToPrice[feeAsset]);
+    return price || new BigNumber(0);
 }
 
-export function calculateMatcherFee(fromCurrency: string, amount: BigNumber, nameToPrice: Dictionary<BigNumber>): BigNumber {
-    const feeValue = amount.multipliedBy(MATCHER_FEE_PERCENT);
-    const feeValueInOrn = feeValue.multipliedBy(toOrnPrice(fromCurrency, nameToPrice));
+export function calculateMatcherFee({baseAsset, amount, blockchainPrices, feePercent, feeAsset}: MatcherFeeArgs): BigNumber {
+    const MATCHER_FEE_PERCENT: BigNumber = new BigNumber(feePercent).dividedBy(100);
 
-    return feeValueInOrn;
+    const feeAmount = amount.multipliedBy(MATCHER_FEE_PERCENT);
+    const feeToAssetPrice = feeAmount.multipliedBy(toFeePrice(baseAsset, blockchainPrices, feeAsset));
+
+    return feeToAssetPrice;
 }
 
-export function calculateNetworkFee(api: ChainApi, gasPriceWei: string, nameToPrice: Dictionary<BigNumber>, needWithdraw: boolean, isPool = false): { networkFeeEth: BigNumber, networkFee: BigNumber } {
+export function calculateNetworkFee({
+    networkAsset,
+    feeAsset,
+    gasPriceWei,
+    blockchainPrices,
+    needWithdraw,
+    isPool = false
+}: {
+    networkAsset: string,
+    feeAsset: string,
+    gasPriceWei: string,
+    blockchainPrices: Dictionary<BigNumber>,
+    needWithdraw: boolean,
+    isPool: boolean}): { networkFeeEth: BigNumber, networkFee: BigNumber } {
     if (gasPriceWei === 'N/A') return {networkFeeEth: new BigNumber(0), networkFee: new BigNumber(0)};
 
     const gasPriceEth = new BigNumber(ethers.utils.formatUnits(gasPriceWei, 'ether'));
@@ -49,11 +63,30 @@ export function calculateNetworkFee(api: ChainApi, gasPriceWei: string, nameToPr
     }
     const networkFeeEth = gasPriceEth.multipliedBy(gasLimit);
 
-    const baseCurrencyName = api.blockchainInfo.baseCurrencyName;
-    const price = nameToPrice[baseCurrencyName] ? nameToPrice[baseCurrencyName] : new BigNumber(0);
+    const price = blockchainPrices[feeAsset] && blockchainPrices[networkAsset]
+        ? blockchainPrices[networkAsset].dividedBy(blockchainPrices[feeAsset])
+        : new BigNumber(0);
     const networkFee = networkFeeEth.multipliedBy(price);
 
     return {networkFeeEth, networkFee};
+}
+
+export function getFee ({
+    asset,
+    amount,
+    networkAsset,
+    gasPriceWei,
+    blockchainPrices,
+    feePercent,
+    feeAsset = 'ORN',
+    needWithdraw = false,
+    isPool = false
+}: GetFeeArgs): BigNumber {
+    const matcherFee = calculateMatcherFee({ baseAsset: asset, amount, blockchainPrices, feePercent, feeAsset })
+    const { networkFee } = calculateNetworkFee({ networkAsset, feeAsset, gasPriceWei, blockchainPrices, needWithdraw, isPool })
+
+    const totalFee = matcherFee.plus(networkFee)
+    return totalFee
 }
 
 export function getNumberFormat(info: BlockchainInfo, from: string, to: string): NumberFormat {

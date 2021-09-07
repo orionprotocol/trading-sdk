@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js"
 import {ethers} from "ethers"
 import {signTypedMessage} from 'eth-sig-util'
 import {BlockchainInfo, Dictionary, BlockchainOrder, SignOrderModel, SignOrderModelRaw, CancelOrderRequest, DomainData, BalanceContract} from "../utils/Models"
-import {getPriceWithDeviation, calculateMatcherFee, calculateNetworkFee, getNumberFormat } from '../utils/Helpers'
+import {getPriceWithDeviation, getFee, getNumberFormat } from '../utils/Helpers'
 import {DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, DOMAIN_TYPE, ORDER_TYPES, FEE_CURRENCY, DEFAULT_EXPIRATION, CANCEL_ORDER_TYPES, APPROVE_ERC20_GAS_LIMIT} from '../utils/Constants'
 import exchangeABI from '../abis/Exchange.json'
 import erc20ABI from '../abis/ERC20.json'
@@ -248,9 +248,17 @@ export class Orion {
                 blockchainPrices = await this.chain.getPricesFromBlockchain()
             }
 
-            const matcherFee = calculateMatcherFee(params.fromCurrency, params.amount, blockchainPrices);
-            const {networkFee} = calculateNetworkFee(this.chain, gasPriceWei, blockchainPrices, params.needWithdraw);
-            const totalFee = matcherFee.plus(networkFee)
+            const totalFee = getFee({
+                asset: params.fromCurrency,
+                amount: params.amount,
+                feePercent: '0.2',
+                blockchainPrices: blockchainPrices,
+                networkAsset: this.blockchainInfo.baseCurrencyName,
+                gasPriceWei,
+                needWithdraw: params.needWithdraw,
+                isPool: false,
+                feeAsset: FEE_CURRENCY
+            })
 
             const priceWithDeviation = params.priceDeviation.isZero() ? params.price : getPriceWithDeviation(params.price, params.side, params.priceDeviation);
 
@@ -289,7 +297,7 @@ export class Orion {
             }
             return order;
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
@@ -305,7 +313,7 @@ export class Orion {
             const { data } =  await this.chain.api.aggregator.post(isCreateInternalOrder ? '/order/maker' : '/order', order)
             return data
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
@@ -322,7 +330,7 @@ export class Orion {
             });
             return data
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
@@ -375,7 +383,7 @@ export class Orion {
                 return this.depositERC20(currency, amountUnit, new BigNumber(gasPriceWeiLocal))
             }
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
@@ -395,7 +403,7 @@ export class Orion {
                 new BigNumber(gasPriceWeiLocal),
             );
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
@@ -445,7 +453,7 @@ export class Orion {
             const unit: ethers.BigNumber = await currentTokenContract.allowance(this.walletAddress, toAddress);
             return new BigNumber(unit.toString()).dividedBy(10 ** decimals);
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
@@ -466,7 +474,7 @@ export class Orion {
                 tokenContract,
             });
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 
@@ -559,7 +567,7 @@ export class Orion {
 
             return result
         } catch (error) {
-            return error
+            return Promise.reject(error)
         }
     }
 

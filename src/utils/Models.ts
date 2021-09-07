@@ -15,33 +15,33 @@ export interface BlockchainInfo {
     assetToIcons: Dictionary<string>;
 }
 export interface SignOrderModel {
-    fromCurrency: string,
-    toCurrency: string,
-    side: string,
-    price: BigNumber,
-    amount: BigNumber,
-    priceDeviation: BigNumber,
-    numberFormat: NumberFormat,
-    needWithdraw: boolean,
+    fromCurrency: string;
+    toCurrency: string;
+    side: string;
+    price: BigNumber;
+    amount: BigNumber;
+    priceDeviation: BigNumber;
+    numberFormat: NumberFormat;
+    needWithdraw: boolean;
     chainPrices?: {     // in case if user already knows chain prices
-        gasWei: string,
-        baseAsset: string | number,
-        networkAsset:  string | number
+        gasWei: string;
+        baseAsset: string | number;
+        networkAsset:  string | number;
     }
 }
 
 export interface SignOrderModelRaw {
-    fromCurrency: string,
-    toCurrency: string,
-    side: string,
-    price: number,
-    amount: number,
-    priceDeviation: number,
-    needWithdraw: boolean,
+    fromCurrency: string;
+    toCurrency: string;
+    side: string;
+    price: number;
+    amount: number;
+    priceDeviation: number;
+    needWithdraw: boolean;
     chainPrices?: {  // in case if user already knows chain prices
-        gasWei: string,
-        baseAsset: string | number,
-        networkAsset: string | number
+        gasWei: string;
+        baseAsset: string | number;
+        networkAsset: string | number;
     }
 }
 
@@ -117,7 +117,7 @@ export interface Transaction {
     status: 'Pending' | 'Done' | 'Bridge' | 'Approving' | 'Cancelled';
     transactionHash: string;
     user: string;
-    chainId?: number,
+    chainId?: number;
     bridgeOrderId?: string;
     bridgeDepositAddress?: string;
     nativeWithdrawAddress?: string;
@@ -206,14 +206,34 @@ export interface Pair {
 }
 
 export interface NetworkEntity {
-    RPC: string,
-    ORION: string,
-    CHAIN_ID: number
+    RPC: string;
+    ORION: string;
+    CHAIN_ID: number;
 }
 
 export interface BalanceContract {
-    total: BigNumber,
-    locked: BigNumber,
-    available: BigNumber
+    total: BigNumber;
+    locked: BigNumber;
+    available: BigNumber;
+}
+
+export interface GetFeeArgs {
+    asset: string;
+    amount: BigNumber;
+    networkAsset: string;
+    gasPriceWei: string;
+    blockchainPrices: Dictionary<BigNumber>;
+    needWithdraw: boolean;
+    isPool: boolean;
+    feePercent: string;
+    feeAsset: string;
+}
+
+export interface MatcherFeeArgs {
+    baseAsset: string;
+    amount: BigNumber;
+    blockchainPrices: Dictionary<BigNumber>;
+    feePercent: string;
+    feeAsset: string;
 }
 
