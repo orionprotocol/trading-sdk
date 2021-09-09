@@ -15,17 +15,17 @@ export class Api {
 
         this.orionBlockchain = axios.create({
             baseURL: `${network.ORION}/api`,
-            timeout: 1000
+            timeout: 5000
         })
 
         this.orionAggregator = axios.create({
             baseURL: `${network.ORION}/backend/api/v1`,
-            timeout: 1000
+            timeout: 5000
         })
 
         this.binance = axios.create({
             baseURL: network.RPC,
-            timeout: 1000
+            timeout: 5000
         })
     }
 }

@@ -17,6 +17,7 @@ export interface BlockchainInfo {
 export interface SignOrderModel {
     fromCurrency: string,
     toCurrency: string,
+    feeCurrency: string,
     side: string,
     price: BigNumber,
     amount: BigNumber,
@@ -26,13 +27,15 @@ export interface SignOrderModel {
     chainPrices?: {     // in case if user already knows chain prices
         gasWei: string,
         baseAsset: string | number,
-        networkAsset:  string | number
+        networkAsset:  string | number,
+        feeAsset: string | number
     }
 }
 
 export interface SignOrderModelRaw {
     fromCurrency: string,
     toCurrency: string,
+    feeCurrency: string,
     side: string,
     price: number,
     amount: number,
@@ -41,7 +44,8 @@ export interface SignOrderModelRaw {
     chainPrices?: {  // in case if user already knows chain prices
         gasWei: string,
         baseAsset: string | number,
-        networkAsset: string | number
+        networkAsset: string | number,
+        feeAsset: string | number,
     }
 }
 

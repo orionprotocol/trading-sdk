@@ -1,5 +1,5 @@
 import 'jest-extended'
-import { Chain, Orion } from '../src/index'
+import { Chain, Exchange } from '../src/index'
 import { NETWORK } from '../src/utils/Constants'
 import dotenv from 'dotenv';
 dotenv.config()
@@ -8,7 +8,7 @@ const { PRIVATE_KEY } = process.env
 
 describe('Get balances', () => {
     let chain: Chain
-    let orion: Orion
+    let exchange: Exchange
 
     if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY is required for this test!')
 
@@ -19,30 +19,30 @@ describe('Get balances', () => {
         expect(chain.signer).toHaveProperty('address')
     })
 
-    it('Create orion instance', async () => {
-        orion = new Orion(chain)
-        expect(orion).toHaveProperty('chain')
+    it('Create exchange instance', async () => {
+        exchange = new Exchange(chain)
+        expect(exchange).toHaveProperty('chain')
     })
 
     it('Check wallet balance summary', async() => {
-        const balance = await orion.getWalletBalance()
+        const balance = await chain.getWalletBalance()
         expect(Object.keys(balance).length).toBeTruthy()
     })
 
     it('Check wallet balance by ticker', async() => {
-        const balance = await orion.getWalletBalance('ORN')
+        const balance = await chain.getWalletBalance('ORN')
         expect(Object.keys(balance).length).toBeTruthy()
     })
 
     it('Check contract balance summary', async () => {
-        const balance = await orion.getContractBalance()
+        const balance = await exchange.getContractBalance()
         const firstKey = Object.keys(balance)[0]
         expect(Object.keys(balance)[0]).toBeTruthy()
         expect(balance[firstKey].total && balance[firstKey].locked && balance[firstKey].available).toBeTruthy()
     })
 
     it('Check contract balance by ticker', async () => {
-        const balance = await orion.getContractBalance('ORN')
+        const balance = await exchange.getContractBalance('ORN')
         const firstKey = Object.keys(balance)[0]
         expect(Object.keys(balance)[0]).toBeTruthy()
         expect(balance[firstKey].total && balance[firstKey].locked && balance[firstKey].available).toBeTruthy()

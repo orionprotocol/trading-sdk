@@ -5,7 +5,6 @@ import { Tokens } from '../utils/Tokens'
 import { NETWORK, NETWORK_TOKEN_ADDRESS, APPROVE_ERC20_GAS_LIMIT } from '../utils/Constants'
 import { handleResponse } from '../utils/Helpers'
 import { Api } from './api'
-import { Exchange } from './exchange'
 import erc20ABI from '../abis/ERC20.json'
 
 export class Chain {
@@ -13,7 +12,6 @@ export class Chain {
     public readonly signer: ethers.Wallet
     public readonly api: Api
     public readonly network: NetworkEntity
-    public exchange!: Exchange
 
     public tokensContracts!: Dictionary<ethers.Contract>;
     private _blockchainInfo!: BlockchainInfo
@@ -33,7 +31,6 @@ export class Chain {
         this._blockchainInfo = info
         this._tokens = new Tokens(this._blockchainInfo.assetToAddress);
         this._isEthereum = this._blockchainInfo.baseCurrencyName === 'ETH'
-        this.exchange = new Exchange(this)
 
         this.tokensContracts = {};
         const tokens = this.blockchainInfo.assetToAddress;

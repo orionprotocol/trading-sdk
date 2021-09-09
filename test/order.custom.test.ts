@@ -3,7 +3,7 @@
  */
 
 import 'jest-extended'
-import { Chain, Orion } from '../src/index'
+import { Chain, OrionAggregator } from '../src/index'
 import { SignOrderModelRaw, BlockchainOrder } from '../src/utils/Models'
 import { ORDER_STATUSES, NETWORK } from '../src/utils/Constants'
 import dotenv from 'dotenv';
@@ -15,7 +15,7 @@ const { PRIVATE_KEY } = process.env
 
 describe('Send order with known chain prices', () => {
     let chain: Chain
-    let orion: Orion
+    let orionAggregator: OrionAggregator
     let order: SignOrderModelRaw
     let signedOrder: BlockchainOrder
     let sentOrderResponse: {orderId: number}
@@ -29,19 +29,20 @@ describe('Send order with known chain prices', () => {
         expect(chain.signer).toHaveProperty('address')
     })
 
-    it('Create orion instance', async () => {
-        orion = new Orion(chain)
-        expect(orion).toHaveProperty('chain')
+    it('Create orionAggregator instance', async () => {
+        orionAggregator = new OrionAggregator(chain)
+        expect(orionAggregator).toHaveProperty('chain')
     })
 
-    it('Sign order with known ornPrice and gasPrice', async () => {
+    it('Create and sign order with known ornPrice and gasPrice', async () => {
         // Get current price for network asset
-        const prices = await chain.api.orionBlockchain.getPrices()
+        const prices = await chain.getBlockchainPrices()
         const networkAssetPrice = prices[chain.blockchainInfo.baseCurrencyName].toString()
 
         order = {
             fromCurrency: 'ORN',
             toCurrency: 'DAI',
+            feeCurrency: 'ORN',
             side: 'sell',
             price: 20000,
             amount: 10,
@@ -50,26 +51,27 @@ describe('Send order with known chain prices', () => {
             chainPrices: {
                 networkAsset: networkAssetPrice,
                 baseAsset: 1,
+                feeAsset: 1,
                 gasWei: '10000000000'
             }
         }
 
-        signedOrder = await orion.signOrder(order)
+        signedOrder = await orionAggregator.createOrder(order)
         expect(signedOrder).toHaveProperty('id')
     })
 
     it('Send signed order', async () => {
-        sentOrderResponse = await chain.api.orionAggregator.sendOrder(signedOrder, false)
+        sentOrderResponse = await orionAggregator.sendOrder(signedOrder, false)
         expect(sentOrderResponse.orderId).toBeNumber()
     })
 
     it('Cancel order', async () => {
-        const orderCancelation = await orion.cancelOrder(sentOrderResponse.orderId)
+        const orderCancelation = await orionAggregator.cancelOrder(sentOrderResponse.orderId)
         expect(orderCancelation.orderId).toBeNumber()
     })
 
     it('Check order status', async () => {
-        const order = await chain.getOrderById(sentOrderResponse.orderId)
+        const order = await orionAggregator.getOrderById(sentOrderResponse.orderId)
         expect(ORDER_STATUSES).toContain(order.status)
     })
 
@@ -79,6 +81,7 @@ describe('Send order with known chain prices', () => {
         order = {
             fromCurrency: 'DAI',
             toCurrency: 'USDT',
+            feeCurrency: 'ORN',
             side: 'sell',
             price: 2000,
             amount: 100,
@@ -87,7 +90,7 @@ describe('Send order with known chain prices', () => {
         }
 
         try {
-            await orion.signOrder(order)
+            await orionAggregator.createOrder(order)
         } catch (error) {
             expect(error instanceof Error).toBeTruthy();
         }

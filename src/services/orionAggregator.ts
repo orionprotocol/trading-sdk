@@ -1,22 +1,25 @@
 import BigNumber from "bignumber.js"
 import { BlockchainOrder, SignOrderModel, SignOrderModelRaw, TradeOrder, CancelOrderRequest } from "../utils/Models"
 import { getPriceWithDeviation, getFee, getNumberFormat, numberTo8, handleResponse, parseTradeOrder} from '../utils/Helpers'
-import { FEE_CURRENCY, DEFAULT_EXPIRATION } from '../utils/Constants'
+import { DEFAULT_EXPIRATION } from '../utils/Constants'
 import { hashOrder, signOrder, signCancelOrder } from './crypto'
 import { Chain } from './chain'
+import { Exchange } from './exchange'
 
-export class Orion {
+export class OrionAggregator {
     public readonly chain: Chain;
+    public readonly exchange: Exchange;
 
     constructor(chain: Chain) {
         this.chain = chain
+        this.exchange = new Exchange(chain)
     }
 
     private async checkBalanceForOrder (order: SignOrderModel, feeAsset: string, feeAmount: BigNumber): Promise<void> {
         try {
             const asset = order.side === 'buy' ? order.toCurrency.toUpperCase() : order.fromCurrency.toUpperCase()
             const amount = order.side === 'buy' ? order.amount.multipliedBy(order.price) : order.amount
-            const balance = await this.chain.exchange.getContractBalance()
+            const balance = await this.exchange.getContractBalance()
 
             if (asset === feeAsset) {
                 if (balance[asset].available.lt(amount.plus(feeAmount))) {
@@ -52,6 +55,7 @@ export class Orion {
         try {
             const baseAsset: string = this.chain.getTokenAddress(params.fromCurrency);
             const quoteAsset: string = this.chain.getTokenAddress(params.toCurrency);
+            const matcherFeeAsset: string = this.chain.getTokenAddress(params.feeCurrency);
             const nonce: number = Date.now();
 
             if (!params.price.gt(0)) throw new Error('Invalid price');
@@ -68,11 +72,13 @@ export class Orion {
 
                 blockchainPrices = {
                     [this.chain.blockchainInfo.baseCurrencyName]: new BigNumber(params.chainPrices.networkAsset),
-                    [params.fromCurrency]: new BigNumber(params.chainPrices.baseAsset)
+                    [params.fromCurrency]: new BigNumber(params.chainPrices.baseAsset),
+                    [params.feeCurrency]: new BigNumber(params.chainPrices.feeAsset),
                 }
 
                 if (!blockchainPrices[this.chain.blockchainInfo.baseCurrencyName].gt(0)) throw new Error('Invalid chainPrices networkAsset')
                 if (!blockchainPrices[params.fromCurrency].gt(0)) throw new Error('Invalid chainPrices baseAsset')
+                if (!blockchainPrices[params.feeCurrency].gt(0)) throw new Error('Invalid chainPrices feeAsset')
             } else {
                 gasPriceWei = await this.chain.getGasPrice();
                 blockchainPrices = await this.chain.getBlockchainPrices()
@@ -87,18 +93,17 @@ export class Orion {
                 gasPriceWei,
                 needWithdraw: params.needWithdraw,
                 isPool: false,
-                feeAsset: FEE_CURRENCY
+                feeAsset: params.feeCurrency
             })
 
             const priceWithDeviation = params.priceDeviation.isZero() ? params.price : getPriceWithDeviation(params.price, params.side, params.priceDeviation);
 
             const amountRounded: BigNumber = params.amount.decimalPlaces(params.numberFormat.qtyPrecision, BigNumber.ROUND_DOWN);
             const priceRounded: BigNumber = priceWithDeviation.decimalPlaces(params.numberFormat.pricePrecision, params.side === 'buy' ? BigNumber.ROUND_UP : BigNumber.ROUND_DOWN);
-            const matcherFeeAsset: string = this.chain.getTokenAddress(FEE_CURRENCY);
 
             if (totalFee.isZero()) throw new Error('Zero fee');
 
-            await this.checkBalanceForOrder(params, FEE_CURRENCY, totalFee)
+            await this.checkBalanceForOrder(params, params.feeCurrency, totalFee)
 
             const order: BlockchainOrder = {
                 id: '',
@@ -120,7 +125,7 @@ export class Orion {
 
             order.id = hashOrder(order);
             order.signature = await signOrder(order, this.chain.signer, this.chain.network.CHAIN_ID);
-            if (!(await this.chain.exchange.validateOrder(order))) {
+            if (!(await this.exchange.validateOrder(order))) {
                 throw new Error('Order validation failed');
             }
             return order;

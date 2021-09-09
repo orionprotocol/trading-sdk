@@ -3,7 +3,7 @@
  */
 
 import 'jest-extended'
-import { Chain, Orion } from '../src/index'
+import { Chain, OrionAggregator } from '../src/index'
 import { SignOrderModelRaw, BlockchainOrder } from '../src/utils/Models'
 import { ORDER_STATUSES, NETWORK } from '../src/utils/Constants'
 import dotenv from 'dotenv';
@@ -15,7 +15,7 @@ const { PRIVATE_KEY } = process.env
 
 describe('Send order', () => {
     let chain: Chain
-    let orion: Orion
+    let orionAggregator: OrionAggregator
     let order: SignOrderModelRaw
     let signedOrder: BlockchainOrder
     let sentOrderResponse: {orderId: number}
@@ -30,14 +30,15 @@ describe('Send order', () => {
     })
 
     it('Create orion instance', async () => {
-        orion = new Orion(chain)
-        expect(orion).toHaveProperty('chain')
+        orionAggregator = new OrionAggregator(chain)
+        expect(orionAggregator).toHaveProperty('chain')
     })
 
-    it('Sign order', async () => {
+    it('Create and sign order', async () => {
         order = {
             fromCurrency: 'ORN',
             toCurrency: 'DAI',
+            feeCurrency: 'ORN',
             side: 'sell',
             price: 20000,
             amount: 100,
@@ -45,27 +46,27 @@ describe('Send order', () => {
             needWithdraw: false
         }
 
-        signedOrder = await orion.signOrder(order)
+        signedOrder = await orionAggregator.createOrder(order)
         expect(signedOrder).toHaveProperty('id')
     })
 
     it('Send signed order', async () => {
-        sentOrderResponse = await orion.sendOrder(signedOrder, false)
+        sentOrderResponse = await orionAggregator.sendOrder(signedOrder, false)
         expect(sentOrderResponse.orderId).toBeNumber()
     })
 
     it('Cancel order', async () => {
-        const orderCancelation = await orion.cancelOrder(sentOrderResponse.orderId)
+        const orderCancelation = await orionAggregator.cancelOrder(sentOrderResponse.orderId)
         expect(orderCancelation.orderId).toBeNumber()
     })
 
     it('Check order status', async () => {
-        const order = await chain.getOrderById(sentOrderResponse.orderId)
+        const order = await orionAggregator.getOrderById(sentOrderResponse.orderId)
         expect(ORDER_STATUSES).toContain(order.status)
     })
 
     it('Check order history', async () => {
-        const history = await chain.getTradeHistory()
+        const history = await orionAggregator.getTradeHistory()
         expect(history).toBeArray()
     })
 })

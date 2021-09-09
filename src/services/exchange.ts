@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js"
-import {ethers} from "ethers"
+import { ethers } from "ethers"
 import { DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT } from '../utils/Constants'
 import { BlockchainOrder, Dictionary, BalanceContract } from '../utils/Models'
 import { Chain } from './chain'

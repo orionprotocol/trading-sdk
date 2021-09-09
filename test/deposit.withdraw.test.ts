@@ -1,5 +1,5 @@
 import 'jest-extended'
-import { Chain, Orion } from '../src/index'
+import { Chain, Exchange } from '../src/index'
 import { NETWORK } from '../src/utils/Constants'
 import dotenv from 'dotenv';
 dotenv.config()
@@ -11,7 +11,7 @@ const { PRIVATE_KEY } = process.env
 // For this test, network tokens are required to pay for transactions, as well as tokens for deposit / withdrawal / approve.
 describe('Deposit and withdraw', () => {
     let chain: Chain
-    let orion: Orion
+    let exchange: Exchange
 
     if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY is required for this test!')
 
@@ -22,18 +22,18 @@ describe('Deposit and withdraw', () => {
         expect(chain.signer).toHaveProperty('address')
     })
 
-    it('Create orion instance', async () => {
-        orion = new Orion(chain)
-        expect(orion).toHaveProperty('chain')
+    it('Create exchange instance', async () => {
+        exchange = new Exchange(chain)
+        expect(exchange).toHaveProperty('chain')
     })
 
     it('Deposit token', async() => {
-        const deposit = await orion.deposit('ORN', '10')
+        const deposit = await exchange.deposit('ORN', '10')
         expect(deposit.nonce).toBeTruthy()
     })
 
     it('Withdraw token', async() => {
-        const withdraw = await orion.withdraw('ORN', '10')
+        const withdraw = await exchange.withdraw('ORN', '10')
         expect(withdraw.nonce).toBeTruthy()
     })
 
