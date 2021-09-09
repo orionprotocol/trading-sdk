@@ -36,7 +36,7 @@ describe('Send order with known chain prices', () => {
 
     it('Sign order with known ornPrice and gasPrice', async () => {
         // Get current price for network asset
-        const prices = await chain.getPricesFromBlockchain()
+        const prices = await chain.api.orionBlockchain.getPrices()
         const networkAssetPrice = prices[chain.blockchainInfo.baseCurrencyName].toString()
 
         order = {
@@ -59,7 +59,7 @@ describe('Send order with known chain prices', () => {
     })
 
     it('Send signed order', async () => {
-        sentOrderResponse = await orion.sendOrder(signedOrder, false)
+        sentOrderResponse = await chain.api.orionAggregator.sendOrder(signedOrder, false)
         expect(sentOrderResponse.orderId).toBeNumber()
     })
 

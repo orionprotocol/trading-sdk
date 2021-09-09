@@ -217,3 +217,23 @@ export interface BalanceContract {
     available: BigNumber
 }
 
+export interface GetFeeArgs {
+    asset: string;
+    amount: BigNumber;
+    networkAsset: string;
+    gasPriceWei: string;
+    blockchainPrices: Dictionary<BigNumber>;
+    needWithdraw: boolean;
+    isPool: boolean;
+    feePercent: string;
+    feeAsset: string;
+}
+
+export interface MatcherFeeArgs {
+    baseAsset: string;
+    amount: BigNumber;
+    blockchainPrices: Dictionary<BigNumber>;
+    feePercent: string;
+    feeAsset: string;
+}
+
