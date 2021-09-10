@@ -226,7 +226,7 @@ export interface GetFeeArgs {
     amount: BigNumber;
     networkAsset: string;
     gasPriceWei: string;
-    blockchainPrices: Dictionary<BigNumber>;
+    assetsPrices: Dictionary<BigNumber>;
     needWithdraw: boolean;
     isPool: boolean;
     feePercent: string;
@@ -236,7 +236,7 @@ export interface GetFeeArgs {
 export interface MatcherFeeArgs {
     baseAsset: string;
     amount: BigNumber;
-    blockchainPrices: Dictionary<BigNumber>;
+    assetsPrices: Dictionary<BigNumber>;
     feePercent: string;
     feeAsset: string;
 }

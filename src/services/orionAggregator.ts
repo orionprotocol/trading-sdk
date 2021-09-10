@@ -89,7 +89,7 @@ export class OrionAggregator {
                 asset: params.fromCurrency,
                 amount: params.amount,
                 feePercent: '0.2',
-                blockchainPrices: blockchainPrices,
+                assetsPrices: blockchainPrices,
                 networkAsset: this.chain.blockchainInfo.baseCurrencyName,
                 gasPriceWei,
                 needWithdraw: params.needWithdraw,

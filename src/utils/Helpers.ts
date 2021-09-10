@@ -24,11 +24,11 @@ export function toFeePrice(currency: string, nameToPrice: Dictionary<BigNumber>,
     return price || new BigNumber(0);
 }
 
-export function calculateMatcherFee({baseAsset, amount, blockchainPrices, feePercent, feeAsset}: MatcherFeeArgs): BigNumber {
+export function calculateMatcherFee({baseAsset, amount, assetsPrices, feePercent, feeAsset}: MatcherFeeArgs): BigNumber {
     const MATCHER_FEE_PERCENT: BigNumber = new BigNumber(feePercent).dividedBy(100);
 
     const feeAmount = amount.multipliedBy(MATCHER_FEE_PERCENT);
-    const feeToAssetPrice = feeAmount.multipliedBy(toFeePrice(baseAsset, blockchainPrices, feeAsset));
+    const feeToAssetPrice = feeAmount.multipliedBy(toFeePrice(baseAsset, assetsPrices, feeAsset));
 
     return feeToAssetPrice;
 }
@@ -37,14 +37,14 @@ export function calculateNetworkFee({
     networkAsset,
     feeAsset,
     gasPriceWei,
-    blockchainPrices,
+    assetsPrices,
     needWithdraw,
     isPool = false
 }: {
     networkAsset: string,
     feeAsset: string,
     gasPriceWei: string,
-    blockchainPrices: Dictionary<BigNumber>,
+    assetsPrices: Dictionary<BigNumber>,
     needWithdraw: boolean,
     isPool: boolean}): { networkFeeEth: BigNumber, networkFee: BigNumber } {
     if (gasPriceWei === 'N/A') return {networkFeeEth: new BigNumber(0), networkFee: new BigNumber(0)};
@@ -64,8 +64,8 @@ export function calculateNetworkFee({
     }
     const networkFeeEth = gasPriceEth.multipliedBy(gasLimit);
 
-    const price = blockchainPrices[feeAsset] && blockchainPrices[networkAsset]
-        ? blockchainPrices[networkAsset].dividedBy(blockchainPrices[feeAsset])
+    const price = assetsPrices[feeAsset] && assetsPrices[networkAsset]
+        ? assetsPrices[networkAsset].dividedBy(assetsPrices[feeAsset])
         : new BigNumber(0);
     const networkFee = networkFeeEth.multipliedBy(price);
 
@@ -77,14 +77,17 @@ export function getFee ({
     amount,
     networkAsset,
     gasPriceWei,
-    blockchainPrices,
+    assetsPrices,
     feePercent,
     feeAsset = 'ORN',
     needWithdraw = false,
     isPool = false
 }: GetFeeArgs): BigNumber {
-    const matcherFee = calculateMatcherFee({ baseAsset: asset, amount, blockchainPrices, feePercent, feeAsset })
-    const { networkFee } = calculateNetworkFee({ networkAsset, feeAsset, gasPriceWei, blockchainPrices, needWithdraw, isPool })
+    const matcherFee = calculateMatcherFee({ baseAsset: asset, amount, assetsPrices, feePercent, feeAsset })
+    const { networkFee } = calculateNetworkFee({ networkAsset, feeAsset, gasPriceWei, assetsPrices, needWithdraw, isPool })
+
+    if (!matcherFee.gt(0)) throw new Error('matcherFee couldn`t be 0')
+    if (!networkFee.gt(0)) throw new Error('networkFee couldn`t be 0')
 
     const totalFee = matcherFee.plus(networkFee)
     return totalFee
