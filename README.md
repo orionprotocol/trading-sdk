@@ -12,10 +12,10 @@ npm install @tumakot/orion-trading-sdk
 
 ## Usage
 
-**First step:** Create *Chain* and *Orion* instances
+**First step:** Create base *Chain* instance
 
 ```javascript
-import { Chain, Orion, Constants } from '@tumakot/orion-trading-sdk'
+import { Chain, Constants } from '@tumakot/orion-trading-sdk'
 
 // Set params for Chain constructor
 
@@ -32,11 +32,6 @@ await chain.init() // get blockchain info
 ```
 
 
-**Second step:** Create Orion instance to interact with blockchain
-
-```javascript
-const orion = new Orion(chain)
-```
 Now you ready to go.
 
 ## Examples
@@ -45,9 +40,9 @@ Now you ready to go.
 
 **Get wallet balance:**
 ```javascript
-const walletBalance = await orion.getWalletBalance('ORN') // by ticker
+const walletBalance = await chain.getWalletBalance('ORN') // by ticker
 
-const walletBalanceSummary = await orion.getWalletBalance() // summary
+const walletBalanceSummary = await chain.getWalletBalance() // summary
 
 /*
     Example:
@@ -59,23 +54,27 @@ const walletBalanceSummary = await orion.getWalletBalance() // summary
 
 **Deposit token:**
 ```javascript
-const deposit = await orion.deposit('ORN', '10')
+import { Exchange } from '@tumakot/orion-trading-sdk'
+
+const exchange = new Exchange(chain)
+
+const deposit = await exchange.deposit('ORN', '10')
 // Should return transaction object
 ```
 
 **Get smart contract balance:**
 ```javascript
-const contractBalance = await orion.getContractBalance('ORN') // by ticker
+const contractBalance = await exchange.getContractBalance('ORN') // by ticker
 
-const contractBalanceSummary = await orion.getContractBalance() // summary
+const contractBalanceSummary = await exchange.getContractBalance() // summary
 
 /*
     Example:
      {
         ORN: {
-          total: { bignumber: [BigNumber], decimal: 11100 },
-          locked: { bignumber: [BigNumber], decimal: 944.59062003 },
-          available: { bignumber: [BigNumber], decimal: 10155.40937997 }
+          total: [BigNumber],
+          locked: [BigNumber],
+          available: [BigNumber]
         }
       }
 */
@@ -83,16 +82,24 @@ const contractBalanceSummary = await orion.getContractBalance() // summary
 
 **Withdraw token:**
 ```javascript
-const withdraw = await orion.withdraw('ORN', '10')
+const withdraw = await exchange.withdraw('ORN', '10')
 // Should return transaction object
 ```
+**Work with OrionAggregator:**
 
-**Create, sign and send order to OrionBlockchain:**
+```javascript
+import { OrionAggregator } from '@tumakot/orion-trading-sdk'
+
+orionAggregator = new OrionAggregator(chain)
+```
+
+**Create, sign and send order to OrionAggregator:**
 ```javascript
 // create order
 const order = {
     fromCurrency: 'ORN',
     toCurrency: 'DAI',
+    feeCurrency: 'ORN',
     side: 'sell',
     price: 12,
     amount: 10,
@@ -103,29 +110,30 @@ const order = {
     chainPrices: {
         networkAsset: 57,  // // 'networkAsset' price against ORN
         baseAsset: 1,    // 'fromCurrency' price against ORN
+        feeAsset: 1,    // 'feeCurrency' price against ORN
         gasWei: '10000000000'
     }
 }
 
 // sign order
-const signedOrder = await orion.signOrder(order)
+const signedOrder = await orionAggregator.createOrder(order)
 
 // send order
-const sentOrderResponse = await orion.sendOrder(signedOrder, false)
+const sentOrderResponse = await orionAggregator.sendOrder(signedOrder, false)
 // Should return order id if successful
 ```
 
 **Cancel order:**
 ```javascript
-const orderCancelation = await orion.cancelOrder(sentOrderResponse.orderId)
+const orderCancelation = await orionAggregator.cancelOrder(sentOrderResponse.orderId)
 // Should return order id if cancelation is successful
 ```
 
 **Get orders history/status:**
 ```javascript
-const history = await chain.getTradeHistory()
+const history = await orionAggregator.getTradeHistory()
 
-const order = await chain.getOrderById(sentOrderResponse.orderId)
+const order = await orionAggregator.getOrderById(sentOrderResponse.orderId)
 const status = order.status
 ```
 

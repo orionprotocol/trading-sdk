@@ -40,11 +40,12 @@ export class OrionAggregator {
     }
 
     private formatRawOrder (order: SignOrderModelRaw): SignOrderModel {
-        const formattedOrder: any = { ...order }
-        formattedOrder.numberFormat = getNumberFormat(this.chain.blockchainInfo, formattedOrder.fromCurrency, formattedOrder.toCurrency)
-        formattedOrder.price = new BigNumber(order.price)
-        formattedOrder.amount = new BigNumber(order.amount)
-        formattedOrder.priceDeviation = new BigNumber(order.priceDeviation)
+        const formattedOrder: SignOrderModel = Object.assign(order, {
+            numberFormat: getNumberFormat(this.chain.blockchainInfo, order.fromCurrency, order.toCurrency),
+            price: new BigNumber(order.price),
+            amount: new BigNumber(order.amount),
+            priceDeviation: new BigNumber(order.priceDeviation),
+        })
 
         return formattedOrder
     }
