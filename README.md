@@ -10,6 +10,130 @@
 npm install @tumakot/orion-trading-sdk
 ```
 
+## Methods with parameters per module
+<hr>
+
+### Module *Chain*
+
+***getWalletBalance(ticker)***
+
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*ticker* | string | no | empty ticker field return balance for all tokens
+@return token balance on wallet (uint)
+<hr>
+
+### Module *OrionAggregator*
+
+***createOrder({...params})***
+
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*fromCurrency* | string | yes
+*toCurrency* | string | yes
+*feeCurrency* | string | yes
+*side* | string | yes
+*price* | number | yes
+*amount* | number | yes
+*priceDeviation* | number | yes
+*needWithdraw* | boolean | yes
+*chainPrices* | object | no
+
+*chainPrices* is optional (use it if you already knew prices):
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*gasWei* | string | yes
+*baseAsset* | string/number | yes
+*networkAsset* | string/number | yes
+*feeAsset* | string/number | yes
+
+@return prepared and signed order
+
+***sendOrder(order, isCreateInternalOrder)***
+
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*order* | object | yes | Order object from `createOrder()`
+*isCreateInternalOrder* | boolean | yes
+
+@return *orderId*
+
+***cancelOrder(orderId)***
+
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*orderId* | number | yes |
+
+@return *orderId* of cancelled order
+
+***getOrderById(orderId)***
+
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*orderId* | number | yes |
+
+@return order with requested id
+
+***getTradeHistory()***
+- no params
+
+@return list of orders
+
+### Module *Exchange*
+
+***getContractBalance(ticker)***
+
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*ticker* | string | no | empty ticker field return balance for all tokens
+
+@return token balance on smart contract (bignumber)
+
+***deposit(token, amount)***
+
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*token* | string | yes |
+*amount* | string | yes |
+
+@return transaction object
+
+***withdraw(token, amount)***
+
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*token* | string | yes |
+*amount* | string | yes |
+
+@return transaction object
+
+<hr>
+
+### Module *WS*
+
+***priceFeedAll()***
+- no params
+
+@return subscriber for all tickers price feed
+
+***priceFeedTicker(ticker)***
+
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*ticker* | string | yes |
+
+@return subscriber for specific ticker price feed
+
+***orderBooks(pair)***
+
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*pair* | string | yes |
+
+@return subscriber for orderbooks
+
+<hr>
+
 ## Usage
 
 **First step:** Create base *Chain* instance
