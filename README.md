@@ -40,6 +40,7 @@ Parameter | Type | Required | Description
 *chainPrices* | object | no
 
 *chainPrices* is optional (use it if you already knew prices):
+
 Parameter | Type | Required | Description
 --- | --- | --- | ---
 *gasWei* | string | yes
