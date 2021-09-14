@@ -37,22 +37,23 @@ describe('Send order with known chain prices', () => {
     it('Create and sign order with known ornPrice and gasPrice', async () => {
         // Get current price for network asset
         const prices = await chain.getBlockchainPrices()
+        const gasPriceWei = await chain.getGasPrice()
         const networkAssetPrice = prices[chain.blockchainInfo.baseCurrencyName].toString()
 
         order = {
             fromCurrency: 'ORN',
-            toCurrency: 'DAI',
+            toCurrency: 'UNI',
             feeCurrency: 'ORN',
             side: 'sell',
-            price: 20000,
+            price: 200,
             amount: 10,
             priceDeviation: 1,
             needWithdraw: false,
             chainPrices: {
                 networkAsset: networkAssetPrice,
-                baseAsset: 1,
-                feeAsset: 1,
-                gasWei: '10000000000'
+                baseAsset: prices['ORN'].toString(),
+                feeAsset: prices['ORN'].toString(),
+                gasWei: gasPriceWei
             }
         }
 

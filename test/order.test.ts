@@ -40,7 +40,7 @@ describe('Send order', () => {
             toCurrency: 'DAI',
             feeCurrency: 'ORN',
             side: 'sell',
-            price: 20000,
+            price: 1000,
             amount: 100,
             priceDeviation: 1,
             needWithdraw: false
