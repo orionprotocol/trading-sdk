@@ -62,7 +62,7 @@ export class OrionAggregator {
             if (!params.price.gt(0)) throw new Error('Invalid price');
             if (!params.amount.gt(0)) throw new Error('Invalid amount');
             if (!params.priceDeviation.gte(0)) throw new Error('Invalid priceDeviation');
-            if (this.chain.tokensFee[params.feeCurrency]) throw new Error(`Invalid feeCurrency, should be one of ${Object.keys(this.chain.tokensFee)}`);
+            if (!this.chain.tokensFee[params.feeCurrency]) throw new Error(`Invalid feeCurrency, should be one of ${Object.keys(this.chain.tokensFee)}`);
 
             if (params.numberFormat.qtyPrecision === undefined || params.numberFormat.qtyPrecision === null) throw new Error('Invalid qtyPrecision');
             if (params.numberFormat.pricePrecision === undefined || params.numberFormat.pricePrecision === null) throw new Error('Invalid pricePrecision');
