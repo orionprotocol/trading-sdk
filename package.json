@@ -1,6 +1,6 @@
 {
   "name": "@tumakot/orion-trading-sdk",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "🛠 An SDK for trading with orionprotocol",
   "repository": "https://github.com/orionprotocol/trading-sdk",
   "author": "peiko.tumakov.y@gmail.com",
@@ -40,7 +40,7 @@
     "bignumber.js": "^9.0.1",
     "dotenv": "^10.0.0",
     "eth-sig-util": "^3.0.1",
-    "ethers": "^5.1.6",
+    "ethers": "^5.0.20",
     "reconnecting-websocket": "^4.4.0",
     "ws": "^8.2.0"
   },
