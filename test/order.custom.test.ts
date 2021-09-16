@@ -43,7 +43,7 @@ describe('Send order with known chain prices', () => {
         order = {
             fromCurrency: 'ORN',
             toCurrency: 'UNI',
-            feeCurrency: 'ORN',
+            feeCurrency: 'USDT',
             side: 'sell',
             price: 200,
             amount: 10,
@@ -52,7 +52,7 @@ describe('Send order with known chain prices', () => {
             chainPrices: {
                 networkAsset: networkAssetPrice,
                 baseAsset: prices['ORN'].toString(),
-                feeAsset: prices['ORN'].toString(),
+                feeAsset: prices['USDT'].toString(),
                 gasWei: gasPriceWei
             }
         }
@@ -80,9 +80,9 @@ describe('Send order with known chain prices', () => {
         // Empty balance for DAI token required
 
         order = {
-            fromCurrency: 'DAI',
+            fromCurrency: 'USDC',
             toCurrency: 'USDT',
-            feeCurrency: 'ORN',
+            feeCurrency: 'USDT',
             side: 'sell',
             price: 2000,
             amount: 100,

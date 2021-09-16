@@ -123,7 +123,7 @@ export class OrionAggregator {
                 buySide: params.side === 'buy' ? 1 : 0,
                 isPersonalSign: false,
                 signature: '',
-                needWithdraw: params.needWithdraw || undefined
+                needWithdraw: params.needWithdraw
             }
 
             order.id = hashOrder(order);
