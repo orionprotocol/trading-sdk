@@ -35,12 +35,11 @@
     "tsdx": "^0.14.1"
   },
   "dependencies": {
-    "@ethersproject/abstract-provider": "^5.4.0",
     "axios": "^0.21.1",
     "bignumber.js": "^9.0.1",
     "dotenv": "^10.0.0",
     "eth-sig-util": "^3.0.1",
-    "ethers": "^5.0.20",
+    "ethers": "5.0.20",
     "reconnecting-websocket": "^4.4.0",
     "ws": "^8.2.0"
   },
