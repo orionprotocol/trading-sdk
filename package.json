@@ -35,6 +35,7 @@
     "tsdx": "^0.14.1"
   },
   "dependencies": {
+    "@ethersproject/transactions": "5.0.11",
     "axios": "^0.21.1",
     "bignumber.js": "^9.0.1",
     "dotenv": "^10.0.0",
