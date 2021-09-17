@@ -59,6 +59,7 @@ export class OrionAggregator {
             const matcherFeeAsset: string = this.chain.getTokenAddress(params.feeCurrency);
             const nonce: number = Date.now();
 
+            if (!['buy', 'sell'].includes(params.side)) throw new Error('Invalid side, should be buy | sell');
             if (!params.price.gt(0)) throw new Error('Invalid price');
             if (!params.amount.gt(0)) throw new Error('Invalid amount');
             if (!params.priceDeviation.gte(0)) throw new Error('Invalid priceDeviation');
@@ -121,7 +122,7 @@ export class OrionAggregator {
                 buySide: params.side === 'buy' ? 1 : 0,
                 isPersonalSign: false,
                 signature: '',
-                needWithdraw: params.needWithdraw || undefined
+                needWithdraw: params.needWithdraw
             }
 
             order.id = hashOrder(order);
