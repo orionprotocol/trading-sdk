@@ -45,7 +45,7 @@ describe('Send order with known chain prices', () => {
             toCurrency: 'UNI',
             feeCurrency: 'USDT',
             side: 'sell',
-            price: 200,
+            price: 10,
             amount: 10,
             priceDeviation: 1,
             needWithdraw: false,
@@ -82,7 +82,7 @@ describe('Send order with known chain prices', () => {
         order = {
             fromCurrency: 'USDC',
             toCurrency: 'USDT',
-            feeCurrency: 'USDT',
+            feeCurrency: 'ORN',
             side: 'sell',
             price: 2000,
             amount: 100,
