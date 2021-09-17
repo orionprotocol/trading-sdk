@@ -83,11 +83,24 @@ export function getFee ({
     needWithdraw = false,
     isPool = false
 }: GetFeeArgs): BigNumber {
+    if (!amount || new BigNumber(amount).isNaN() || new BigNumber(amount).lte(0)) throw new Error('amount field is invalid!')
+    if (!feePercent || Number(feePercent) <= 0) throw new Error('feePercent field is invalid!')
+
+    if (!gasPriceWei || new BigNumber(gasPriceWei).isNaN() || new BigNumber(gasPriceWei).lte('0')) {
+        throw new Error('gasPriceWei field is invalid!')
+    }
+    if (!assetsPrices || !Object.entries(assetsPrices).length) {
+        throw new Error('assetsPrices field is invalid!')
+    }
+    if (!assetsPrices[asset]) throw new Error('asset field is invalid!')
+    if (!assetsPrices[feeAsset]) throw new Error('feeAsset field is invalid!')
+    if (!assetsPrices[networkAsset]) throw new Error('networkAsset field is invalid!')
+
     const matcherFee = calculateMatcherFee({ baseAsset: asset, amount, assetsPrices, feePercent, feeAsset })
     const { networkFee } = calculateNetworkFee({ networkAsset, feeAsset, gasPriceWei, assetsPrices, needWithdraw, isPool })
 
-    if (!matcherFee.gt(0)) throw new Error('matcherFee couldn`t be 0')
-    if (!networkFee.gt(0)) throw new Error('networkFee couldn`t be 0')
+    if (!matcherFee.gt(0)) throw new Error('matcherFee couldn`t be 0!')
+    if (!networkFee.gt(0)) throw new Error('networkFee couldn`t be 0!')
 
     const totalFee = matcherFee.plus(networkFee)
     return totalFee
