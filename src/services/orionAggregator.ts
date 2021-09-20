@@ -95,7 +95,8 @@ export class OrionAggregator {
                 gasPriceWei,
                 needWithdraw: params.needWithdraw,
                 isPool: false,
-                feeAsset: params.feeCurrency
+                feeAsset: params.feeCurrency,
+                feeDecimals: this.chain.blockchainInfo.assetToDecimals[params.feeCurrency]
             })
 
             const priceWithDeviation = params.priceDeviation.isZero() ? params.price : getPriceWithDeviation(params.price, params.side, params.priceDeviation);

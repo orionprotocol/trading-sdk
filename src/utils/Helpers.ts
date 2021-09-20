@@ -79,6 +79,7 @@ export function getFee ({
     gasPriceWei,
     assetsPrices,
     feePercent,
+    feeDecimals,
     feeAsset = 'ORN',
     needWithdraw = false,
     isPool = false
@@ -86,9 +87,12 @@ export function getFee ({
     if (!amount || new BigNumber(amount).isNaN() || new BigNumber(amount).lte(0)) throw new Error('amount field is invalid!')
     if (!feePercent || Number(feePercent) <= 0) throw new Error('feePercent field is invalid!')
 
+    if (feeDecimals <= 0) throw new Error('feeDecimals field should be greater than 0!')
+
     if (!gasPriceWei || new BigNumber(gasPriceWei).isNaN() || new BigNumber(gasPriceWei).lte('0')) {
         throw new Error('gasPriceWei field is invalid!')
     }
+
     if (!assetsPrices || !Object.entries(assetsPrices).length) {
         throw new Error('assetsPrices field is invalid!')
     }
@@ -102,7 +106,7 @@ export function getFee ({
     if (!matcherFee.gt(0)) throw new Error('matcherFee couldn`t be 0!')
     if (!networkFee.gt(0)) throw new Error('networkFee couldn`t be 0!')
 
-    const totalFee = matcherFee.plus(networkFee)
+    const totalFee = matcherFee.plus(networkFee).decimalPlaces(feeDecimals)
     return totalFee
 }
 
