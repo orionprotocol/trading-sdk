@@ -63,6 +63,7 @@ export class OrionAggregator {
             if (!params.price.gt(0)) throw new Error('Invalid price');
             if (!params.amount.gt(0)) throw new Error('Invalid amount');
             if (!params.priceDeviation.gte(0)) throw new Error('Invalid priceDeviation');
+            if (!this.chain.tokensFee[params.feeCurrency]) throw new Error(`Invalid feeCurrency, should be one of ${Object.keys(this.chain.tokensFee)}`);
 
             if (params.numberFormat.qtyPrecision === undefined || params.numberFormat.qtyPrecision === null) throw new Error('Invalid qtyPrecision');
             if (params.numberFormat.pricePrecision === undefined || params.numberFormat.pricePrecision === null) throw new Error('Invalid pricePrecision');
@@ -89,7 +90,7 @@ export class OrionAggregator {
             const totalFee = getFee({
                 asset: params.fromCurrency,
                 amount: params.amount,
-                feePercent: '0.2',
+                feePercent: this.chain.tokensFee[params.feeCurrency],
                 assetsPrices: blockchainPrices,
                 networkAsset: this.chain.blockchainInfo.baseCurrencyName,
                 gasPriceWei,
@@ -103,6 +104,7 @@ export class OrionAggregator {
 
             const amountRounded: BigNumber = params.amount.decimalPlaces(params.numberFormat.qtyPrecision, BigNumber.ROUND_DOWN);
             const priceRounded: BigNumber = priceWithDeviation.decimalPlaces(params.numberFormat.pricePrecision, params.side === 'buy' ? BigNumber.ROUND_UP : BigNumber.ROUND_DOWN);
+            const totalFeeRounded: BigNumber = totalFee.decimalPlaces(this.chain.blockchainInfo.assetToDecimals[params.feeCurrency], BigNumber.ROUND_UP);
 
             if (totalFee.isZero()) throw new Error('Zero fee');
 
@@ -117,7 +119,7 @@ export class OrionAggregator {
                 matcherFeeAsset: matcherFeeAsset,
                 amount: numberTo8(amountRounded),
                 price: numberTo8(priceRounded),
-                matcherFee: numberTo8(totalFee),
+                matcherFee: numberTo8(totalFeeRounded),
                 nonce: nonce,
                 expiration: nonce + DEFAULT_EXPIRATION,
                 buySide: params.side === 'buy' ? 1 : 0,

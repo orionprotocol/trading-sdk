@@ -23,7 +23,7 @@ describe('Send order with known chain prices', () => {
     if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY is required for this test!')
 
     it('Create chain instance and init', async () => {
-        chain = new Chain(PRIVATE_KEY, NETWORK.TEST.BSC)
+        chain = new Chain(PRIVATE_KEY, NETWORK.TEST.ETH)
         await chain.init()
         expect(chain.blockchainInfo).toHaveProperty('chainName')
         expect(chain.signer).toHaveProperty('address')
@@ -37,22 +37,23 @@ describe('Send order with known chain prices', () => {
     it('Create and sign order with known ornPrice and gasPrice', async () => {
         // Get current price for network asset
         const prices = await chain.getBlockchainPrices()
+        const gasPriceWei = await chain.getGasPrice()
         const networkAssetPrice = prices[chain.blockchainInfo.baseCurrencyName].toString()
 
         order = {
             fromCurrency: 'ORN',
-            toCurrency: 'DAI',
-            feeCurrency: 'ORN',
+            toCurrency: 'UNI',
+            feeCurrency: 'USDT',
             side: 'sell',
-            price: 20000,
+            price: 10,
             amount: 10,
             priceDeviation: 1,
             needWithdraw: false,
             chainPrices: {
                 networkAsset: networkAssetPrice,
-                baseAsset: 1,
-                feeAsset: 1,
-                gasWei: '10000000000'
+                baseAsset: prices['ORN'].toString(),
+                feeAsset: prices['USDT'].toString(),
+                gasWei: gasPriceWei
             }
         }
 
@@ -79,7 +80,7 @@ describe('Send order with known chain prices', () => {
         // Empty balance for DAI token required
 
         order = {
-            fromCurrency: 'DAI',
+            fromCurrency: 'USDC',
             toCurrency: 'USDT',
             feeCurrency: 'ORN',
             side: 'sell',

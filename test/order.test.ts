@@ -23,7 +23,7 @@ describe('Send order', () => {
     if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY is required for this test!')
 
     it('Create chain instance and init', async () => {
-        chain = new Chain(PRIVATE_KEY, NETWORK.TEST.BSC)
+        chain = new Chain(PRIVATE_KEY, NETWORK.TEST.ETH)
         await chain.init()
         expect(chain.blockchainInfo).toHaveProperty('chainName')
         expect(chain.signer).toHaveProperty('address')
@@ -37,11 +37,11 @@ describe('Send order', () => {
     it('Create and sign order', async () => {
         order = {
             fromCurrency: 'ORN',
-            toCurrency: 'DAI',
+            toCurrency: 'UNI',
             feeCurrency: 'ORN',
             side: 'sell',
-            price: 20000,
-            amount: 100,
+            price: 200,
+            amount: 10,
             priceDeviation: 1,
             needWithdraw: false
         }
