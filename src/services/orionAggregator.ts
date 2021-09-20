@@ -104,7 +104,6 @@ export class OrionAggregator {
 
             const amountRounded: BigNumber = params.amount.decimalPlaces(params.numberFormat.qtyPrecision, BigNumber.ROUND_DOWN);
             const priceRounded: BigNumber = priceWithDeviation.decimalPlaces(params.numberFormat.pricePrecision, params.side === 'buy' ? BigNumber.ROUND_UP : BigNumber.ROUND_DOWN);
-            const totalFeeRounded: BigNumber = totalFee.decimalPlaces(this.chain.blockchainInfo.assetToDecimals[params.feeCurrency], BigNumber.ROUND_UP);
 
             if (totalFee.isZero()) throw new Error('Zero fee');
 
@@ -119,7 +118,7 @@ export class OrionAggregator {
                 matcherFeeAsset: matcherFeeAsset,
                 amount: numberTo8(amountRounded),
                 price: numberTo8(priceRounded),
-                matcherFee: numberTo8(totalFeeRounded),
+                matcherFee: numberTo8(totalFee),
                 nonce: nonce,
                 expiration: nonce + DEFAULT_EXPIRATION,
                 buySide: params.side === 'buy' ? 1 : 0,
