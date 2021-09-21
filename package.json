@@ -1,6 +1,6 @@
 {
   "name": "@tumakot/orion-trading-sdk",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "🛠 An SDK for trading with orionprotocol",
   "repository": "https://github.com/orionprotocol/trading-sdk",
   "author": "peiko.tumakov.y@gmail.com",
