@@ -31,7 +31,6 @@ Parameter | Type | Required | Description
 --- | --- | --- | ---
 *fromCurrency* | string | yes
 *toCurrency* | string | yes
-*feeCurrency* | string | yes
 *side* | string | yes
 *price* | number | yes
 *amount* | number | yes
@@ -224,7 +223,6 @@ orionAggregator = new OrionAggregator(chain)
 const order = {
     fromCurrency: 'ORN',
     toCurrency: 'DAI',
-    feeCurrency: 'ORN',
     side: 'sell',
     price: 12,
     amount: 10,

@@ -38,7 +38,6 @@ describe('Send order', () => {
         order = {
             fromCurrency: 'ORN',
             toCurrency: 'DAI',
-            feeCurrency: 'USDT',
             side: 'sell',
             price: 200,
             amount: 10,

@@ -2,6 +2,8 @@ import 'jest-extended'
 import { WS, Constants }  from '../src/index'
 import { Pair }  from '../src/utils/Models'
 
+jest.setTimeout(10000)
+
 describe('Subscriber', () => {
     const wsUrl = Constants.ORION_WS.TEST.BSC
     const ws = new WS(wsUrl)

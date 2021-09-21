@@ -43,7 +43,6 @@ describe('Send order with known chain prices', () => {
         order = {
             fromCurrency: 'ORN',
             toCurrency: 'UNI',
-            feeCurrency: 'USDT',
             side: 'sell',
             price: 10,
             amount: 10,
@@ -52,7 +51,7 @@ describe('Send order with known chain prices', () => {
             chainPrices: {
                 networkAsset: networkAssetPrice,
                 baseAsset: prices['ORN'].toString(),
-                feeAsset: prices['USDT'].toString(),
+                feeAsset: prices['ORN'].toString(),
                 gasWei: gasPriceWei
             }
         }
@@ -82,7 +81,6 @@ describe('Send order with known chain prices', () => {
         order = {
             fromCurrency: 'USDC',
             toCurrency: 'USDT',
-            feeCurrency: 'ORN',
             side: 'sell',
             price: 2000,
             amount: 100,
