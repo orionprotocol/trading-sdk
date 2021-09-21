@@ -39,7 +39,7 @@ export class Exchange {
 
             total.forEach((totalBalance, i) => {
                 const lockedValue = locked[tokens[i]] || 0
-                result[tokens[i]] = this.parseContractBalance(tokens[i], totalBalance, lockedValue)
+                result[tokens[i]] = this.parseContractBalance(totalBalance, lockedValue)
             })
 
             return result
@@ -54,16 +54,17 @@ export class Exchange {
         return handleResponse(this.chain.api.orionAggregator.get(path))
     }
 
-    private parseContractBalance(token: string, totalWei: BigNumber, locked: string | number): BalanceContract {
-        const totalBignumberWei = new BigNumber(totalWei.toString())
-        const lockedBignumberWei = new BigNumber(numberToUnit(token, new BigNumber(locked), this.chain.blockchainInfo))
+    private parseContractBalance(total8: BigNumber, locked: string | number): BalanceContract {
+        const total = ethers.utils.formatUnits(ethers.BigNumber.from(total8.toString()), 8)
+        const totalBN = new BigNumber(total)
+        const lockedBN = new BigNumber(locked)
 
-        const availableBignumberWei = totalBignumberWei.minus(lockedBignumberWei)
+        const availableBN = totalBN.minus(lockedBN)
 
         const balanceSummary = {
-            total: unitToNumber(token, totalBignumberWei, this.chain.blockchainInfo),
-            locked: unitToNumber(token, lockedBignumberWei, this.chain.blockchainInfo),
-            available: unitToNumber(token, availableBignumberWei, this.chain.blockchainInfo)
+            total: totalBN,
+            locked: lockedBN,
+            available: availableBN
         }
 
         return balanceSummary

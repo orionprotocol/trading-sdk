@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { AxiosResponse, AxiosPromise } from "axios"
 import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo,
     TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs} from "./Models";
-import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT} from '../utils/Constants'
+import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT, } from '../utils/Constants'
 
 export function getPriceWithDeviation(price: BigNumber, side: string, deviation: BigNumber): BigNumber {
     const d = deviation.dividedBy(100)
@@ -114,10 +114,10 @@ export function getFee ({
 export function getNumberFormat(info: BlockchainInfo, from: string, to: string): NumberFormat {
     const format = {...DEFAULT_NUMBER_FORMAT}
     format.name = `${from}-${to}`
-    if(!info.assetToDecimals[from]) throw new Error('Invalid asset "from"')
-    if(!info.assetToDecimals[to]) throw new Error('Invalid asset "to"')
-    format.baseAssetPrecision = info.assetToDecimals[from]
-    format.quoteAssetPrecision = info.assetToDecimals[to]
+    if(!info.assetToDecimals[from] && info.baseCurrencyName !== from) throw new Error('Invalid asset "from"')
+    if(!info.assetToDecimals[to] && info.baseCurrencyName !== to) throw new Error('Invalid asset "to"')
+    format.baseAssetPrecision = info.assetToDecimals[from] || 18
+    format.quoteAssetPrecision = info.assetToDecimals[to] || 18
     return format
 }
 
