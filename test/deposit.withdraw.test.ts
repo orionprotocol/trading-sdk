@@ -1,7 +1,7 @@
 import 'jest-extended'
 import { Chain, Exchange } from '../src/index'
 import { NETWORK } from '../src/utils/Constants'
-import dotenv from 'dotenv';
+import dotenv from 'dotenv'
 dotenv.config()
 
 jest.setTimeout(40000)

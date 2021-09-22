@@ -232,7 +232,7 @@ export class Chain {
         }
     }
 
-    async allowanceHandler (currency: string, amount: string, gasPriceWei: string): Promise<ethers.providers.TransactionResponse | void> {
+    async allowanceHandler (currency: string, amount: string, gasPriceWei: string): Promise<ethers.providers.TransactionReceipt | void> {
         if (this.isNetworkAsset(currency)) return
 
         try {
@@ -269,7 +269,7 @@ export class Chain {
         }
     }
 
-    async approve(currency: string, amountUnit: string, gasPriceWei?: string): Promise<ethers.providers.TransactionResponse> {
+    async approve(currency: string, amountUnit: string, gasPriceWei?: string): Promise<ethers.providers.TransactionReceipt> {
         try {
             await this.checkNetworkTokens()
 
@@ -295,14 +295,17 @@ export class Chain {
         gasPriceWei: string,
         toAddress: string,
         tokenContract: ethers.Contract
-    }): Promise<ethers.providers.TransactionResponse> {
+    }): Promise<ethers.providers.TransactionReceipt> {
         try {
             const unsignedTx = await tokenContract.populateTransaction.approve(toAddress, amountUnit);
-            return this.sendTransaction(
+            const txResponse = await this.sendTransaction(
                 unsignedTx,
                 APPROVE_ERC20_GAS_LIMIT,
                 new BigNumber(gasPriceWei),
             )
+            const txResult = await txResponse.wait()
+            if (txResult.status !== 1) throw new Error(`Approve transaction ${txResult.transactionHash} failed!`)
+            return txResult
         } catch (error) {
             return Promise.reject(error)
         }
