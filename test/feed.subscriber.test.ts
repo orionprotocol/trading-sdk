@@ -4,7 +4,7 @@ import { Pair }  from '../src/utils/Models'
 
 jest.setTimeout(10000)
 
-describe('Subscriber', () => {
+describe.skip('Subscriber', () => {
     const wsUrl = Constants.ORION_WS.TEST.BSC
     const ws = new WS(wsUrl)
 

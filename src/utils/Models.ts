@@ -210,7 +210,8 @@ export interface Pair {
 export interface NetworkEntity {
     RPC: string,
     ORION: string,
-    CHAIN_ID: number
+    CHAIN_ID: number,
+    TX_TIMEOUT_SEC: number
 }
 
 export interface BalanceContract {

@@ -303,6 +303,7 @@ export class Chain {
                 APPROVE_ERC20_GAS_LIMIT,
                 new BigNumber(gasPriceWei),
             )
+            // waitForTx(txResponse, this.network.TX_TIMEOUT_SEC)
             const txResult = await txResponse.wait()
             if (txResult.status !== 1) throw new Error(`Approve transaction ${txResult.transactionHash} failed!`)
             return txResult

@@ -5,24 +5,28 @@ export const NETWORK = {
         BSC: {
             RPC: 'https://data-seed-prebsc-2-s1.binance.org:8545',
             ORION: 'https://dev-exp.orionprotocol.io',
-            CHAIN_ID: 97
+            CHAIN_ID: 97,
+            TX_TIMEOUT_SEC: 60
         },
         ETH: {
             RPC: 'https://staging.orionprotocol.io/rpc',
             ORION: 'https://staging.orionprotocol.io',
-            CHAIN_ID: 3
+            CHAIN_ID: 3,
+            TX_TIMEOUT_SEC: 60
         }
     },
     MAIN: {
         BSC: {
             RPC: 'https://bsc-dataseed.binance.org',
             ORION: 'https://trade-exp.orionprotocol.io',
-            CHAIN_ID: 56
+            CHAIN_ID: 56,
+            TX_TIMEOUT_SEC: 60
         },
         ETH: {
             RPC: 'https://trade.orionprotocol.io/rpc',
             ORION: 'https://trade.orionprotocol.io',
-            CHAIN_ID: 1
+            CHAIN_ID: 1,
+            TX_TIMEOUT_SEC: 60
         }
     }
 }

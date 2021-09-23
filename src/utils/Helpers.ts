@@ -252,3 +252,11 @@ export async function handleResponse(request: AxiosPromise): Promise<AxiosRespon
         return Promise.reject(error)
     }
 }
+
+// export async function waitForTx(txResponse: ethers.providers.TransactionResponse, timeout: number): Promise<void> {
+//     console.log(txResponse, unsignedTx, timeout);
+//     let timeoutExceeded = false
+//     timeoutExceeded = false
+
+//     if (timeoutExceeded) throw new Error(`Approve transaction ${txResponse.hash} failed!`)
+// }

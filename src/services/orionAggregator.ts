@@ -108,7 +108,10 @@ export class OrionAggregator {
 
             if (totalFee.isZero()) throw new Error('Zero fee');
 
-            await this.checkBalanceForOrder(params, feeAsset, totalFee)
+            // await this.checkBalanceForOrder(params, feeAsset, totalFee)
+            console.log(typeof this.checkBalanceForOrder);
+            console.log(params.numberFormat, params);
+            console.log(amountRounded.toString(), priceRounded.toString());
 
             const order: BlockchainOrder = {
                 id: '',

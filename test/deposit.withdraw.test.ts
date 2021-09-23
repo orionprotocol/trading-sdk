@@ -2,6 +2,7 @@ import 'jest-extended'
 import { Chain, Exchange } from '../src/index'
 import { NETWORK } from '../src/utils/Constants'
 import dotenv from 'dotenv'
+import { ethers } from 'ethers'
 dotenv.config()
 
 jest.setTimeout(40000)
@@ -9,7 +10,7 @@ jest.setTimeout(40000)
 const { PRIVATE_KEY } = process.env
 
 // For this test, network tokens are required to pay for transactions, as well as tokens for deposit / withdrawal / approve.
-describe('Deposit and withdraw', () => {
+describe.skip('Deposit and withdraw', () => {
     let chain: Chain
     let exchange: Exchange
 
@@ -22,17 +23,25 @@ describe('Deposit and withdraw', () => {
         expect(chain.signer).toHaveProperty('address')
     })
 
-    it('Create exchange instance', async () => {
+    it.skip('Create exchange instance', async () => {
         exchange = new Exchange(chain)
         expect(exchange).toHaveProperty('chain')
     })
 
-    it('Deposit token', async() => {
+    it('Approve test', async() => {
+        const max = ethers.constants.MaxUint256.toString()
+        const zero = ethers.constants.Zero.toString()
+        console.log(max, zero);
+        const aproveResult = await chain.approve('ORN', max)
+        console.log(aproveResult);
+    })
+
+    it.skip('Deposit token', async() => {
         const deposit = await exchange.deposit('ORN', '10')
         expect(deposit.nonce).toBeTruthy()
     })
 
-    it('Withdraw token', async() => {
+    it.skip('Withdraw token', async() => {
         const withdraw = await exchange.withdraw('ORN', '10')
         expect(withdraw.nonce).toBeTruthy()
     })
