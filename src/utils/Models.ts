@@ -240,3 +240,16 @@ export interface MatcherFeeArgs {
     feeAsset: string;
 }
 
+export interface PairConfig {
+    name: string;
+    minQty: number; // validating order amount
+    maxQty: number;
+    minPrice: number; // validating order price
+    maxPrice: number;
+    pricePrecision: number; // formatting price
+    qtyPrecision: number; // formatting amount
+    baseAssetPrecision: number; // fromCurrency
+    quoteAssetPrecision: number; // formatting totals / toCurrency
+    limitOrderThreshold?: number;
+    executableOnBrokersPriceDeviation?: number;
+  }

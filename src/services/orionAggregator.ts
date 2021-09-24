@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js"
-import { BlockchainOrder, SignOrderModel, SignOrderModelRaw, TradeOrder, CancelOrderRequest } from "../utils/Models"
-import { getPriceWithDeviation, getFee, getNumberFormat, numberTo8, handleResponse, parseTradeOrder} from '../utils/Helpers'
-import { DEFAULT_EXPIRATION } from '../utils/Constants'
+import { BlockchainOrder, SignOrderModel, SignOrderModelRaw, TradeOrder, CancelOrderRequest, PairConfig } from "../utils/Models"
+import { getPriceWithDeviation, getFee, numberTo8, handleResponse, parseTradeOrder} from '../utils/Helpers'
+import { DEFAULT_EXPIRATION, PRICE_DEVIATIONS } from '../utils/Constants'
 import { hashOrder, signOrder, signCancelOrder } from './crypto'
 import { Chain } from './chain'
 import { Exchange } from './exchange'
@@ -9,10 +9,32 @@ import { Exchange } from './exchange'
 export class OrionAggregator {
     public readonly chain: Chain;
     public readonly exchange: Exchange;
+    private _pairs!: Record<string, PairConfig>;  // replace any with Model
 
     constructor(chain: Chain) {
         this.chain = chain
         this.exchange = new Exchange(chain)
+    }
+
+    public async init(): Promise<void> {
+        this._pairs = await this.getPairsInfo()
+    }
+
+    public async getPairsInfo (): Promise<Record<string, PairConfig>> {
+        try {
+            const data: PairConfig[] = await handleResponse(this.chain.api.orionAggregator.get('/pairs/exchangeInfo'))
+            const pairConfigs: Record<string, PairConfig> = {};
+            data.forEach((item) => {
+                pairConfigs[item.name] = item;
+            });
+            return pairConfigs
+        } catch (error) {
+            return Promise.reject(error)
+        }
+    }
+
+    get pairs (): Record<string, PairConfig> {
+        return this._pairs
     }
 
     private async checkBalanceForOrder (order: SignOrderModel, feeAsset: string, feeAmount: BigNumber): Promise<void> {
@@ -40,8 +62,14 @@ export class OrionAggregator {
     }
 
     private formatRawOrder (order: SignOrderModelRaw): SignOrderModel {
+        const pair = `${order.fromCurrency.toUpperCase()}-${order.toCurrency.toUpperCase()}`
+        const pairConfig = this.pairs[pair]
+        if (!pairConfig) throw new Error(`No such pair ${pair}`)
+
+        if (!order.priceDeviation || !PRICE_DEVIATIONS.includes(order.priceDeviation)) throw new Error('priceDeviation value should be 0.5 or 1!')
+
         const formattedOrder: SignOrderModel = Object.assign(order, {
-            numberFormat: getNumberFormat(this.chain.blockchainInfo, order.fromCurrency, order.toCurrency),
+            numberFormat: pairConfig,
             price: new BigNumber(order.price),
             amount: new BigNumber(order.amount),
             priceDeviation: new BigNumber(order.priceDeviation),

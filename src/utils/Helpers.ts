@@ -4,6 +4,8 @@ import { AxiosResponse, AxiosPromise } from "axios"
 import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo,
     TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs} from "./Models";
 import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT, } from '../utils/Constants'
+import { Chain } from '../services/chain'
+import erc20ABI from '../abis/ERC20.json'
 
 export function getPriceWithDeviation(price: BigNumber, side: string, deviation: BigNumber): BigNumber {
     const d = deviation.dividedBy(100)
@@ -251,4 +253,22 @@ export async function handleResponse(request: AxiosPromise): Promise<AxiosRespon
     } catch (error) {
         return Promise.reject(error)
     }
+}
+
+export function getTokenContracts (chain: Chain): Dictionary<ethers.Contract> {
+    const tokensContracts: Dictionary<ethers.Contract> = {};
+    const tokens = chain.blockchainInfo.assetToAddress;
+    for (const name in tokens) {
+        if (name === chain.blockchainInfo.baseCurrencyName) continue;
+        const tokenAddress = tokens[name];
+        const tokenContract = new ethers.Contract(
+            tokenAddress,
+            erc20ABI,
+            chain.signer
+        );
+
+        tokensContracts[name] = tokenContract;
+        tokensContracts[tokenAddress] = tokenContract;
+    }
+    return tokensContracts
 }

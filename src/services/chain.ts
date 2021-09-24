@@ -3,9 +3,8 @@ import BigNumber from 'bignumber.js'
 import { BlockchainInfo, NetworkEntity, Dictionary } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
 import { NETWORK, NETWORK_TOKEN_ADDRESS, APPROVE_ERC20_GAS_LIMIT } from '../utils/Constants'
-import { handleResponse } from '../utils/Helpers'
+import { handleResponse, getTokenContracts } from '../utils/Helpers'
 import { Api } from './api'
-import erc20ABI from '../abis/ERC20.json'
 
 export class Chain {
     public readonly provider: ethers.providers.JsonRpcProvider
@@ -31,21 +30,7 @@ export class Chain {
         this._blockchainInfo = info
         this._tokens = new Tokens(this._blockchainInfo.assetToAddress);
         this._isEthereum = this._blockchainInfo.baseCurrencyName === 'ETH'
-
-        this.tokensContracts = {};
-        const tokens = this.blockchainInfo.assetToAddress;
-        for (const name in tokens) {
-            if (name === this.blockchainInfo.baseCurrencyName) continue;
-            const tokenAddress = tokens[name];
-            const tokenContract = new ethers.Contract(
-                tokenAddress,
-                erc20ABI,
-                this.signer
-            );
-
-            this.tokensContracts[name] = tokenContract;
-            this.tokensContracts[tokenAddress] = tokenContract;
-        }
+        this.tokensContracts = getTokenContracts(this)
     }
 
     get blockchainInfo(): BlockchainInfo {

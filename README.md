@@ -20,6 +20,7 @@ npm install @tumakot/orion-trading-sdk
 Parameter | Type | Required | Description
 --- | --- | --- | ---
 *ticker* | string | no | empty ticker field return balance for all tokens
+
 @return token balance on wallet (uint)
 <hr>
 
@@ -29,12 +30,12 @@ Parameter | Type | Required | Description
 
 Parameter | Type | Required | Description
 --- | --- | --- | ---
-*fromCurrency* | string | yes
-*toCurrency* | string | yes
-*side* | string | yes
+*fromCurrency* | string | yes | token symbol
+*toCurrency* | string | yes | token symbol
+*side* | string | yes | 'buy' or 'sell'
 *price* | number | yes
 *amount* | number | yes
-*priceDeviation* | number | yes
+*priceDeviation* | number | yes | price deviation percents 0.5 or 1
 *needWithdraw* | boolean | yes
 *chainPrices* | object | no
 
@@ -42,7 +43,7 @@ Parameter | Type | Required | Description
 
 Parameter | Type | Required | Description
 --- | --- | --- | ---
-*gasWei* | string | yes
+*gasWei* | string | yes | gas price in wei
 *baseAsset* | string/number | yes
 *networkAsset* | string/number | yes
 *feeAsset* | string/number | yes
@@ -134,7 +135,20 @@ Parameter | Type | Required | Description
 
 <hr>
 
-## Usage
+## How to use
+ **Important note!** you should always wrap your async functions in a try-catch block, so you could handle errors in a right way.
+ ```javascript
+try {
+    // place here your async functions
+    /* Example
+        const chain = new Chain(privateKey, networkParams)
+        await chain.init() // get blockchain info
+     */
+
+} catch(error) {
+    // handle errors
+}
+ ```
 
 **First step:** Create base *Chain* instance
 
@@ -150,11 +164,16 @@ const networkParams = Constants.NETWORK.TEST.BSC
 
 // By default networkParams is NETWORK.TEST.BSC
 
-const chain = new Chain(privateKey, networkParams)
+try {
+    const chain = new Chain(privateKey, networkParams)
 
-await chain.init() // get blockchain info
+    await chain.init() // get blockchain info
+} catch (error) {
+    // handle error
+}
+
 ```
-
+In examples below we hide try-catch blocks, because they are wrappers. But you should always use them.
 
 Now you ready to go.
 
@@ -209,12 +228,17 @@ const contractBalanceSummary = await exchange.getContractBalance() // summary
 const withdraw = await exchange.withdraw('ORN', '10')
 // Should return transaction object
 ```
-**Work with OrionAggregator:**
+## Work with OrionAggregator:
+Creating, sending, canceling orders and getting info
 
 ```javascript
 import { OrionAggregator } from '@tumakot/orion-trading-sdk'
 
 orionAggregator = new OrionAggregator(chain)
+
+await orionAggregator.init()  // get aggregator info
+
+orionAggregator.pairs // list of available exchange pairs
 ```
 
 **Create, sign and send order to OrionAggregator:**
@@ -223,10 +247,10 @@ orionAggregator = new OrionAggregator(chain)
 const order = {
     fromCurrency: 'ORN',
     toCurrency: 'DAI',
-    side: 'sell',
+    side: 'sell',   // 'buy' or 'sell'
     price: 12,
     amount: 10,
-    priceDeviation: 1,
+    priceDeviation: 1,   // 0.5 or 1 percent
     needWithdraw: false,
     // 'chainPrices' is optional, use it when prices are already known
     // to increase request speed

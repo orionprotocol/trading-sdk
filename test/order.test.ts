@@ -31,16 +31,18 @@ describe('Send order', () => {
 
     it('Create orion instance', async () => {
         orionAggregator = new OrionAggregator(chain)
+        await orionAggregator.init()
         expect(orionAggregator).toHaveProperty('chain')
+        expect(orionAggregator).toHaveProperty('pairs')
     })
 
     it('Create and sign order', async () => {
         order = {
             fromCurrency: 'ORN',
-            toCurrency: 'DAI',
+            toCurrency: 'USDT',
             side: 'sell',
-            price: 200,
-            amount: 10,
+            price: 1000,
+            amount: 15,
             priceDeviation: 1,
             needWithdraw: false
         }

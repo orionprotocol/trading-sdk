@@ -31,7 +31,9 @@ describe('Send order with known chain prices', () => {
 
     it('Create orionAggregator instance', async () => {
         orionAggregator = new OrionAggregator(chain)
+        await orionAggregator.init()
         expect(orionAggregator).toHaveProperty('chain')
+        expect(orionAggregator).toHaveProperty('pairs')
     })
 
     it('Create and sign order with known ornPrice and gasPrice', async () => {
@@ -80,6 +82,24 @@ describe('Send order with known chain prices', () => {
 
         order = {
             fromCurrency: 'USDC',
+            toCurrency: 'USDT',
+            side: 'sell',
+            price: 2000,
+            amount: 100,
+            priceDeviation: 1,
+            needWithdraw: false
+        }
+
+        try {
+            await orionAggregator.createOrder(order)
+        } catch (error) {
+            expect(error instanceof Error).toBeTruthy();
+        }
+    })
+
+    it('Send order with wrong pair', async () => {
+        order = {
+            fromCurrency: 'USD',
             toCurrency: 'USDT',
             side: 'sell',
             price: 2000,
