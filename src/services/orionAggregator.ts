@@ -91,6 +91,7 @@ export class OrionAggregator {
             if (!params.price.gt(0)) throw new Error('Invalid price');
             if (!params.amount.gt(0)) throw new Error('Invalid amount');
             if (!params.priceDeviation.gte(0)) throw new Error('Invalid priceDeviation');
+            if (!this.chain.tokensFee[params.feeCurrency]) throw new Error(`Invalid feeCurrency, should be one of ${Object.keys(this.chain.tokensFee)}`);
 
             if (params.numberFormat.qtyPrecision === undefined || params.numberFormat.qtyPrecision === null) throw new Error('Invalid qtyPrecision');
             if (params.numberFormat.pricePrecision === undefined || params.numberFormat.pricePrecision === null) throw new Error('Invalid pricePrecision');
@@ -103,12 +104,12 @@ export class OrionAggregator {
                 blockchainPrices = {
                     [this.chain.blockchainInfo.baseCurrencyName]: new BigNumber(params.chainPrices.networkAsset),
                     [params.fromCurrency]: new BigNumber(params.chainPrices.baseAsset),
-                    ORN: new BigNumber(params.chainPrices.feeAsset),
+                    [params.feeCurrency]: new BigNumber(params.chainPrices.feeAsset),
                 }
 
                 if (!blockchainPrices[this.chain.blockchainInfo.baseCurrencyName].gt(0)) throw new Error('Invalid chainPrices networkAsset')
                 if (!blockchainPrices[params.fromCurrency].gt(0)) throw new Error('Invalid chainPrices baseAsset')
-                if (!blockchainPrices.ORN.gt(0)) throw new Error('Invalid chainPrices feeAsset')
+                if (!blockchainPrices[params.feeCurrency].gt(0)) throw new Error('Invalid chainPrices feeAsset')
             } else {
                 gasPriceWei = await this.chain.getGasPrice();
                 blockchainPrices = await this.chain.getBlockchainPrices()
@@ -117,13 +118,13 @@ export class OrionAggregator {
             const totalFee = getFee({
                 baseAsset: params.fromCurrency,
                 amount: params.amount,
-                feePercent: feePercent,
+                feePercent: this.chain.tokensFee[params.feeCurrency],
                 assetsPrices: blockchainPrices,
                 networkAsset: this.chain.blockchainInfo.baseCurrencyName,
                 gasPriceWei,
                 needWithdraw: params.needWithdraw,
                 isPool: false,
-                feeAsset: feeAsset
+                feeAsset: params.feeCurrency,
             })
 
             const priceWithDeviation = params.priceDeviation.isZero() ? params.price : getPriceWithDeviation(params.price, params.side, params.priceDeviation);
@@ -133,7 +134,7 @@ export class OrionAggregator {
 
             if (totalFee.isZero()) throw new Error('Zero fee');
 
-            await this.checkBalanceForOrder(params, feeAsset, totalFee)
+            await this.checkBalanceForOrder(params, params.feeCurrency, totalFee)
 
             const order: BlockchainOrder = {
                 id: '',
