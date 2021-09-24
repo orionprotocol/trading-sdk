@@ -117,7 +117,7 @@ export class OrionAggregator {
             }
 
             const totalFee = getFee({
-                asset: params.fromCurrency,
+                baseAsset: params.fromCurrency,
                 amount: params.amount,
                 feePercent: feePercent,
                 assetsPrices: blockchainPrices,

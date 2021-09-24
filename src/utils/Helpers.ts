@@ -21,12 +21,12 @@ export function sumBigNumber(arr: BigNumber[]): BigNumber {
     return result;
 }
 
-export function toFeePrice(currency: string, nameToPrice: Dictionary<BigNumber>, feeAsset: string): BigNumber {
+function toFeePrice(currency: string, nameToPrice: Dictionary<BigNumber>, feeAsset: string): BigNumber {
     const price = nameToPrice[currency].dividedBy(nameToPrice[feeAsset]);
     return price || new BigNumber(0);
 }
 
-export function calculateMatcherFee({baseAsset, amount, assetsPrices, feePercent, feeAsset}: MatcherFeeArgs): BigNumber {
+function calculateMatcherFee({baseAsset, amount, assetsPrices, feePercent, feeAsset}: MatcherFeeArgs): BigNumber {
     const MATCHER_FEE_PERCENT: BigNumber = new BigNumber(feePercent).dividedBy(100);
 
     const feeAmount = amount.multipliedBy(MATCHER_FEE_PERCENT);
@@ -35,7 +35,7 @@ export function calculateMatcherFee({baseAsset, amount, assetsPrices, feePercent
     return feeToAssetPrice;
 }
 
-export function calculateNetworkFee({
+function calculateNetworkFee({
     networkAsset,
     feeAsset,
     gasPriceWei,
@@ -75,7 +75,7 @@ export function calculateNetworkFee({
 }
 
 export function getFee ({
-    asset,
+    baseAsset,
     amount,
     networkAsset,
     gasPriceWei,
@@ -87,9 +87,9 @@ export function getFee ({
     isPool = false
 }: GetFeeArgs): BigNumber {
     if (!amount || new BigNumber(amount).isNaN() || new BigNumber(amount).lte(0)) throw new Error('amount field is invalid!')
-    if (!feePercent || Number(feePercent) <= 0) throw new Error('feePercent field is invalid!')
+    if (!feePercent || Number.isNaN(Number(feePercent)) || Number(feePercent) <= 0) throw new Error('feePercent field is invalid!')
 
-    if (!feeDecimals || feeDecimals <= 0) throw new Error('feeDecimals field should be greater than 0!')
+    if (!feeDecimals || Number.isNaN(Number(feeDecimals)) || Number(feeDecimals) <= 0) throw new Error('feeDecimals field should be greater than 0!')
 
     if (!gasPriceWei || new BigNumber(gasPriceWei).isNaN() || new BigNumber(gasPriceWei).lte('0')) {
         throw new Error('gasPriceWei field is invalid!')
@@ -98,11 +98,16 @@ export function getFee ({
     if (!assetsPrices || !Object.entries(assetsPrices).length) {
         throw new Error('assetsPrices field is invalid!')
     }
-    if (!assetsPrices[asset]) throw new Error('asset field is invalid!')
+    Object.keys(assetsPrices).forEach(key => {
+        assetsPrices[key] = new BigNumber(assetsPrices[key])
+        if (assetsPrices[key].isNaN() || assetsPrices[key].lte(0)) throw new Error(`assetsPrices.${key} value should be valid BigNumber`)
+    })
+
+    if (!assetsPrices[baseAsset]) throw new Error('baseAsset field is invalid!')
     if (!assetsPrices[feeAsset]) throw new Error('feeAsset field is invalid!')
     if (!assetsPrices[networkAsset]) throw new Error('networkAsset field is invalid!')
 
-    const matcherFee = calculateMatcherFee({ baseAsset: asset, amount, assetsPrices, feePercent, feeAsset })
+    const matcherFee = calculateMatcherFee({ baseAsset, amount, assetsPrices, feePercent, feeAsset })
     const { networkFee } = calculateNetworkFee({ networkAsset, feeAsset, gasPriceWei, assetsPrices, needWithdraw, isPool })
 
     if (!matcherFee.gt(0)) throw new Error('matcherFee couldn`t be 0!')

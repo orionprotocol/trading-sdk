@@ -220,7 +220,7 @@ export interface BalanceContract {
 }
 
 export interface GetFeeArgs {
-    asset: string;
+    baseAsset: string;
     amount: BigNumber;
     networkAsset: string;
     gasPriceWei: string;
