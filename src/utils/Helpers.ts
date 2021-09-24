@@ -1,9 +1,9 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
 import { AxiosResponse, AxiosPromise } from "axios"
-import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo,
+import { Dictionary, BlockchainInfo,
     TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs} from "./Models";
-import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT, } from '../utils/Constants'
+import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT, EXCHANGE_ORDER_PRECISION} from '../utils/Constants'
 import { Chain } from '../services/chain'
 import erc20ABI from '../abis/ERC20.json'
 
@@ -73,7 +73,9 @@ function calculateNetworkFee({
 
     return {networkFeeEth, networkFee};
 }
-
+/*
+    getFee return fee value rounded with EXCHANGE_ORDER_PRECISION
+*/
 export function getFee ({
     baseAsset,
     amount,
@@ -113,19 +115,9 @@ export function getFee ({
     if (!matcherFee.gt(0)) throw new Error('matcherFee couldn`t be 0!')
     if (!networkFee.gt(0)) throw new Error('networkFee couldn`t be 0!')
 
-    const totalFee = matcherFee.plus(networkFee).decimalPlaces(feeDecimals)
+    const totalFee = matcherFee.plus(networkFee).decimalPlaces(EXCHANGE_ORDER_PRECISION)
 
     return totalFee
-}
-
-export function getNumberFormat(info: BlockchainInfo, from: string, to: string): NumberFormat {
-    const format = {...DEFAULT_NUMBER_FORMAT}
-    format.name = `${from}-${to}`
-    if(!info.assetToDecimals[from] && info.baseCurrencyName !== from) throw new Error('Invalid asset "from"')
-    if(!info.assetToDecimals[to] && info.baseCurrencyName !== to) throw new Error('Invalid asset "to"')
-    format.baseAssetPrecision = info.assetToDecimals[from] || 18
-    format.quoteAssetPrecision = info.assetToDecimals[to] || 18
-    return format
 }
 
 export function parseTradeOrder(item: any): TradeOrder {
