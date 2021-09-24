@@ -229,7 +229,6 @@ export interface GetFeeArgs {
     isPool: boolean;
     feePercent: string;
     feeAsset: string;
-    feeDecimals: number;
 }
 
 export interface MatcherFeeArgs {

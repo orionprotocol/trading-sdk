@@ -83,15 +83,12 @@ export function getFee ({
     gasPriceWei,
     assetsPrices,
     feePercent,
-    feeDecimals,
     feeAsset = 'ORN',
     needWithdraw = false,
     isPool = false
 }: GetFeeArgs): BigNumber {
     if (!amount || new BigNumber(amount).isNaN() || new BigNumber(amount).lte(0)) throw new Error('amount field is invalid!')
     if (!feePercent || Number.isNaN(Number(feePercent)) || Number(feePercent) <= 0) throw new Error('feePercent field is invalid!')
-
-    if (!feeDecimals || Number.isNaN(Number(feeDecimals)) || Number(feeDecimals) <= 0) throw new Error('feeDecimals field should be greater than 0!')
 
     if (!gasPriceWei || new BigNumber(gasPriceWei).isNaN() || new BigNumber(gasPriceWei).lte('0')) {
         throw new Error('gasPriceWei field is invalid!')
