@@ -82,11 +82,9 @@ export class OrionAggregator {
         const params = this.formatRawOrder(orderParams)
 
         try {
-            const feePercent = '0.2'
-            const feeAsset = 'ORN'
             const baseAsset: string = this.chain.getTokenAddress(params.fromCurrency);
             const quoteAsset: string = this.chain.getTokenAddress(params.toCurrency);
-            const matcherFeeAsset: string = this.chain.getTokenAddress(feeAsset);
+            const matcherFeeAsset: string = this.chain.getTokenAddress(params.feeCurrency);
             const nonce: number = Date.now();
 
             if (!['buy', 'sell'].includes(params.side)) throw new Error('Invalid side, should be buy | sell');

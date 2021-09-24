@@ -16,6 +16,7 @@ export class Chain {
     private _blockchainInfo!: BlockchainInfo
     private _tokens!: Tokens
     private _isEthereum!: boolean
+    private _tokensFee!: Dictionary<string>
 
     constructor(privateKey: string, network: NetworkEntity = NETWORK.TEST.BSC) {
         this.provider = new ethers.providers.JsonRpcProvider(network.RPC);
@@ -26,6 +27,7 @@ export class Chain {
 
     public async init(): Promise<void> {
         const info = await this.getBlockchainInfo();
+        this._tokensFee = await this.getTokensFee()
         info.baseCurrencyName = this.getNetworkAsset(info)
         this._blockchainInfo = info
         this._tokens = new Tokens(this._blockchainInfo.assetToAddress);
@@ -39,6 +41,10 @@ export class Chain {
 
     get tokens(): Tokens {
         return this._tokens;
+    }
+
+    get tokensFee(): Dictionary<string> {
+        return this._tokensFee
     }
 
     get isEthereum(): boolean {
@@ -83,6 +89,10 @@ export class Chain {
 
     getBlockchainInfo(): Promise<BlockchainInfo> {
         return handleResponse(this.api.orionBlockchain.get('/info'))
+    }
+
+    getTokensFee(): Promise<Dictionary<string>> {
+        return handleResponse(this.api.orionBlockchain.get('/tokensFee'))
     }
 
     async getBlockchainPrices(): Promise<Record<string, BigNumber>> {

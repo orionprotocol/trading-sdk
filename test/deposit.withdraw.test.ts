@@ -9,7 +9,7 @@ jest.setTimeout(40000)
 const { PRIVATE_KEY } = process.env
 
 // For this test, network tokens are required to pay for transactions, as well as tokens for deposit / withdrawal / approve.
-describe('Deposit and withdraw', () => {
+describe.skip('Deposit and withdraw', () => {
     let chain: Chain
     let exchange: Exchange
 
