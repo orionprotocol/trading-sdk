@@ -66,13 +66,14 @@ export class OrionAggregator {
         const pairConfig = this.pairs[pair]
         if (!pairConfig) throw new Error(`No such pair ${pair}`)
 
-        if (!order.priceDeviation || !PRICE_DEVIATIONS.includes(order.priceDeviation)) throw new Error('priceDeviation value should be 0.5 or 1!')
+        if (order.priceDeviation && (new BigNumber(PRICE_DEVIATIONS.MIN).gt(order.priceDeviation) || new BigNumber(PRICE_DEVIATIONS.MAX).lt(order.priceDeviation) ) )
+            throw new Error(`priceDeviation value should between ${PRICE_DEVIATIONS.MIN} and ${PRICE_DEVIATIONS.MAX}`);
 
         const formattedOrder: SignOrderModel = Object.assign(order, {
             numberFormat: pairConfig,
             price: new BigNumber(order.price),
             amount: new BigNumber(order.amount),
-            priceDeviation: new BigNumber(order.priceDeviation),
+            priceDeviation: new BigNumber(order.priceDeviation!==undefined ? order.priceDeviation : 0),
         })
 
         return formattedOrder
