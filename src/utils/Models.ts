@@ -37,7 +37,7 @@ export interface SignOrderModelRaw {
     side: string,
     price: number,
     amount: number,
-    priceDeviation: number,
+    priceDeviation?: number,
     needWithdraw: boolean,
     chainPrices?: {  // in case if user already knows chain prices
         gasWei: string,
@@ -221,7 +221,7 @@ export interface BalanceContract {
 }
 
 export interface GetFeeArgs {
-    asset: string;
+    baseAsset: string;
     amount: BigNumber;
     networkAsset: string;
     gasPriceWei: string;
@@ -230,7 +230,6 @@ export interface GetFeeArgs {
     isPool: boolean;
     feePercent: string;
     feeAsset: string;
-    feeDecimals: number;
 }
 
 export interface MatcherFeeArgs {
@@ -241,3 +240,16 @@ export interface MatcherFeeArgs {
     feeAsset: string;
 }
 
+export interface PairConfig {
+    name: string;
+    minQty: number; // validating order amount
+    maxQty: number;
+    minPrice: number; // validating order price
+    maxPrice: number;
+    pricePrecision: number; // formatting price
+    qtyPrecision: number; // formatting amount
+    baseAssetPrecision: number; // fromCurrency
+    quoteAssetPrecision: number; // formatting totals / toCurrency
+    limitOrderThreshold?: number;
+    executableOnBrokersPriceDeviation?: number;
+  }

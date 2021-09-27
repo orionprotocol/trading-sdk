@@ -23,7 +23,7 @@ describe.skip('Send order with known chain prices', () => {
     if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY is required for this test!')
 
     it('Create chain instance and init', async () => {
-        chain = new Chain(PRIVATE_KEY, NETWORK.TEST.ETH)
+        chain = new Chain(PRIVATE_KEY, NETWORK.TEST.BSC)
         await chain.init()
         expect(chain.blockchainInfo).toHaveProperty('chainName')
         expect(chain.signer).toHaveProperty('address')
@@ -31,7 +31,9 @@ describe.skip('Send order with known chain prices', () => {
 
     it('Create orionAggregator instance', async () => {
         orionAggregator = new OrionAggregator(chain)
+        await orionAggregator.init()
         expect(orionAggregator).toHaveProperty('chain')
+        expect(orionAggregator).toHaveProperty('pairs')
     })
 
     it('Create and sign order with known ornPrice and gasPrice', async () => {
@@ -42,7 +44,7 @@ describe.skip('Send order with known chain prices', () => {
 
         order = {
             fromCurrency: 'ORN',
-            toCurrency: 'UNI',
+            toCurrency: 'USDT',
             side: 'sell',
             price: 10,
             amount: 10,
@@ -80,6 +82,24 @@ describe.skip('Send order with known chain prices', () => {
 
         order = {
             fromCurrency: 'USDC',
+            toCurrency: 'USDT',
+            side: 'sell',
+            price: 2000,
+            amount: 100,
+            priceDeviation: 1,
+            needWithdraw: false
+        }
+
+        try {
+            await orionAggregator.createOrder(order)
+        } catch (error) {
+            expect(error instanceof Error).toBeTruthy();
+        }
+    })
+
+    it('Send order with wrong pair', async () => {
+        order = {
+            fromCurrency: 'USD',
             toCurrency: 'USDT',
             side: 'sell',
             price: 2000,

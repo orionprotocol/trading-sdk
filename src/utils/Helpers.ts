@@ -1,9 +1,11 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
 import { AxiosResponse, AxiosPromise } from "axios"
-import { Dictionary, DEFAULT_NUMBER_FORMAT, NumberFormat, BlockchainInfo,
+import { Dictionary, BlockchainInfo,
     TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs} from "./Models";
-import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT, } from '../utils/Constants'
+import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT, EXCHANGE_ORDER_PRECISION} from '../utils/Constants'
+import { Chain } from '../services/chain'
+import erc20ABI from '../abis/ERC20.json'
 
 export function getPriceWithDeviation(price: BigNumber, side: string, deviation: BigNumber): BigNumber {
     const d = deviation.dividedBy(100)
@@ -19,12 +21,12 @@ export function sumBigNumber(arr: BigNumber[]): BigNumber {
     return result;
 }
 
-export function toFeePrice(currency: string, nameToPrice: Dictionary<BigNumber>, feeAsset: string): BigNumber {
+function toFeePrice(currency: string, nameToPrice: Dictionary<BigNumber>, feeAsset: string): BigNumber {
     const price = nameToPrice[currency].dividedBy(nameToPrice[feeAsset]);
     return price || new BigNumber(0);
 }
 
-export function calculateMatcherFee({baseAsset, amount, assetsPrices, feePercent, feeAsset}: MatcherFeeArgs): BigNumber {
+function calculateMatcherFee({baseAsset, amount, assetsPrices, feePercent, feeAsset}: MatcherFeeArgs): BigNumber {
     const MATCHER_FEE_PERCENT: BigNumber = new BigNumber(feePercent).dividedBy(100);
 
     const feeAmount = amount.multipliedBy(MATCHER_FEE_PERCENT);
@@ -33,7 +35,7 @@ export function calculateMatcherFee({baseAsset, amount, assetsPrices, feePercent
     return feeToAssetPrice;
 }
 
-export function calculateNetworkFee({
+function calculateNetworkFee({
     networkAsset,
     feeAsset,
     gasPriceWei,
@@ -71,23 +73,22 @@ export function calculateNetworkFee({
 
     return {networkFeeEth, networkFee};
 }
-
+/*
+    getFee return fee value rounded with EXCHANGE_ORDER_PRECISION
+*/
 export function getFee ({
-    asset,
+    baseAsset,
     amount,
     networkAsset,
     gasPriceWei,
     assetsPrices,
     feePercent,
-    feeDecimals,
     feeAsset = 'ORN',
     needWithdraw = false,
     isPool = false
 }: GetFeeArgs): BigNumber {
     if (!amount || new BigNumber(amount).isNaN() || new BigNumber(amount).lte(0)) throw new Error('amount field is invalid!')
-    if (!feePercent || Number(feePercent) <= 0) throw new Error('feePercent field is invalid!')
-
-    if (!feeDecimals || feeDecimals <= 0) throw new Error('feeDecimals field should be greater than 0!')
+    if (!feePercent || Number.isNaN(Number(feePercent)) || Number(feePercent) <= 0) throw new Error('feePercent field is invalid!')
 
     if (!gasPriceWei || new BigNumber(gasPriceWei).isNaN() || new BigNumber(gasPriceWei).lte('0')) {
         throw new Error('gasPriceWei field is invalid!')
@@ -96,29 +97,24 @@ export function getFee ({
     if (!assetsPrices || !Object.entries(assetsPrices).length) {
         throw new Error('assetsPrices field is invalid!')
     }
-    if (!assetsPrices[asset]) throw new Error('asset field is invalid!')
+    Object.keys(assetsPrices).forEach(key => {
+        assetsPrices[key] = new BigNumber(assetsPrices[key])
+        if (assetsPrices[key].isNaN() || assetsPrices[key].lte(0)) throw new Error(`assetsPrices.${key} value should be valid BigNumber`)
+    })
+
+    if (!assetsPrices[baseAsset]) throw new Error('baseAsset field is invalid!')
     if (!assetsPrices[feeAsset]) throw new Error('feeAsset field is invalid!')
     if (!assetsPrices[networkAsset]) throw new Error('networkAsset field is invalid!')
 
-    const matcherFee = calculateMatcherFee({ baseAsset: asset, amount, assetsPrices, feePercent, feeAsset })
+    const matcherFee = calculateMatcherFee({ baseAsset, amount, assetsPrices, feePercent, feeAsset })
     const { networkFee } = calculateNetworkFee({ networkAsset, feeAsset, gasPriceWei, assetsPrices, needWithdraw, isPool })
 
     if (!matcherFee.gt(0)) throw new Error('matcherFee couldn`t be 0!')
     if (!networkFee.gt(0)) throw new Error('networkFee couldn`t be 0!')
 
-    const totalFee = matcherFee.plus(networkFee).decimalPlaces(feeDecimals)
+    const totalFee = matcherFee.plus(networkFee).decimalPlaces(EXCHANGE_ORDER_PRECISION)
 
     return totalFee
-}
-
-export function getNumberFormat(info: BlockchainInfo, from: string, to: string): NumberFormat {
-    const format = {...DEFAULT_NUMBER_FORMAT}
-    format.name = `${from}-${to}`
-    if(!info.assetToDecimals[from] && info.baseCurrencyName !== from) throw new Error('Invalid asset "from"')
-    if(!info.assetToDecimals[to] && info.baseCurrencyName !== to) throw new Error('Invalid asset "to"')
-    format.baseAssetPrecision = info.assetToDecimals[from] || 18
-    format.quoteAssetPrecision = info.assetToDecimals[to] || 18
-    return format
 }
 
 export function parseTradeOrder(item: any): TradeOrder {
@@ -260,3 +256,20 @@ export async function handleResponse(request: AxiosPromise): Promise<AxiosRespon
 
 //     if (timeoutExceeded) throw new Error(`Approve transaction ${txResponse.hash} failed!`)
 // }
+export function getTokenContracts (chain: Chain): Dictionary<ethers.Contract> {
+    const tokensContracts: Dictionary<ethers.Contract> = {};
+    const tokens = chain.blockchainInfo.assetToAddress;
+    for (const name in tokens) {
+        if (name === chain.blockchainInfo.baseCurrencyName) continue;
+        const tokenAddress = tokens[name];
+        const tokenContract = new ethers.Contract(
+            tokenAddress,
+            erc20ABI,
+            chain.signer
+        );
+
+        tokensContracts[name] = tokenContract;
+        tokensContracts[tokenAddress] = tokenContract;
+    }
+    return tokensContracts
+}
