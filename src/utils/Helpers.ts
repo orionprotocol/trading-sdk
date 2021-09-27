@@ -3,7 +3,8 @@ import { ethers } from "ethers";
 import { AxiosResponse, AxiosPromise } from "axios"
 import { Dictionary, BlockchainInfo,
     TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs} from "./Models";
-import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT, EXCHANGE_ORDER_PRECISION} from '../utils/Constants'
+import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT,
+    EXCHANGE_ORDER_PRECISION } from '../utils/Constants'
 import { Chain } from '../services/chain'
 import erc20ABI from '../abis/ERC20.json'
 
@@ -249,13 +250,21 @@ export async function handleResponse(request: AxiosPromise): Promise<AxiosRespon
     }
 }
 
-// export async function waitForTx(txResponse: ethers.providers.TransactionResponse, timeout: number): Promise<void> {
-//     console.log(txResponse, unsignedTx, timeout);
-//     let timeoutExceeded = false
-//     timeoutExceeded = false
+export async function waitForTx(txResponse: ethers.providers.TransactionResponse, timeoutSec: number, txType: string): Promise<ethers.providers.TransactionReceipt> {
+    let txHasResult = false
+    const timeoutRunner = setTimeout(() => {
+        if (!txHasResult) throw new Error(`"${txType}" transaction ${txResponse.hash} - status request failed due to exceeding the time limit of ${timeoutSec} seconds!`)
+    }, timeoutSec * 1000);
 
-//     if (timeoutExceeded) throw new Error(`Approve transaction ${txResponse.hash} failed!`)
-// }
+    const txResult = await txResponse.wait()
+    txHasResult = true
+    clearTimeout(timeoutRunner)
+
+    if (txResult.status !== 1) throw new Error(`"${txType}" transaction ${txResult.transactionHash} - failed with status ${txResult.status}!`)
+
+    return txResult
+}
+
 export function getTokenContracts (chain: Chain): Dictionary<ethers.Contract> {
     const tokensContracts: Dictionary<ethers.Contract> = {};
     const tokens = chain.blockchainInfo.assetToAddress;

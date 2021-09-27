@@ -6,7 +6,7 @@ dotenv.config()
 
 const { PRIVATE_KEY } = process.env
 
-describe.skip('Get balances', () => {
+describe('Get balances', () => {
     let chain: Chain
     let exchange: Exchange
 

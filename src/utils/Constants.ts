@@ -20,13 +20,13 @@ export const NETWORK = {
             RPC: 'https://bsc-dataseed.binance.org',
             ORION: 'https://trade-exp.orionprotocol.io',
             CHAIN_ID: 56,
-            TX_TIMEOUT_SEC: 60
+            TX_TIMEOUT_SEC: 120
         },
         ETH: {
             RPC: 'https://trade.orionprotocol.io/rpc',
             ORION: 'https://trade.orionprotocol.io',
             CHAIN_ID: 1,
-            TX_TIMEOUT_SEC: 60
+            TX_TIMEOUT_SEC: 120
         }
     }
 }
@@ -112,3 +112,9 @@ export const PRICE_DEVIATIONS = {
 }
 
 export const EXCHANGE_ORDER_PRECISION = 8
+
+export const CHAIN_TX_TYPES: Record<string, string> = {
+    approve: 'APPROVE',
+    deposit: 'DEPOSIT',
+    withdraw: 'WITHDRAW',
+}

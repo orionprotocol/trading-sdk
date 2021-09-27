@@ -1,10 +1,10 @@
 import BigNumber from "bignumber.js"
 import { ethers } from "ethers"
-import { DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT } from '../utils/Constants'
+import { DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, EXCHANGE_ORDER_PRECISION, CHAIN_TX_TYPES } from '../utils/Constants'
 import { BlockchainOrder, Dictionary, BalanceContract } from '../utils/Models'
 import { Chain } from './chain'
 import exchangeABI from '../abis/Exchange.json'
-import { numberToUnit, unitToNumber, handleResponse } from '../utils/Helpers'
+import { numberToUnit, unitToNumber, handleResponse, waitForTx } from '../utils/Helpers'
 
 export class Exchange {
     public readonly chain: Chain;
@@ -55,7 +55,7 @@ export class Exchange {
     }
 
     private parseContractBalance(total8: BigNumber, locked: string | number): BalanceContract {
-        const total = ethers.utils.formatUnits(ethers.BigNumber.from(total8.toString()), 8)
+        const total = ethers.utils.formatUnits(ethers.BigNumber.from(total8.toString()), EXCHANGE_ORDER_PRECISION)
         const totalBN = new BigNumber(total)
         const lockedBN = new BigNumber(locked)
 
@@ -70,25 +70,29 @@ export class Exchange {
         return balanceSummary
     }
 
-    private async depositETH(amountUnit: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionResponse> {
+    private async depositETH(amountUnit: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionReceipt> {
         const unsignedTx: ethers.PopulatedTransaction = await this.exchangeContract.populateTransaction.deposit();
         unsignedTx.value = ethers.BigNumber.from(amountUnit);
-        return this.chain.sendTransaction(
+        const txResponse = await this.chain.sendTransaction(
             unsignedTx,
             DEPOSIT_ETH_GAS_LIMIT,
             gasPriceWei
         )
+
+        return waitForTx(txResponse, this.chain.network.TX_TIMEOUT_SEC, CHAIN_TX_TYPES.deposit)
     }
 
-    private async depositERC20(currency: string, amountUnit: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionResponse> {
-        return this.chain.sendTransaction(
+    private async depositERC20(currency: string, amountUnit: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionReceipt> {
+        const txResponse = await this.chain.sendTransaction(
             await this.exchangeContract.populateTransaction.depositAsset(this.chain.getTokenAddress(currency), amountUnit),
             DEPOSIT_ERC20_GAS_LIMIT,
             gasPriceWei
         )
+
+        return waitForTx(txResponse, this.chain.network.TX_TIMEOUT_SEC, CHAIN_TX_TYPES.deposit)
     }
 
-    async deposit(currency: string, amount: string, gasPriceWei?: string): Promise<ethers.providers.TransactionResponse> {
+    async deposit(currency: string, amount: string, gasPriceWei?: string): Promise<ethers.providers.TransactionReceipt> {
         try {
             await this.chain.checkNetworkTokens()
 
@@ -113,7 +117,7 @@ export class Exchange {
         }
     }
 
-    async withdraw(currency: string, amount: string, gasPriceWei?: string): Promise<ethers.providers.TransactionResponse> {
+    async withdraw(currency: string, amount: string, gasPriceWei?: string): Promise<ethers.providers.TransactionReceipt> {
         try {
             await this.chain.checkNetworkTokens()
 
@@ -123,11 +127,13 @@ export class Exchange {
 
             if (balance[currency].available.lt(new BigNumber(amount))) throw new Error(`The available contract balance (${balance[currency].available}) is less than the withdrawal amount (${new BigNumber(amount)})! `)
 
-            return this.chain.sendTransaction(
+            const txResponse = await this.chain.sendTransaction(
                 await this.exchangeContract.populateTransaction.withdraw(this.chain.getTokenAddress(currency), amountUnit),
                 DEPOSIT_ERC20_GAS_LIMIT,
                 new BigNumber(gasPriceWeiLocal),
             );
+
+            return waitForTx(txResponse, this.chain.network.TX_TIMEOUT_SEC, CHAIN_TX_TYPES.withdraw)
         } catch (error) {
             return Promise.reject(error)
         }

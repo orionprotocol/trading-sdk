@@ -2,8 +2,8 @@ import { ethers } from 'ethers'
 import BigNumber from 'bignumber.js'
 import { BlockchainInfo, NetworkEntity, Dictionary } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
-import { NETWORK, NETWORK_TOKEN_ADDRESS, APPROVE_ERC20_GAS_LIMIT } from '../utils/Constants'
-import { handleResponse, getTokenContracts } from '../utils/Helpers'
+import { NETWORK, NETWORK_TOKEN_ADDRESS, APPROVE_ERC20_GAS_LIMIT, CHAIN_TX_TYPES } from '../utils/Constants'
+import { handleResponse, getTokenContracts, waitForTx } from '../utils/Helpers'
 import { Api } from './api'
 
 export class Chain {
@@ -288,10 +288,8 @@ export class Chain {
                 APPROVE_ERC20_GAS_LIMIT,
                 new BigNumber(gasPriceWei),
             )
-            // waitForTx(txResponse, this.network.TX_TIMEOUT_SEC)
-            const txResult = await txResponse.wait()
-            if (txResult.status !== 1) throw new Error(`Approve transaction ${txResult.transactionHash} failed!`)
-            return txResult
+
+            return waitForTx(txResponse, this.network.TX_TIMEOUT_SEC, CHAIN_TX_TYPES.approve)
         } catch (error) {
             return Promise.reject(error)
         }
