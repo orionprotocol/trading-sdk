@@ -13,7 +13,7 @@ jest.setTimeout(30000)
 
 const { PRIVATE_KEY } = process.env
 
-describe('Send order', () => {
+describe.skip('Send order', () => {
     let chain: Chain
     let orionAggregator: OrionAggregator
     let order: SignOrderModelRaw
