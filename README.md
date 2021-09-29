@@ -32,9 +32,9 @@ Parameter | Type | Required | Description
 *fromCurrency* | string | yes | token symbol
 *toCurrency* | string | yes | token symbol
 *side* | string | yes | 'buy' or 'sell'
-*price* | number | yes
-*amount* | number | yes
-*priceDeviation* | number | yes | price deviation percents 0.5 or 1
+*price* | number | yes | any number
+*amount* | number | yes | any number
+*priceDeviation* | number | yes | it's percents, 0 < priceDeviation < 50
 *needWithdraw* | boolean | yes
 *chainPrices* | object | no
 
@@ -249,7 +249,7 @@ const order = {
     side: 'sell',   // 'buy' or 'sell'
     price: 12,
     amount: 10,
-    priceDeviation: 1,   // 0.5 or 1 percent
+    priceDeviation: 1,   // it's percents: 0 < priceDeviation < 50
     needWithdraw: false,
     // 'chainPrices' is optional, use it when prices are already known
     // to increase request speed
