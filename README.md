@@ -235,8 +235,9 @@ import { OrionAggregator } from '@orionprotocol/orion-trading-sdk'
 
 orionAggregator = new OrionAggregator(chain)
 
-await orionAggregator.init()  // get aggregator info
+await orionAggregator.init()  // initializing of aggregator (required)
 
+// for information purposes
 orionAggregator.pairs // list of available exchange pairs
 ```
 
@@ -246,6 +247,7 @@ orionAggregator.pairs // list of available exchange pairs
 const order = {
     fromCurrency: 'ORN',
     toCurrency: 'DAI',
+    feeCurrency: 'ORN', // available fee tokens you can find in chain.tokensFee
     side: 'sell',   // 'buy' or 'sell'
     price: 12,
     amount: 10,
