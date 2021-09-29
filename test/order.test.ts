@@ -41,8 +41,8 @@ describe('Send order', () => {
             fromCurrency: 'ORN',
             toCurrency: 'USDT',
             feeCurrency: 'BNB',
-            side: 'buy',
-            price: 8.386,
+            side: 'sell',
+            price: 10,
             amount: 10,
             priceDeviation: 1,
             needWithdraw: false
