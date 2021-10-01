@@ -45,6 +45,7 @@ describe.skip('Send order with known chain prices', () => {
         order = {
             fromCurrency: 'ORN',
             toCurrency: 'USDT',
+            feeCurrency: 'ORN',
             side: 'sell',
             price: 10,
             amount: 10,
@@ -83,6 +84,7 @@ describe.skip('Send order with known chain prices', () => {
         order = {
             fromCurrency: 'USDC',
             toCurrency: 'USDT',
+            feeCurrency: 'ORN',
             side: 'sell',
             price: 2000,
             amount: 100,
@@ -101,6 +103,7 @@ describe.skip('Send order with known chain prices', () => {
         order = {
             fromCurrency: 'USD',
             toCurrency: 'USDT',
+            feeCurrency: 'ORN',
             side: 'sell',
             price: 2000,
             amount: 100,

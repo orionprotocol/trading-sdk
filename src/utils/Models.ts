@@ -17,6 +17,7 @@ export interface BlockchainInfo {
 export interface SignOrderModel {
     fromCurrency: string,
     toCurrency: string,
+    feeCurrency: string,
     side: string,
     price: BigNumber,
     amount: BigNumber,
@@ -34,6 +35,7 @@ export interface SignOrderModel {
 export interface SignOrderModelRaw {
     fromCurrency: string,
     toCurrency: string,
+    feeCurrency: string,
     side: string,
     price: number,
     amount: number,

@@ -1,6 +1,6 @@
 {
   "name": "@orionprotocol/orion-trading-sdk",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "🛠 An SDK for trading with OrionPool.",
   "repository": "https://github.com/orionprotocol/trading-sdk",
   "license": "MIT",

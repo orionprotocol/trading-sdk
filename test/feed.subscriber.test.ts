@@ -1,11 +1,11 @@
 import 'jest-extended'
 import { WS, Constants }  from '../src/index'
-import { Pair }  from '../src/utils/Models'
+import { Pair, OrderbookItem }  from '../src/utils/Models'
 
 jest.setTimeout(10000)
 
-describe.skip('Subscriber', () => {
-    const wsUrl = Constants.ORION_WS.TEST.BSC
+describe('Subscriber', () => {
+    const wsUrl = Constants.ORION_WS.MAIN.BSC
     const ws = new WS(wsUrl)
 
     it('Subscribe for all tickers price feed', async (done) => {
@@ -50,7 +50,7 @@ describe.skip('Subscriber', () => {
         // Listen
         orderBooksSubscriber.on('message', (message) => {
             orderBooksSubscriber.close()
-            const { asks, bids }: {asks: [], bids: []} = message
+            const { asks, bids }: {asks: OrderbookItem[], bids: OrderbookItem[]} = message
             expect(asks).toBeArray()
             expect(bids).toBeArray()
             done()
