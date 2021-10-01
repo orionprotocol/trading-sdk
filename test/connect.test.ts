@@ -8,7 +8,7 @@ dotenv.config()
 
 jest.setTimeout(40000)
 
-describe('Deposit and withdraw', () => {
+describe.skip('Deposit and withdraw', () => {
     let chain: Chain
     let walletFromMnemonic: ethers.Wallet
     const tokenAddress = '0x48edc7317A487ACdA0A96E030786875D727cD5e5'

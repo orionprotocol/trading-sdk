@@ -5,7 +5,7 @@ import { Pair, OrderbookItem }  from '../src/utils/Models'
 jest.setTimeout(10000)
 
 describe('Subscriber', () => {
-    const wsUrl = Constants.ORION_WS.MAIN.BSC
+    const wsUrl = Constants.ORION_WS.MAIN.ETH
     const ws = new WS(wsUrl)
 
     it('Subscribe for all tickers price feed', async (done) => {
@@ -17,6 +17,7 @@ describe('Subscriber', () => {
         subscriberForAll.on('message', (message) => {
             subscriberForAll.close()
             const keys = Object.keys(message)
+            console.log(keys.length);
             expect(keys).toBeArray()
             expect(keys.length).toBeTruthy()
             done()
@@ -32,6 +33,7 @@ describe('Subscriber', () => {
         subscriberOrnUsdt.on('message', (message: Record<string, Pair>) => {
             subscriberOrnUsdt.close()
             const keys = Object.keys(message)
+            console.log(message);
             const value: Pair = Object.values(message)[0]
             expect(keys).toBeArray()
             expect(keys.length).toBeTruthy()
@@ -51,6 +53,7 @@ describe('Subscriber', () => {
         orderBooksSubscriber.on('message', (message) => {
             orderBooksSubscriber.close()
             const { asks, bids }: {asks: OrderbookItem[], bids: OrderbookItem[]} = message
+            console.log(asks.length);
             expect(asks).toBeArray()
             expect(bids).toBeArray()
             done()
