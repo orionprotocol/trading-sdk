@@ -231,6 +231,7 @@ export interface GetFeeArgs {
     isPool: boolean;
     feePercent: string;
     feeAsset: string;
+    limits: Dictionary<number>;
 }
 
 export interface MatcherFeeArgs {

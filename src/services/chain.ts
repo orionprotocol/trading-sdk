@@ -2,7 +2,7 @@ import { ethers } from 'ethers'
 import BigNumber from 'bignumber.js'
 import { BlockchainInfo, NetworkEntity, Dictionary } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
-import { NETWORK, NETWORK_TOKEN_ADDRESS, APPROVE_ERC20_GAS_LIMIT } from '../utils/Constants'
+import { NETWORK, NETWORK_TOKEN_ADDRESS } from '../utils/Constants'
 import { handleResponse, getTokenContracts } from '../utils/Helpers'
 import { Api } from './api'
 
@@ -17,6 +17,7 @@ export class Chain {
     private _tokens!: Tokens
     private _isEthereum!: boolean
     private _tokensFee!: Dictionary<string>
+    private _baseLimits!: Dictionary<number>
 
     constructor(privateKey: string, network: NetworkEntity = NETWORK.TEST.BSC) {
         this.provider = new ethers.providers.JsonRpcProvider(network.RPC);
@@ -28,6 +29,7 @@ export class Chain {
     public async init(): Promise<void> {
         const info = await this.getBlockchainInfo();
         this._tokensFee = await this.getTokensFee()
+        this._baseLimits = await this.getBaseLimits()
         info.baseCurrencyName = this.getNetworkAsset(info)
         this._blockchainInfo = info
         this._tokens = new Tokens(this._blockchainInfo.assetToAddress);
@@ -41,6 +43,10 @@ export class Chain {
 
     get tokens(): Tokens {
         return this._tokens;
+    }
+
+    get baseLimits(): Dictionary<number> {
+        return this._baseLimits;
     }
 
     get tokensFee(): Dictionary<string> {
@@ -93,6 +99,10 @@ export class Chain {
 
     getTokensFee(): Promise<Dictionary<string>> {
         return handleResponse(this.api.orionBlockchain.get('/tokensFee'))
+    }
+
+    getBaseLimits(): Promise<Dictionary<number>> {
+        return handleResponse(this.api.orionBlockchain.get('/baseLimits'))
     }
 
     async getBlockchainPrices(): Promise<Record<string, BigNumber>> {
@@ -295,7 +305,7 @@ export class Chain {
             const unsignedTx = await tokenContract.populateTransaction.approve(toAddress, amountUnit);
             return this.sendTransaction(
                 unsignedTx,
-                APPROVE_ERC20_GAS_LIMIT,
+                this.baseLimits.APPROVE_ERC20_GAS_LIMIT,
                 new BigNumber(gasPriceWei),
             )
         } catch (error) {
