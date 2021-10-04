@@ -252,4 +252,9 @@ export interface PairConfig {
     quoteAssetPrecision: number; // formatting totals / toCurrency
     limitOrderThreshold?: number;
     executableOnBrokersPriceDeviation?: number;
-  }
+}
+
+export interface TxType {
+    code: number;
+    name: string;
+}

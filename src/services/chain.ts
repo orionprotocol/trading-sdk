@@ -217,7 +217,7 @@ export class Chain {
         }
     }
 
-    async allowanceHandler (currency: string, amount: string, gasPriceWei: string): Promise<ethers.providers.TransactionReceipt | void> {
+    async allowanceHandler (currency: string, amount: string, gasPriceWei: string): Promise<string | void> {
         if (this.isNetworkAsset(currency)) return
 
         try {
@@ -254,7 +254,7 @@ export class Chain {
         }
     }
 
-    async approve(currency: string, amountUnit: string, gasPriceWei?: string): Promise<ethers.providers.TransactionReceipt> {
+    async approve(currency: string, amountUnit: string, gasPriceWei?: string): Promise<string> {
         try {
             await this.checkNetworkTokens()
 
@@ -280,7 +280,7 @@ export class Chain {
         gasPriceWei: string,
         toAddress: string,
         tokenContract: ethers.Contract
-    }): Promise<ethers.providers.TransactionReceipt> {
+    }): Promise<string> {
         try {
             const unsignedTx = await tokenContract.populateTransaction.approve(toAddress, amountUnit);
             const txResponse = await this.sendTransaction(

@@ -1,4 +1,5 @@
 import BigNumber from "bignumber.js";
+import { TxType } from "./Models";
 
 export const NETWORK = {
     TEST: {
@@ -113,8 +114,17 @@ export const PRICE_DEVIATIONS = {
 
 export const EXCHANGE_ORDER_PRECISION = 8
 
-export const CHAIN_TX_TYPES: Record<string, string> = {
-    approve: 'APPROVE',
-    deposit: 'DEPOSIT',
-    withdraw: 'WITHDRAW',
+export const CHAIN_TX_TYPES: Record<string, TxType> = {
+    approve: {
+        code: 1,
+        name: 'APPROVE'
+    },
+    deposit: {
+        code: 2,
+        name: 'DEPOSIT'
+    },
+    withdraw: {
+        code: 3,
+        name: 'WITHDRAW'
+    },
 }

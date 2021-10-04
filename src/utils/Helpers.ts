@@ -2,11 +2,12 @@ import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
 import { AxiosResponse, AxiosPromise } from "axios"
 import { Dictionary, BlockchainInfo,
-    TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs} from "./Models";
+    TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs, TxType} from "./Models";
 import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT,
     EXCHANGE_ORDER_PRECISION } from '../utils/Constants'
 import { Chain } from '../services/chain'
 import erc20ABI from '../abis/ERC20.json'
+import { TxError } from './TxError'
 
 export function getPriceWithDeviation(price: BigNumber, side: string, deviation: BigNumber): BigNumber {
     const d = deviation.dividedBy(100)
@@ -250,19 +251,19 @@ export async function handleResponse(request: AxiosPromise): Promise<AxiosRespon
     }
 }
 
-export async function waitForTx(txResponse: ethers.providers.TransactionResponse, timeoutSec: number, txType: string): Promise<ethers.providers.TransactionReceipt> {
+export async function waitForTx(txResponse: ethers.providers.TransactionResponse, timeoutSec: number, txType: TxType): Promise<string> {
     let txHasResult = false
     const timeoutRunner = setTimeout(() => {
-        if (!txHasResult) throw new Error(`"${txType}" transaction ${txResponse.hash} - status request failed due to exceeding the time limit of ${timeoutSec} seconds!`)
+        if (!txHasResult) throw new TxError(txResponse.hash, txType, `Request failed due to exceeding the time limit of ${timeoutSec} seconds!`)
     }, timeoutSec * 1000);
 
     const txResult = await txResponse.wait()
     txHasResult = true
     clearTimeout(timeoutRunner)
 
-    if (txResult.status !== 1) throw new Error(`"${txType}" transaction ${txResult.transactionHash} - failed with status ${txResult.status}!`)
+    if (txResult.status !== 1) throw new TxError(txResponse.hash, txType, `Request failed with status ${txResult.status}!`)
 
-    return txResult
+    return txResponse.hash
 }
 
 export function getTokenContracts (chain: Chain): Dictionary<ethers.Contract> {

@@ -96,7 +96,7 @@ Parameter | Type | Required | Description
 *token* | string | yes |
 *amount* | string | yes |
 
-@return transaction object
+@return transaction hash
 
 ***withdraw(token, amount)***
 
@@ -105,7 +105,7 @@ Parameter | Type | Required | Description
 *token* | string | yes |
 *amount* | string | yes |
 
-@return transaction object
+@return transaction hash
 
 <hr>
 

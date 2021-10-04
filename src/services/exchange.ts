@@ -70,7 +70,7 @@ export class Exchange {
         return balanceSummary
     }
 
-    private async depositETH(amountUnit: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionReceipt> {
+    private async depositETH(amountUnit: string, gasPriceWei: BigNumber): Promise<string> {
         const unsignedTx: ethers.PopulatedTransaction = await this.exchangeContract.populateTransaction.deposit();
         unsignedTx.value = ethers.BigNumber.from(amountUnit);
         const txResponse = await this.chain.sendTransaction(
@@ -82,7 +82,7 @@ export class Exchange {
         return waitForTx(txResponse, this.chain.network.TX_TIMEOUT_SEC, CHAIN_TX_TYPES.deposit)
     }
 
-    private async depositERC20(currency: string, amountUnit: string, gasPriceWei: BigNumber): Promise<ethers.providers.TransactionReceipt> {
+    private async depositERC20(currency: string, amountUnit: string, gasPriceWei: BigNumber): Promise<string> {
         const txResponse = await this.chain.sendTransaction(
             await this.exchangeContract.populateTransaction.depositAsset(this.chain.getTokenAddress(currency), amountUnit),
             DEPOSIT_ERC20_GAS_LIMIT,
@@ -92,7 +92,7 @@ export class Exchange {
         return waitForTx(txResponse, this.chain.network.TX_TIMEOUT_SEC, CHAIN_TX_TYPES.deposit)
     }
 
-    async deposit(currency: string, amount: string, gasPriceWei?: string): Promise<ethers.providers.TransactionReceipt> {
+    async deposit(currency: string, amount: string, gasPriceWei?: string): Promise<string> {
         try {
             await this.chain.checkNetworkTokens()
 
@@ -117,7 +117,7 @@ export class Exchange {
         }
     }
 
-    async withdraw(currency: string, amount: string, gasPriceWei?: string): Promise<ethers.providers.TransactionReceipt> {
+    async withdraw(currency: string, amount: string, gasPriceWei?: string): Promise<string> {
         try {
             await this.chain.checkNetworkTokens()
 

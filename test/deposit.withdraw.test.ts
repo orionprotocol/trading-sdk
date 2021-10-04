@@ -29,12 +29,12 @@ describe('Deposit and withdraw', () => {
 
     it('Deposit token', async() => {
         const deposit = await exchange.deposit('ORN', '10')
-        expect(deposit.status).toBeTruthy()
+        expect(deposit).toBeTruthy()
     })
 
     it('Withdraw token', async() => {
         const withdraw = await exchange.withdraw('ORN', '10')
-        expect(withdraw.status).toBeTruthy()
+        expect(withdraw).toBeTruthy()
     })
 
 })
