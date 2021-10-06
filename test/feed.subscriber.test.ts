@@ -2,10 +2,10 @@ import 'jest-extended'
 import { WS, Constants }  from '../src/index'
 import { Pair, OrderbookItem }  from '../src/utils/Models'
 
-jest.setTimeout(10000)
+jest.setTimeout(20000)
 
 describe('Subscriber', () => {
-    const wsUrl = Constants.ORION_WS.MAIN.BSC
+    const wsUrl = Constants.ORION_WS.TEST.ETH
     const ws = new WS(wsUrl)
 
     it('Subscribe for all tickers price feed', async (done) => {

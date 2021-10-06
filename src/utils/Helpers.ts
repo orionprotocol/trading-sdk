@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
 import { AxiosResponse, AxiosPromise } from "axios"
 import { Dictionary, BlockchainInfo,
-    TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs} from "./Models";
+    TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs, OrderbookUpdates } from "./Models";
 import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT, EXCHANGE_ORDER_PRECISION} from '../utils/Constants'
 import { Chain } from '../services/chain'
 import erc20ABI from '../abis/ERC20.json'
@@ -192,9 +192,9 @@ export function parseOrderbookItem(arr: any): OrderbookItem {
     }
 }
 
-export function parseOrderbookItems (message: {asks: Array<[]>, bids: Array<[]>}): {asks: OrderbookItem[], bids: OrderbookItem[]} {
-    const { asks, bids } = message
-    return {asks: asks.map(parseOrderbookItem), bids: bids.map(parseOrderbookItem)}
+export function parseOrderbookItems (message: OrderbookUpdates): {asks: OrderbookItem[], bids: OrderbookItem[]} {
+    const { a, b } = message.ob
+    return {asks: a.map(parseOrderbookItem), bids: b.map(parseOrderbookItem)}
 }
 
 export function parsePair(arr: string[]): Pair {

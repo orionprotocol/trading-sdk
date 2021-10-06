@@ -4,6 +4,12 @@ import { ORION_WS } from '../utils/Constants'
 import EventEmitter from 'events'
 import { parseOrderbookItems, parsePairs } from '../utils/Helpers';
 
+const SubscriptionType = {
+    ASSET_PAIRS_CONFIG_UPDATES_SUBSCRIBE: 'apcus',
+    AGGREGATED_ORDER_BOOK_UPDATES_SUBSCRIBE: 'aobus',
+    ADDRESS_UPDATES_SUBSCRIBE: 'aus',
+}
+
 class WsEmitter extends EventEmitter {
     socket: ReconnectingWebSocket
 
@@ -24,11 +30,11 @@ interface MiddlewareFunction {
 export class WS {
     public readonly wsOrionUrl: string
 
-    constructor(url: string = ORION_WS.TEST.BSC) {
+    constructor(url: string = ORION_WS.MAIN.BSC) {
         this.wsOrionUrl = url
     }
 
-    private connect (url: string, middleware?: MiddlewareFunction): WsEmitter {
+    private connect (url: string, middleware?: MiddlewareFunction, query?: Record<string, unknown>): WsEmitter {
         const socket = new ReconnectingWebSocket(url, [], {
             WebSocket: Websocket
         });
@@ -41,13 +47,16 @@ export class WS {
 
         socket.onmessage = (message) => {
             if (!message.data) return
-
             let handledMessage = JSON.parse(message.data)
+
+            if (query && handledMessage.T && query.T !== `${handledMessage.T}s`) return
 
             if (middleware) handledMessage = middleware(handledMessage)
 
             localEmitter.emit('message', handledMessage);
         }
+
+        if (query) socket.send(JSON.stringify(query))
 
         return localEmitter
     }
@@ -64,9 +73,12 @@ export class WS {
         return this.connect(url, parsePairs)
     }
 
-    public orderBooks (symbol: string): WsEmitter {
-        const url = `${this.wsOrionUrl}/ws/${symbol}`
+    public orderBooks (pair: string): WsEmitter {
+        const url = `${this.wsOrionUrl}/v1`
 
-        return this.connect(url, parseOrderbookItems)
+        return this.connect(url, parseOrderbookItems, {
+            S: pair,
+            T: SubscriptionType.AGGREGATED_ORDER_BOOK_UPDATES_SUBSCRIBE
+        })
     }
 }

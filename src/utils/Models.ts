@@ -253,4 +253,14 @@ export interface PairConfig {
     quoteAssetPrecision: number; // formatting totals / toCurrency
     limitOrderThreshold?: number;
     executableOnBrokersPriceDeviation?: number;
-  }
+}
+
+export interface OrderbookUpdates {
+    T: string,
+    _: number
+    S: string,
+    ob: {
+        a: [][],
+        b: [][]
+    }
+}
