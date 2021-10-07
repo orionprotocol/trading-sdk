@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js"
-import { BlockchainOrder, SignOrderModel, SignOrderModelRaw, TradeOrder, CancelOrderRequest, PairConfig } from "../utils/Models"
+import { BlockchainOrder, SignOrderModel, SignOrderModelRaw, TradeOrder, CancelOrderRequest, PairConfig, TradeOrderV2 } from "../utils/Models"
 import { getPriceWithDeviation, getFee, numberTo8, handleResponse, parseTradeOrder} from '../utils/Helpers'
 import { DEFAULT_EXPIRATION, PRICE_DEVIATIONS } from '../utils/Constants'
 import { hashOrder, signOrder, signCancelOrder } from './crypto'
@@ -166,15 +166,15 @@ export class OrionAggregator {
         }
     }
 
-    public async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<{orderId: number}> {
-        return handleResponse(this.chain.api.orionAggregator.post(isCreateInternalOrder ? '/order/maker' : '/order', order))
+    public async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<{orderId: string}> {
+        return handleResponse(this.chain.api.orionAggregator.post(isCreateInternalOrder ? '/order/internal' : '/order', order))
     }
 
-    public async cancelOrder(orderId: number): Promise<{orderId: number}> {
+    public async cancelOrder(orderId: string): Promise<{orderId: string}> {
         try {
-            const order = await this.getOrderById(orderId)
+            const response = await this.getOrderById(orderId)
 
-            const cancelationSubject = this.getCancelationSubject(order)
+            const cancelationSubject = this.getCancelationSubject(response.order)
 
             cancelationSubject.signature = await signCancelOrder(cancelationSubject, this.chain.signer, this.chain.network.CHAIN_ID)
 
@@ -186,11 +186,11 @@ export class OrionAggregator {
         }
     }
 
-    private getCancelationSubject (order: TradeOrder): CancelOrderRequest {
+    private getCancelationSubject (order: TradeOrderV2): CancelOrderRequest {
         const { id, blockchainOrder } = order
         return {
             id,
-            senderAddress: blockchainOrder.senderAddress,
+            sender: blockchainOrder.senderAddress,
             signature: '',
             isPersonalSign: blockchainOrder.isPersonalSign
         }
@@ -214,8 +214,8 @@ export class OrionAggregator {
         return Array.isArray(data) && data.length ? data.map(parseTradeOrder) : []
     }
 
-    public async getOrderById (orderId: number): Promise<TradeOrder> {
-        const path = `/order?orderId=${orderId}`
+    public async getOrderById (orderId: string): Promise<{orderId: string, order: TradeOrderV2}> {
+        const path = `/order?orderId=${orderId}&owner=${this.chain.signer.address}`
 
         return handleResponse(this.chain.api.orionAggregator.get(path))
     }

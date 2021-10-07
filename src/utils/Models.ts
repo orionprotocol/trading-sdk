@@ -98,7 +98,7 @@ export const DEFAULT_NUMBER_FORMAT: NumberFormat = {
 
 export interface CancelOrderRequest {
     id: number | string;
-    senderAddress: string;
+    sender: string;
     signature: string;
     isPersonalSign: boolean;
 }
@@ -176,6 +176,25 @@ export interface TradeOrder {
     amount: BigNumber;
     price: BigNumber;
     total: BigNumber;
+    subOrders: TradeSubOrder[];
+}
+
+export interface TradeOrderV2 {
+    blockchainOrder: BlockchainOrder,
+    status: OrderStatus;
+    creationTime: number;
+    updateTime: number;
+    sender: string;
+    id: string;
+    type: string;
+    assetPair: string;
+    side: string;
+    amount: BigNumber;
+    remainingAmount: BigNumber;
+    price: BigNumber;
+    fee: BigNumber;
+    feeAsset: string;
+    internalOnly: boolean;
     subOrders: TradeSubOrder[];
 }
 

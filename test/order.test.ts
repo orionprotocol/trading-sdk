@@ -18,12 +18,12 @@ describe('Send order', () => {
     let orionAggregator: OrionAggregator
     let order: SignOrderModelRaw
     let signedOrder: BlockchainOrder
-    let sentOrderResponse: {orderId: number}
+    let sentOrderResponse: {orderId: string}
 
     if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY is required for this test!')
 
     it('Create chain instance and init', async () => {
-        chain = new Chain(PRIVATE_KEY, NETWORK.TEST.BSC)
+        chain = new Chain(PRIVATE_KEY, NETWORK.TEST.BSCV2)
         await chain.init()
         expect(chain.blockchainInfo).toHaveProperty('chainName')
         expect(chain.signer).toHaveProperty('address')
@@ -54,17 +54,17 @@ describe('Send order', () => {
 
     it('Send signed order', async () => {
         sentOrderResponse = await orionAggregator.sendOrder(signedOrder, false)
-        expect(sentOrderResponse.orderId).toBeNumber()
+        expect(sentOrderResponse.orderId).toBeString()
     })
 
     it('Check order status', async () => {
-        const order = await orionAggregator.getOrderById(sentOrderResponse.orderId)
-        expect(ORDER_STATUSES).toContain(order.status)
+        const response = await orionAggregator.getOrderById(sentOrderResponse.orderId)
+        expect(ORDER_STATUSES).toContain(response.order.status)
     })
 
     it('Cancel order', async () => {
         const orderCancelation = await orionAggregator.cancelOrder(sentOrderResponse.orderId)
-        expect(orderCancelation.orderId).toBeNumber()
+        expect(orderCancelation.orderId).toBeString()
     })
 
     it('Check order history', async () => {

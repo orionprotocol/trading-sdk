@@ -7,6 +7,11 @@ export const NETWORK = {
             ORION: 'https://dev-exp.orionprotocol.io',
             CHAIN_ID: 97
         },
+        BSCV2: {
+            RPC: 'https://data-seed-prebsc-2-s1.binance.org:8545',
+            ORION: 'https://dn-bsc.orionprotocol.io',
+            CHAIN_ID: 97
+        },
         ETH: {
             RPC: 'https://staging.orionprotocol.io/rpc',
             ORION: 'https://staging.orionprotocol.io',
@@ -30,6 +35,7 @@ export const NETWORK = {
 export const ORION_WS = {
     TEST: {
         BSC: 'wss://dev-exp.orionprotocol.io',
+        BSCV2: 'wss://dn-bsc.orionprotocol.io',
         ETH: 'wss://staging.orionprotocol.io',
     },
     MAIN: {
@@ -74,8 +80,8 @@ export const ORDER_TYPES = {
 
 export const CANCEL_ORDER_TYPES = {
     DeleteOrder: [
-        {name: "senderAddress", type: "address"},
-        {name: "id", type: process.env.REACT_APP_AGG_V2 ? "string" : "uint64"},
+        {name: "sender", type: "address"},
+        {name: "id", type: "string"},
     ],
 };
 

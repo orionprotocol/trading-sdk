@@ -26,7 +26,7 @@ export async function signCancelOrder(cancelOrderRequest: CancelOrderRequest, si
         };
 
         const msgParams = {data};
-        const bufferKey = Buffer.from((signer).privateKey.substr(2), 'hex');
+        const bufferKey = Buffer.from(signer.privateKey.substr(2), 'hex');
         return signTypedMessage(bufferKey, msgParams as any, 'V4');
     } else {
         throw new Error('privateKey is required!')
