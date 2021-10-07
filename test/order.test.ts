@@ -57,14 +57,14 @@ describe('Send order', () => {
         expect(sentOrderResponse.orderId).toBeNumber()
     })
 
-    it('Cancel order', async () => {
-        const orderCancelation = await orionAggregator.cancelOrder(sentOrderResponse.orderId)
-        expect(orderCancelation.orderId).toBeNumber()
-    })
-
     it('Check order status', async () => {
         const order = await orionAggregator.getOrderById(sentOrderResponse.orderId)
         expect(ORDER_STATUSES).toContain(order.status)
+    })
+
+    it('Cancel order', async () => {
+        const orderCancelation = await orionAggregator.cancelOrder(sentOrderResponse.orderId)
+        expect(orderCancelation.orderId).toBeNumber()
     })
 
     it('Check order history', async () => {

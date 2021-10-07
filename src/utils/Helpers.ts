@@ -120,18 +120,19 @@ export function getFee ({
 export function parseTradeOrder(item: any): TradeOrder {
     const amount = new BigNumber(item.orderQty);
     const price = new BigNumber(item.price);
-    const [fromCurrency, toCurrency] = item.symbol.split('-');
-    const subOrders = item.subOrders ? item.subOrders.map((sub: any) => parseTradeSubOrder(sub, item.symbol, item.side)) : [];
+    const [fromCurrency, toCurrency] = item.assetPair.split('-');
+    const subOrdersKeys = Object.keys(item.subOrders)
+    const subOrders = subOrdersKeys.length ? subOrdersKeys.map((key: any) => parseTradeSubOrder(item.subOrders[key], item.assetPair, item.side)) : [];
 
     const total = amount.multipliedBy(price);
 
     return {
         ...{
-            date: Number(item.time),
-            clientOrdId: item.clientOrdId,
-            id: Number(item.id),
+            date: Number(item.creationTime),
+            sender: item.sender,
+            id: item.id,
             type: item.side, // 'buy' / 'sell'
-            pair: item.symbol, // 'ETH-BTC'
+            pair: item.assetPair, // 'ETH-BTC'
         },
         blockchainOrder: item?.blockchainOrder,
         status: item.status,
@@ -152,11 +153,11 @@ export function parseTradeSubOrder(item: any, pair?: string, side?: Side): Trade
         pair: pr,
         exchange: item.exchange,
         id: Number(item.id),
-        amount: new BigNumber(item.subOrdQty),
+        amount: new BigNumber(item.amount),
         price: new BigNumber(item.price),
         status: item.status || 'NEW', // todo: backend,
-        subOrdQty: item.subOrdQty,
         side: sd,
+        tradesInfo: item.tradesInfo
     }
 }
 

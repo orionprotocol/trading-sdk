@@ -147,7 +147,7 @@ export interface TradeSubOrder {
     price: BigNumber;
     status: SubOrderStatus;
     side: Side;
-    subOrdQty: number;
+    tradesInfo: Dictionary<string | number | boolean>;
 }
 
 export type OrderStatus =
@@ -167,8 +167,8 @@ export interface TradeOrder {
     blockchainOrder: BlockchainOrder,
     status: OrderStatus;
     date: number;
-    clientOrdId: string;
-    id: number | string;
+    sender: string;
+    id: string;
     type: string;
     pair: string;
     fromCurrency: string;

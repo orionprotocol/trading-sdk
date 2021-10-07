@@ -1,6 +1,5 @@
 import BigNumber from "bignumber.js"
-import { BlockchainOrder, SignOrderModel, SignOrderModelRaw, TradeOrder, CancelOrderRequest, PairConfig,
-    Dictionary } from "../utils/Models"
+import { BlockchainOrder, SignOrderModel, SignOrderModelRaw, TradeOrder, CancelOrderRequest, PairConfig } from "../utils/Models"
 import { getPriceWithDeviation, getFee, numberTo8, handleResponse, parseTradeOrder} from '../utils/Helpers'
 import { DEFAULT_EXPIRATION, PRICE_DEVIATIONS } from '../utils/Constants'
 import { hashOrder, signOrder, signCancelOrder } from './crypto'
@@ -205,14 +204,14 @@ export class OrionAggregator {
         limit?: number,
     }): Promise<TradeOrder[]> {
         const url = '/order/history'
-        const params: Dictionary<string | number> = {
+        const params = {
             address: this.chain.signer.address,
             ...options
         }
 
-        const data = await handleResponse(this.chain.api.orionAggregator.get(url, params));
+        const data = await handleResponse(this.chain.api.orionAggregator.get(url, { params }));
 
-        return data.map(parseTradeOrder);
+        return Array.isArray(data) && data.length ? data.map(parseTradeOrder) : []
     }
 
     public async getOrderById (orderId: number): Promise<TradeOrder> {
