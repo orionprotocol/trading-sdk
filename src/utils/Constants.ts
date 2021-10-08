@@ -108,3 +108,7 @@ export const PRICE_DEVIATIONS = {
 }
 
 export const EXCHANGE_ORDER_PRECISION = 8
+
+export const TEST_WALLET = {
+    mnemonicPhrase: 'announce room limb pattern dry unit scale effort smooth jazz weasel alcohol'
+}
