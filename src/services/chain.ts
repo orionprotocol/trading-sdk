@@ -2,8 +2,8 @@ import { ethers } from 'ethers'
 import BigNumber from 'bignumber.js'
 import { BlockchainInfo, NetworkEntity, Dictionary } from '../utils/Models'
 import { Tokens } from '../utils/Tokens'
-import { NETWORK, NETWORK_TOKEN_ADDRESS } from '../utils/Constants'
-import { handleResponse, getTokenContracts } from '../utils/Helpers'
+import { NETWORK, NETWORK_TOKEN_ADDRESS, CHAIN_TX_TYPES } from '../utils/Constants'
+import { handleResponse, getTokenContracts, waitForTx } from '../utils/Helpers'
 import { Api } from './api'
 
 export class Chain {
@@ -22,7 +22,8 @@ export class Chain {
     constructor(privateKey: string, network: NetworkEntity = NETWORK.TEST.BSC) {
         this.provider = new ethers.providers.JsonRpcProvider(network.RPC);
         this.api = new Api(network)
-        this.signer = new ethers.Wallet(`0x${privateKey}`).connect(this.provider)
+        const privateKeyFormatted = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`
+        this.signer = new ethers.Wallet(privateKeyFormatted).connect(this.provider)
         this.network = network
     }
 
@@ -237,7 +238,7 @@ export class Chain {
         }
     }
 
-    async allowanceHandler (currency: string, amount: string, gasPriceWei: string): Promise<ethers.providers.TransactionResponse | void> {
+    async allowanceHandler (currency: string, amount: string, gasPriceWei: string): Promise<string | void> {
         if (this.isNetworkAsset(currency)) return
 
         try {
@@ -274,7 +275,7 @@ export class Chain {
         }
     }
 
-    async approve(currency: string, amountUnit: string, gasPriceWei?: string): Promise<ethers.providers.TransactionResponse> {
+    async approve(currency: string, amountUnit: string, gasPriceWei?: string): Promise<string> {
         try {
             await this.checkNetworkTokens()
 
@@ -300,14 +301,16 @@ export class Chain {
         gasPriceWei: string,
         toAddress: string,
         tokenContract: ethers.Contract
-    }): Promise<ethers.providers.TransactionResponse> {
+    }): Promise<string> {
         try {
             const unsignedTx = await tokenContract.populateTransaction.approve(toAddress, amountUnit);
-            return this.sendTransaction(
+            const txResponse = await this.sendTransaction(
                 unsignedTx,
                 this.baseLimits.APPROVE_ERC20_GAS_LIMIT,
                 new BigNumber(gasPriceWei),
             )
+
+            return waitForTx(txResponse, this.network.TX_TIMEOUT_SEC, CHAIN_TX_TYPES.approve)
         } catch (error) {
             return Promise.reject(error)
         }

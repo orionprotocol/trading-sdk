@@ -96,7 +96,7 @@ Parameter | Type | Required | Description
 *token* | string | yes |
 *amount* | string | yes |
 
-@return transaction object
+@return transaction hash
 
 ***withdraw(token, amount)***
 
@@ -105,7 +105,7 @@ Parameter | Type | Required | Description
 *token* | string | yes |
 *amount* | string | yes |
 
-@return transaction object
+@return transaction hash
 
 <hr>
 
@@ -373,3 +373,6 @@ npm run test
 ```
 
 You should see output with all test passed
+
+## Resources
+- **[Changelog](https://github.com/orionprotocol/trading-sdk/CHANGELOG.md)**
