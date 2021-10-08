@@ -128,3 +128,7 @@ export const CHAIN_TX_TYPES: Record<string, TxType> = {
         name: 'WITHDRAW'
     },
 }
+
+export const TEST_WALLET = {
+    mnemonicPhrase: 'announce room limb pattern dry unit scale effort smooth jazz weasel alcohol'
+}

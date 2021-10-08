@@ -21,7 +21,8 @@ export class Chain {
     constructor(privateKey: string, network: NetworkEntity = NETWORK.TEST.BSC) {
         this.provider = new ethers.providers.JsonRpcProvider(network.RPC);
         this.api = new Api(network)
-        this.signer = new ethers.Wallet(`0x${privateKey}`).connect(this.provider)
+        const privateKeyFormatted = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`
+        this.signer = new ethers.Wallet(privateKeyFormatted).connect(this.provider)
         this.network = network
     }
 
