@@ -1,19 +1,16 @@
 import 'jest-extended'
+import { ethers } from 'ethers';
 import { Chain, Exchange } from '../src/index'
-import { NETWORK } from '../src/utils/Constants'
-import dotenv from 'dotenv';
-dotenv.config()
-
-const { PRIVATE_KEY } = process.env
+import { NETWORK, TEST_WALLET } from '../src/utils/Constants'
 
 describe('Get balances', () => {
     let chain: Chain
     let exchange: Exchange
+    const walletFromMnemonic = ethers.Wallet.fromMnemonic(TEST_WALLET.mnemonicPhrase)
 
-    if (!PRIVATE_KEY) throw new Error('PRIVATE_KEY is required for this test!')
 
     it('Create chain instance and init', async () => {
-        chain = new Chain(PRIVATE_KEY, NETWORK.TEST.BSC)
+        chain = new Chain(walletFromMnemonic.privateKey, NETWORK.TEST.BSC)
         await chain.init()
         expect(chain.blockchainInfo).toHaveProperty('chainName')
         expect(chain.signer).toHaveProperty('address')
