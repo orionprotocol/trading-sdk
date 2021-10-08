@@ -373,3 +373,6 @@ npm run test
 ```
 
 You should see output with all test passed
+
+## Resources
+- **[Changelog](https://github.com/orionprotocol/trading-sdk/CHANGELOG.md)**
