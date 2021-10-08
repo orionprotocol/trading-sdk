@@ -35,8 +35,8 @@ export class WS {
 
         const localEmitter = new WsEmitter(socket);
 
-        socket.onerror = () => {
-            throw new Error(`WS connection error, check your path!`)
+        socket.onerror = (error) => {
+            throw new Error(`WS connection error: ${error.message}!`)
         }
 
         socket.onmessage = (message) => {
