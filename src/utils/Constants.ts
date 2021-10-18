@@ -12,7 +12,8 @@ export const NETWORK = {
         BSCV2: {
             RPC: 'https://data-seed-prebsc-2-s1.binance.org:8545',
             ORION: 'https://dn-bsc.orionprotocol.io',
-            CHAIN_ID: 97
+            CHAIN_ID: 97,
+            TX_TIMEOUT_SEC: 60
         },
         ETH: {
             RPC: 'https://staging.orionprotocol.io/rpc',

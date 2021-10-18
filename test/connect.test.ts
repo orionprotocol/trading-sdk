@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 
 jest.setTimeout(40000)
 
-describe('Deposit and withdraw', () => {
+describe('Connecting, creating instances', () => {
     let chain: Chain
     const walletFromMnemonic = ethers.Wallet.fromMnemonic(TEST_WALLET.mnemonicPhrase)
 
@@ -19,10 +19,17 @@ describe('Deposit and withdraw', () => {
     })
 
     it('Create orionAggregator instance and init', async () => {
-        const orionAggregator = new OrionAggregator(chain)
-        await orionAggregator.init()
-        expect(orionAggregator).toHaveProperty('chain')
-        expect(orionAggregator).toHaveProperty('pairs')
+        try {
+            const orionAggregator = new OrionAggregator(chain)
+            await orionAggregator.init()
+            const history = await orionAggregator.getTradeHistory()
+            console.log('version', orionAggregator.version);
+            console.log('history', history);
+            expect(orionAggregator).toHaveProperty('chain')
+            expect(orionAggregator).toHaveProperty('pairs')
+        } catch (error) {
+            console.log(error);
+        }
     })
 
 })

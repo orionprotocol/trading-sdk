@@ -139,15 +139,26 @@ export type SubOrderStatus =
     | 'FAILED'
     | 'SETTLED';
 
+
 export interface TradeSubOrder {
-    pair: string;
+    amount: BigNumber;
     exchange: string;
     id: number;
+    price: BigNumber;
+    status: SubOrderStatus;
+    side: Side;
+    sent: boolean;
+    pair: string;
+}
+export interface TradeSubOrderV2 {
     amount: BigNumber;
+    exchange: string;
+    id: number;
     price: BigNumber;
     status: SubOrderStatus;
     side: Side;
     tradesInfo: Dictionary<string | number | boolean>;
+    pair: string,
 }
 
 export type OrderStatus =
@@ -165,37 +176,43 @@ export type OrderStatus =
 
 export interface TradeOrder {
     blockchainOrder: BlockchainOrder,
-    status: OrderStatus;
+    id: number;
+    baseAsset: string;
+    quoteAsset: string;
+    feeAsset: string;
     date: number;
-    sender: string;
-    id: string;
-    type: string;
     pair: string;
-    fromCurrency: string;
-    toCurrency: string;
     amount: BigNumber;
     price: BigNumber;
-    total: BigNumber;
+    side: Side;
+    status: OrderStatus;
     subOrders: TradeSubOrder[];
+    total: BigNumber;
 }
 
 export interface TradeOrderV2 {
+    pair: string;
+    baseAsset: string;
+    quoteAsset: string;
+    feeAsset: string;
     blockchainOrder: BlockchainOrder,
     status: OrderStatus;
-    creationTime: number;
-    updateTime: number;
-    sender: string;
+    date: number;
     id: string;
-    type: string;
-    assetPair: string;
     side: string;
     amount: BigNumber;
-    remainingAmount: BigNumber;
     price: BigNumber;
     fee: BigNumber;
-    feeAsset: string;
-    internalOnly: boolean;
-    subOrders: TradeSubOrder[];
+    subOrders: TradeSubOrderV2[];
+    total: BigNumber;
+}
+
+export interface HistoryParams {
+    baseAsset?: string;
+    quoteAsset?: string;
+    startTime?: number;
+    endTime?: number;
+    limit?: number;
 }
 
 export interface DomainData {

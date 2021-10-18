@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { Chain, Exchange } from '../src/index'
 import { NETWORK, TEST_WALLET } from '../src/utils/Constants'
 
-describe('Get balances', () => {
+describe.skip('Get balances', () => {
     let chain: Chain
     let exchange: Exchange
     const walletFromMnemonic = ethers.Wallet.fromMnemonic(TEST_WALLET.mnemonicPhrase)
