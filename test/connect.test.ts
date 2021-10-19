@@ -10,7 +10,7 @@ describe('Connecting, creating instances', () => {
     const walletFromMnemonic = ethers.Wallet.fromMnemonic(TEST_WALLET.mnemonicPhrase)
 
     it('Create chain instance and init', async () => {
-        chain = new Chain(walletFromMnemonic.privateKey, NETWORK.TEST.BSC)
+        chain = new Chain(walletFromMnemonic.privateKey, NETWORK.TEST.BSCV2)
         await chain.init()
         expect(chain).toHaveProperty('tokensFee')
         expect(chain).toHaveProperty('tokens')
@@ -19,17 +19,11 @@ describe('Connecting, creating instances', () => {
     })
 
     it('Create orionAggregator instance and init', async () => {
-        try {
-            const orionAggregator = new OrionAggregator(chain)
-            await orionAggregator.init()
-            const history = await orionAggregator.getTradeHistory()
-            console.log('version', orionAggregator.version);
-            console.log('history', history);
-            expect(orionAggregator).toHaveProperty('chain')
-            expect(orionAggregator).toHaveProperty('pairs')
-        } catch (error) {
-            console.log(error);
-        }
+        const orionAggregator = new OrionAggregator(chain)
+        await orionAggregator.init()
+        expect(orionAggregator).toHaveProperty('chain')
+        expect(orionAggregator).toHaveProperty('pairs')
+        expect(orionAggregator).toHaveProperty('version')
     })
 
 })

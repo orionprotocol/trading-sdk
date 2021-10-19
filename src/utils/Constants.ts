@@ -84,10 +84,17 @@ export const ORDER_TYPES = {
     ],
 }
 
-export const CANCEL_ORDER_TYPES = {
+export const CANCEL_ORDER_TYPES_V2 = {
     DeleteOrder: [
         {name: "sender", type: "address"},
         {name: "id", type: "string"},
+    ],
+};
+
+export const CANCEL_ORDER_TYPES = {
+    DeleteOrder: [
+        {name: "senderAddress", type: "address"},
+        {name: "id", type: "uint64"},
     ],
 };
 

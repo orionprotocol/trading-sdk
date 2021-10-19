@@ -96,9 +96,16 @@ export const DEFAULT_NUMBER_FORMAT: NumberFormat = {
     "executableOnBrokersPriceDeviation": 0.001
 }
 
-export interface CancelOrderRequest {
+export interface CancelOrderRequestV2 {
     id: number | string;
     sender: string;
+    signature: string;
+    isPersonalSign: boolean;
+}
+
+export interface CancelOrderRequest {
+    id: number | string;
+    senderAddress: string;
     signature: string;
     isPersonalSign: boolean;
 }
@@ -177,9 +184,11 @@ export type OrderStatus =
 export interface TradeOrder {
     blockchainOrder: BlockchainOrder,
     id: number;
+    sender: string;
     baseAsset: string;
     quoteAsset: string;
     feeAsset: string;
+    fee: BigNumber;
     date: number;
     pair: string;
     amount: BigNumber;
@@ -197,6 +206,7 @@ export interface TradeOrderV2 {
     feeAsset: string;
     blockchainOrder: BlockchainOrder,
     status: OrderStatus;
+    sender: string;
     date: number;
     id: string;
     side: string;

@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
 import { AxiosResponse, AxiosPromise } from "axios"
 import { Dictionary, BlockchainInfo, TradeOrderV2, TradeSubOrderV2,
-    TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs, OrderbookUpdates, TxType } from "./Models";
+    TradeOrder, TradeSubOrder, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs, OrderbookUpdates, TxType } from "./Models";
 import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT, EXCHANGE_ORDER_PRECISION} from '../utils/Constants'
 import { Chain } from '../services/chain'
 import erc20ABI from '../abis/ERC20.json'
@@ -128,7 +128,7 @@ export function parseTradeOrder(item: any): TradeOrder {
     return {
         ...{
             date: Number(item.time),
-            clientOrdId: item.clientOrdId,
+            sender: item.clientId,
             id: Number(item.id),
             type: item.side, // 'buy' / 'sell'
             pair: item.symbol, // 'ETH-BTC'
@@ -138,6 +138,7 @@ export function parseTradeOrder(item: any): TradeOrder {
         baseAsset: item.baseAsset,
         quoteAsset: item.quoteAsset,
         feeAsset: item.feeCurrency,
+        fee: new BigNumber(item.feeQty),
         side: item.side,
         amount,
         price,
@@ -162,6 +163,7 @@ export function parseTradeSubOrder(item: any): TradeSubOrder {
 export function parseTradeOrderV2(item: any): TradeOrderV2 {
     const amount = new BigNumber(item.amount);
     const price = new BigNumber(item.price);
+    const [baseAsset, quoteAsset] = item.assetPair.split('-')
     const subOrdersKeys = Object.keys(item.subOrders)
     const subOrders = subOrdersKeys.length ? subOrdersKeys.map((key: any) => parseTradeSubOrderV2(item.subOrders[key])) : [];
 
@@ -177,10 +179,10 @@ export function parseTradeOrderV2(item: any): TradeOrderV2 {
         },
         blockchainOrder: item?.blockchainOrder,
         status: item.status,
-        baseAsset: item.baseAsset,
-        quoteAsset: item.quoteAsset,
-        feeAsset: item.feeCurrency,
-        fee: item.fee,
+        baseAsset,
+        quoteAsset,
+        feeAsset: item.feeAsset,
+        fee: new BigNumber(item.fee),
         amount,
         side: item.side,
         price,
@@ -196,7 +198,7 @@ export function parseTradeSubOrderV2(item: any): TradeSubOrderV2 {
         id: Number(item.id),
         amount: new BigNumber(item.amount),
         price: new BigNumber(item.price),
-        status: item.status || 'NEW', // todo: backend,
+        status: item.status || 'NEW',
         side: item.side,
         tradesInfo: item.tradesInfo
     }
