@@ -76,8 +76,14 @@ Parameter | Type | Required | Description
 
 @return order with requested id
 
-***getTradeHistory()***
-- no params
+***getTradeHistory({...options})***
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*baseAsset* | string | no | token address
+*quoteAsset* | string | no | token address
+*startTime* | number | no |
+*endTime* | number | no |
+*limit* | number | no | default 1000
 
 @return list of orders
 
@@ -265,7 +271,7 @@ const order = {
     }
 }
 
-// sign order
+// create and sign order
 const signedOrder = await orionAggregator.createOrder(order)
 
 // send order
@@ -281,10 +287,12 @@ const orderCancelation = await orionAggregator.cancelOrder(sentOrderResponse.ord
 
 **Get orders history/status:**
 ```javascript
+// getTradeHistory returns list of orders
 const history = await orionAggregator.getTradeHistory()
 
+// getOrderById returns order object
 const order = await orionAggregator.getOrderById(sentOrderResponse.orderId)
-const status = order.status
+// const status = order.status
 ```
 
 ## Websockets
@@ -300,6 +308,9 @@ const wsUrl = Constants.ORION_WS.TEST.BSC
 
 // wsUrl by default is ORION_WS.TEST.BSC
 const ws = new WS(wsUrl)
+
+// Important step before using!!
+await ws.init()
 ```
 
 **To subscribe to the price feed:**
@@ -357,16 +368,8 @@ Install dependencies
 npm install
 ```
 
-Copy .env.example file to .env
-```sh
-cp .env.example .env
-```
 
-Fill environment variables. It's necessary for order testing.
-```sh
-PRIVATE_KEY= # your private key
-```
-**Also network tokens are required to pay for transactions, as well as tokens for deposit / withdrawal / exchange. (10 ORN in test cases)**
+
 
 Run tests
 

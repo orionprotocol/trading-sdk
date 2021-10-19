@@ -236,7 +236,12 @@ export function parseOrderbookItem(arr: any): OrderbookItem {
     }
 }
 
-export function parseOrderbookItems (message: OrderbookUpdates): {asks: OrderbookItem[], bids: OrderbookItem[]} {
+export function parseOrderbookItemsV1 (message: {asks: Array<[]>, bids: Array<[]>}): {asks: OrderbookItem[], bids: OrderbookItem[]} {
+    const { asks, bids } = message
+    return {asks: asks.map(parseOrderbookItem), bids: bids.map(parseOrderbookItem)}
+}
+
+export function parseOrderbookItemsV2 (message: OrderbookUpdates): {asks: OrderbookItem[], bids: OrderbookItem[]} {
     const { a, b } = message.ob
     return {asks: a.map(parseOrderbookItem), bids: b.map(parseOrderbookItem)}
 }

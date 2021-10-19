@@ -2,7 +2,7 @@ import Websocket from 'ws';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { ORION_WS } from '../utils/Constants'
 import EventEmitter from 'events'
-import { parseOrderbookItems, parsePairs } from '../utils/Helpers';
+import { parseOrderbookItemsV1, parseOrderbookItemsV2, parsePairs } from '../utils/Helpers';
 import axios from 'axios';
 
 const SubscriptionType = {
@@ -64,7 +64,6 @@ export class WS {
         }
 
         socket.onmessage = (message) => {
-            console.log('message', message.data);
             if (!message.data) return
             let handledMessage = JSON.parse(message.data)
 
@@ -93,9 +92,19 @@ export class WS {
     }
 
     public orderBooks (pair: string): WsEmitter {
+        return this.version === 2 ? this.orderBooksV2(pair) : this.orderBooksV1(pair)
+    }
+
+    private orderBooksV1 (pair: string): WsEmitter {
+        const url = `${this.wsOrionUrl}/ws/${pair}`
+
+        return this.connect(url, parseOrderbookItemsV1)
+    }
+
+    private orderBooksV2 (pair: string): WsEmitter {
         const url = `${this.wsOrionUrl}/v1`
 
-        return this.connect(url, parseOrderbookItems, {
+        return this.connect(url, parseOrderbookItemsV2, {
             S: pair,
             T: SubscriptionType.AGGREGATED_ORDER_BOOK_UPDATES_SUBSCRIBE
         })
