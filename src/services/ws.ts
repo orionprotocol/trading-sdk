@@ -3,6 +3,7 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 import { ORION_WS } from '../utils/Constants'
 import EventEmitter from 'events'
 import { parseOrderbookItems, parsePairs } from '../utils/Helpers';
+import axios from 'axios';
 
 const SubscriptionType = {
     ASSET_PAIRS_CONFIG_UPDATES_SUBSCRIBE: 'apcus',
@@ -29,9 +30,26 @@ interface MiddlewareFunction {
 
 export class WS {
     public readonly wsOrionUrl: string
+    private _version!: number
 
     constructor(url: string = ORION_WS.MAIN.BSC) {
         this.wsOrionUrl = url
+    }
+
+    public async init(): Promise<void> {
+        let version = 1
+        try {
+            const url = this.wsOrionUrl.replace('wss://', 'https://')
+            const { data } = await axios.get(`${url}/backend/api/v1/version`)
+            version = data.apiVersion
+        } catch (error) {
+            version = 1
+        }
+        this._version = Number(version)
+    }
+
+    get version (): number {
+        return this._version
     }
 
     private connect (url: string, middleware?: MiddlewareFunction, query?: Record<string, unknown>): WsEmitter {
@@ -46,6 +64,7 @@ export class WS {
         }
 
         socket.onmessage = (message) => {
+            console.log('message', message.data);
             if (!message.data) return
             let handledMessage = JSON.parse(message.data)
 

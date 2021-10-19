@@ -4,11 +4,11 @@ import { Pair, OrderbookItem }  from '../src/utils/Models'
 
 jest.setTimeout(20000)
 
-describe.skip('Subscriber', () => {
+describe('Subscriber', () => {
     const wsUrl = Constants.ORION_WS.TEST.BSCV2
     const ws = new WS(wsUrl)
 
-    it('Subscribe for all tickers price feed', async (done) => {
+    it.skip('Subscribe for all tickers price feed', async (done) => {
 
         // Create subscriber
         const subscriberForAll = ws.priceFeedAll()
@@ -23,7 +23,7 @@ describe.skip('Subscriber', () => {
         });
     })
 
-    it('Subscribe for specific ticker price feed', async (done) => {
+    it.skip('Subscribe for specific ticker price feed', async (done) => {
 
         // Create another subscriber ORN-USDT
         const subscriberOrnUsdt = ws.priceFeedTicker('ORN-USDT')
@@ -49,6 +49,7 @@ describe.skip('Subscriber', () => {
 
         // Listen
         orderBooksSubscriber.on('message', (message) => {
+            console.log(message.asks.length, message.bids.length);
             orderBooksSubscriber.close()
             const { asks, bids }: {asks: OrderbookItem[], bids: OrderbookItem[]} = message
             expect(asks).toBeArray()

@@ -5,12 +5,12 @@ import { ethers } from 'ethers';
 
 jest.setTimeout(40000)
 
-describe('Connecting, creating instances', () => {
+describe.skip('Connecting, creating instances', () => {
     let chain: Chain
     const walletFromMnemonic = ethers.Wallet.fromMnemonic(TEST_WALLET.mnemonicPhrase)
 
     it('Create chain instance and init', async () => {
-        chain = new Chain(walletFromMnemonic.privateKey, NETWORK.TEST.BSCV2)
+        chain = new Chain(walletFromMnemonic.privateKey, NETWORK.TEST.BSC)
         await chain.init()
         expect(chain).toHaveProperty('tokensFee')
         expect(chain).toHaveProperty('tokens')
