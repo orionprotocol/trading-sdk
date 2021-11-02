@@ -37,7 +37,7 @@ Parameter | Type | Required | Description
 *price* | number | yes | any number
 *amount* | number | yes | any number
 *priceDeviation* | number | yes | it's percents, 0 < priceDeviation < 50
-*needWithdraw* | boolean | yes
+*needWithdraw* | boolean | yes | withdraw the received tokens to the wallet
 *chainPrices* | object | no
 
 *chainPrices* is optional (use it if you already knew prices):
@@ -45,7 +45,7 @@ Parameter | Type | Required | Description
 Parameter | Type | Required | Description
 --- | --- | --- | ---
 *gasWei* | string | yes | gas price in wei
-*baseAsset* | string/number | yes
+*baseAsset* | string/number | yes | aka 'fromCurrency'
 *networkAsset* | string/number | yes
 *feeAsset* | string/number | yes
 

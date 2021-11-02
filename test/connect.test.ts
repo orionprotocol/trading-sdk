@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 
 jest.setTimeout(40000)
 
-describe('Connecting, creating instances', () => {
+describe('Connection and initializing', () => {
     let chain: Chain
     const walletFromMnemonic = ethers.Wallet.fromMnemonic(TEST_WALLET.mnemonicPhrase)
 

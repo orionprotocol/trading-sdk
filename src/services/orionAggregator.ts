@@ -133,6 +133,7 @@ export class OrionAggregator {
                 needWithdraw: params.needWithdraw,
                 isPool: false,
                 feeAsset: params.feeCurrency,
+                limits: this.chain.baseLimits
             })
 
             const priceWithDeviation = params.priceDeviation.isZero() ? params.price : getPriceWithDeviation(params.price, params.side, params.priceDeviation);
