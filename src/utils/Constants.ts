@@ -3,7 +3,7 @@ import { TxType } from "./Models";
 export const NETWORK = {
     TEST: {
         BSC: {
-            RPC: 'https://data-seed-prebsc-2-s1.binance.org:8545',
+            RPC: 'https://data-seed-prebsc-1-s1.binance.org:8545',
             ORION: 'https://dev-exp.orionprotocol.io',
             CHAIN_ID: 97,
             TX_TIMEOUT_SEC: 60
