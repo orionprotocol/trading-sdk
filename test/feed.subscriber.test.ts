@@ -2,14 +2,14 @@ import 'jest-extended'
 import { WS, Constants }  from '../src/index'
 import { Pair, OrderbookItem }  from '../src/utils/Models'
 
-jest.setTimeout(10000)
+jest.setTimeout(20000)
 
 describe('Subscriber', () => {
-    const wsUrl = Constants.ORION_WS.MAIN.BSC
+    const wsUrl = Constants.ORION_WS.TEST.BSC
     const ws = new WS(wsUrl)
 
     it('Subscribe for all tickers price feed', async (done) => {
-
+        await ws.init()
         // Create subscriber
         const subscriberForAll = ws.priceFeedAll()
 
@@ -24,7 +24,6 @@ describe('Subscriber', () => {
     })
 
     it('Subscribe for specific ticker price feed', async (done) => {
-
         // Create another subscriber ORN-USDT
         const subscriberOrnUsdt = ws.priceFeedTicker('ORN-USDT')
 
@@ -43,7 +42,6 @@ describe('Subscriber', () => {
     })
 
     it('Subscribe for orderbooks', async (done) => {
-
         // Create subscriber
         const orderBooksSubscriber = ws.orderBooks('ORN-USDT')
 

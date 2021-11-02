@@ -96,6 +96,13 @@ export const DEFAULT_NUMBER_FORMAT: NumberFormat = {
     "executableOnBrokersPriceDeviation": 0.001
 }
 
+export interface CancelOrderRequestV2 {
+    id: number | string;
+    sender: string;
+    signature: string;
+    isPersonalSign: boolean;
+}
+
 export interface CancelOrderRequest {
     id: number | string;
     senderAddress: string;
@@ -139,15 +146,26 @@ export type SubOrderStatus =
     | 'FAILED'
     | 'SETTLED';
 
+
 export interface TradeSubOrder {
-    pair: string;
+    amount: BigNumber;
     exchange: string;
     id: number;
-    amount: BigNumber;
     price: BigNumber;
     status: SubOrderStatus;
     side: Side;
-    subOrdQty: number;
+    sent: boolean;
+    pair: string;
+}
+export interface TradeSubOrderV2 {
+    amount: BigNumber;
+    exchange: string;
+    id: number;
+    price: BigNumber;
+    status: SubOrderStatus;
+    side: Side;
+    tradesInfo: Dictionary<string | number | boolean>;
+    pair: string,
 }
 
 export type OrderStatus =
@@ -165,18 +183,46 @@ export type OrderStatus =
 
 export interface TradeOrder {
     blockchainOrder: BlockchainOrder,
-    status: OrderStatus;
+    id: number;
+    sender: string;
+    baseAsset: string;
+    quoteAsset: string;
+    feeAsset: string;
+    fee: BigNumber;
     date: number;
-    clientOrdId: string;
-    id: number | string;
-    type: string;
     pair: string;
-    fromCurrency: string;
-    toCurrency: string;
     amount: BigNumber;
     price: BigNumber;
-    total: BigNumber;
+    side: Side;
+    status: OrderStatus;
     subOrders: TradeSubOrder[];
+    total: BigNumber;
+}
+
+export interface TradeOrderV2 {
+    pair: string;
+    baseAsset: string;
+    quoteAsset: string;
+    feeAsset: string;
+    blockchainOrder: BlockchainOrder,
+    status: OrderStatus;
+    sender: string;
+    date: number;
+    id: string;
+    side: string;
+    amount: BigNumber;
+    price: BigNumber;
+    fee: BigNumber;
+    subOrders: TradeSubOrderV2[];
+    total: BigNumber;
+}
+
+export interface HistoryParams {
+    baseAsset?: string;
+    quoteAsset?: string;
+    startTime?: number;
+    endTime?: number;
+    limit?: number;
 }
 
 export interface DomainData {
@@ -212,7 +258,8 @@ export interface Pair {
 export interface NetworkEntity {
     RPC: string,
     ORION: string,
-    CHAIN_ID: number
+    CHAIN_ID: number,
+    TX_TIMEOUT_SEC: number
 }
 
 export interface BalanceContract {
@@ -231,6 +278,7 @@ export interface GetFeeArgs {
     isPool: boolean;
     feePercent: string;
     feeAsset: string;
+    limits: Dictionary<number>;
 }
 
 export interface MatcherFeeArgs {
@@ -253,4 +301,18 @@ export interface PairConfig {
     quoteAssetPrecision: number; // formatting totals / toCurrency
     limitOrderThreshold?: number;
     executableOnBrokersPriceDeviation?: number;
-  }
+}
+
+export interface OrderbookUpdates {
+    T: string,
+    _: number
+    S: string,
+    ob: {
+        a: [][],
+        b: [][]
+    }
+}
+export interface TxType {
+    code: number;
+    name: string;
+}

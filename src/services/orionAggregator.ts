@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js"
-import { BlockchainOrder, SignOrderModel, SignOrderModelRaw, TradeOrder, CancelOrderRequest, PairConfig } from "../utils/Models"
-import { getPriceWithDeviation, getFee, numberTo8, handleResponse, parseTradeOrder} from '../utils/Helpers'
+import { BlockchainOrder, SignOrderModel, SignOrderModelRaw, TradeOrder, CancelOrderRequest, PairConfig, TradeOrderV2,
+    CancelOrderRequestV2, HistoryParams } from "../utils/Models"
+import { getPriceWithDeviation, getFee, numberTo8, handleResponse, parseTradeOrder, parseTradeOrderV2} from '../utils/Helpers'
 import { DEFAULT_EXPIRATION, PRICE_DEVIATIONS } from '../utils/Constants'
 import { hashOrder, signOrder, signCancelOrder } from './crypto'
 import { Chain } from './chain'
@@ -9,7 +10,8 @@ import { Exchange } from './exchange'
 export class OrionAggregator {
     public readonly chain: Chain;
     public readonly exchange: Exchange;
-    private _pairs!: Record<string, PairConfig>;  // replace any with Model
+    private _pairs!: Record<string, PairConfig>;
+    private _version!: number;
 
     constructor(chain: Chain) {
         this.chain = chain
@@ -18,6 +20,7 @@ export class OrionAggregator {
 
     public async init(): Promise<void> {
         this._pairs = await this.getPairsInfo()
+        this._version = await this.getApiVersion()
     }
 
     public async getPairsInfo (): Promise<Record<string, PairConfig>> {
@@ -35,6 +38,10 @@ export class OrionAggregator {
 
     get pairs (): Record<string, PairConfig> {
         return this._pairs
+    }
+
+    get version (): number {
+        return this._version
     }
 
     private async checkBalanceForOrder (order: SignOrderModel, feeAsset: string, feeAmount: BigNumber): Promise<void> {
@@ -126,6 +133,7 @@ export class OrionAggregator {
                 needWithdraw: params.needWithdraw,
                 isPool: false,
                 feeAsset: params.feeCurrency,
+                limits: this.chain.baseLimits
             })
 
             const priceWithDeviation = params.priceDeviation.isZero() ? params.price : getPriceWithDeviation(params.price, params.side, params.priceDeviation);
@@ -166,17 +174,20 @@ export class OrionAggregator {
         }
     }
 
-    public async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<{orderId: number}> {
-        return handleResponse(this.chain.api.orionAggregator.post(isCreateInternalOrder ? '/order/maker' : '/order', order))
+    public async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<{orderId: string | number}> {
+        const internalRoute = this.version === 2 ? '/order/internal' : '/order/maker'
+        return handleResponse(this.chain.api.orionAggregator.post(isCreateInternalOrder ? internalRoute : '/order', order))
     }
 
-    public async cancelOrder(orderId: number): Promise<{orderId: number}> {
+    public async cancelOrder(orderId: string | number): Promise<{orderId: string | number}> {
         try {
             const order = await this.getOrderById(orderId)
 
-            const cancelationSubject = this.getCancelationSubject(order)
+            const cancelationSubject = this.version === 2
+                ? this.getCancelationSubjectV2(order)
+                : this.getCancelationSubjectV1(order)
 
-            cancelationSubject.signature = await signCancelOrder(cancelationSubject, this.chain.signer, this.chain.network.CHAIN_ID)
+            cancelationSubject.signature = await signCancelOrder(cancelationSubject, this.chain.signer, this.chain.network.CHAIN_ID, this.version)
 
             return handleResponse(this.chain.api.orionAggregator.delete('/order', {
                 data: cancelationSubject
@@ -186,7 +197,17 @@ export class OrionAggregator {
         }
     }
 
-    private getCancelationSubject (order: TradeOrder): CancelOrderRequest {
+    private getCancelationSubjectV2 (order: TradeOrderV2 | TradeOrder): CancelOrderRequestV2 {
+        const { id, blockchainOrder } = order
+        return {
+            id,
+            sender: blockchainOrder.senderAddress,
+            signature: '',
+            isPersonalSign: blockchainOrder.isPersonalSign
+        }
+    }
+
+    private getCancelationSubjectV1 (order: TradeOrderV2 | TradeOrder): CancelOrderRequest {
         const { id, blockchainOrder } = order
         return {
             id,
@@ -196,16 +217,67 @@ export class OrionAggregator {
         }
     }
 
-    public async getTradeHistory(fromCurrency?: string, toCurrency?: string): Promise<TradeOrder[]> {
-        const url = '/orderHistory?address=' + this.chain.signer.address + (fromCurrency ? '&baseAsset=' + fromCurrency : '') + (toCurrency ? '&quoteAsset=' + toCurrency : '');
-        const data = await handleResponse(this.chain.api.orionAggregator.get(url));
-
-        return data.map(parseTradeOrder);
+    public getTradeHistory(options?: HistoryParams): Promise<TradeOrderV2[] | TradeOrder[]> {
+        return this.version === 2
+            ? this.getTradeHistoryV2(options)
+            : this.getTradeHistoryV1(options)
     }
 
-    public async getOrderById (orderId: number): Promise<TradeOrder> {
-        const path = `/order?orderId=${orderId}`
+    private async getTradeHistoryV1(options?: HistoryParams): Promise<TradeOrder[]> {
+        const url = '/orderHistory'
+        const params = {
+            address: this.chain.signer.address,
+            ...options
+        }
 
-        return handleResponse(this.chain.api.orionAggregator.get(path))
+        const data = await handleResponse(this.chain.api.orionAggregator.get(url, { params }));
+
+        return Array.isArray(data) && data.length
+            ? data.map(parseTradeOrder)
+            : []
+    }
+
+    private async getTradeHistoryV2(options?: HistoryParams): Promise<TradeOrderV2[]> {
+        const url = '/order/history'
+        const params = {
+            address: this.chain.signer.address,
+            ...options
+        }
+
+        const data = await handleResponse(this.chain.api.orionAggregator.get(url, { params }));
+
+        return Array.isArray(data) && data.length
+            ? data.map(parseTradeOrderV2)
+            : []
+    }
+
+    public async getOrderById (orderId: number | string): Promise<TradeOrder | TradeOrderV2> {
+        return this.version === 2
+            ? this.getOrderByIdV2(orderId)
+            : this.getOrderByIdV1(orderId)
+    }
+
+    private async getOrderByIdV1 (orderId: number | string): Promise<TradeOrder> {
+        const path = `/order?orderId=${orderId}&owner=${this.chain.signer.address}`
+
+        return parseTradeOrder(await handleResponse(this.chain.api.orionAggregator.get(path)))
+    }
+
+    private async getOrderByIdV2 (orderId: number | string): Promise<TradeOrderV2> {
+        const path = `/order?orderId=${orderId}&owner=${this.chain.signer.address}`
+
+        const {order} = await handleResponse(this.chain.api.orionAggregator.get(path))
+        return parseTradeOrderV2(order)
+    }
+
+    public async getApiVersion (): Promise<number> {
+        let version = 1
+        try {
+            const { apiVersion } = await handleResponse(this.chain.api.orionAggregator.get('/version'))
+            version = Number(apiVersion)
+        } catch (error) {
+            version = 1
+        }
+        return version
     }
 }

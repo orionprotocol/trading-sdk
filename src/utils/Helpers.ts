@@ -1,11 +1,12 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
 import { AxiosResponse, AxiosPromise } from "axios"
-import { Dictionary, BlockchainInfo,
-    TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs} from "./Models";
-import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT, EXCHANGE_ORDER_PRECISION} from '../utils/Constants'
+import { Dictionary, BlockchainInfo, TradeOrderV2, TradeSubOrderV2,
+    TradeOrder, TradeSubOrder, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs, OrderbookUpdates, TxType } from "./Models";
+import { EXCHANGE_ORDER_PRECISION} from '../utils/Constants'
 import { Chain } from '../services/chain'
 import erc20ABI from '../abis/ERC20.json'
+import { TxError } from './TxError'
 
 export function getPriceWithDeviation(price: BigNumber, side: string, deviation: BigNumber): BigNumber {
     const d = deviation.dividedBy(100)
@@ -41,15 +42,25 @@ function calculateNetworkFee({
     gasPriceWei,
     assetsPrices,
     needWithdraw,
-    isPool = false
+    isPool = false,
+    limits
 }: {
     networkAsset: string,
     feeAsset: string,
     gasPriceWei: string,
     assetsPrices: Dictionary<BigNumber>,
     needWithdraw: boolean,
-    isPool: boolean}): { networkFeeEth: BigNumber, networkFee: BigNumber } {
+    isPool: boolean,
+    limits: Dictionary<number>
+}): { networkFeeEth: BigNumber, networkFee: BigNumber } {
     if (gasPriceWei === 'N/A') return {networkFeeEth: new BigNumber(0), networkFee: new BigNumber(0)};
+
+    const requiredKeys = ['SWAP_THROUGH_ORION_POOL_GAS_LIMIT', 'FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT', 'FILL_ORDERS_GAS_LIMIT']
+    requiredKeys.forEach(key => {
+        if (!Object.keys(limits).includes(key)) throw new Error(`${key} in limits is required!`)
+    })
+
+    const { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT } = limits
 
     const gasPriceEth = new BigNumber(ethers.utils.formatUnits(gasPriceWei, 'ether'));
 
@@ -85,7 +96,8 @@ export function getFee ({
     feePercent,
     feeAsset = 'ORN',
     needWithdraw = false,
-    isPool = false
+    isPool = false,
+    limits
 }: GetFeeArgs): BigNumber {
     if (!amount || new BigNumber(amount).isNaN() || new BigNumber(amount).lte(0)) throw new Error('amount field is invalid!')
     if (!feePercent || Number.isNaN(Number(feePercent)) || Number(feePercent) <= 0) throw new Error('feePercent field is invalid!')
@@ -106,8 +118,11 @@ export function getFee ({
     if (!assetsPrices[feeAsset]) throw new Error('feeAsset field is invalid!')
     if (!assetsPrices[networkAsset]) throw new Error('networkAsset field is invalid!')
 
+    if (!limits || !Object.keys(limits).length) throw new Error('limits field is required')
+    if (!Object.values(limits).every(el => typeof el === 'number' && el > 0)) throw new Error('limits values should be positive numbers')
+
     const matcherFee = calculateMatcherFee({ baseAsset, amount, assetsPrices, feePercent, feeAsset })
-    const { networkFee } = calculateNetworkFee({ networkAsset, feeAsset, gasPriceWei, assetsPrices, needWithdraw, isPool })
+    const { networkFee } = calculateNetworkFee({ networkAsset, feeAsset, gasPriceWei, assetsPrices, needWithdraw, isPool, limits })
 
     if (!matcherFee.gt(0)) throw new Error('matcherFee couldn`t be 0!')
     if (!networkFee.gt(0)) throw new Error('networkFee couldn`t be 0!')
@@ -120,23 +135,25 @@ export function getFee ({
 export function parseTradeOrder(item: any): TradeOrder {
     const amount = new BigNumber(item.orderQty);
     const price = new BigNumber(item.price);
-    const [fromCurrency, toCurrency] = item.symbol.split('-');
-    const subOrders = item.subOrders ? item.subOrders.map((sub: any) => parseTradeSubOrder(sub, item.symbol, item.side)) : [];
+    const subOrders = item.subOrders ? item.subOrders.map((subOrder: any) => parseTradeSubOrder(subOrder)) : [];
 
     const total = amount.multipliedBy(price);
 
     return {
         ...{
             date: Number(item.time),
-            clientOrdId: item.clientOrdId,
+            sender: item.clientId,
             id: Number(item.id),
             type: item.side, // 'buy' / 'sell'
             pair: item.symbol, // 'ETH-BTC'
         },
         blockchainOrder: item?.blockchainOrder,
         status: item.status,
-        fromCurrency,
-        toCurrency,
+        baseAsset: item.baseAsset,
+        quoteAsset: item.quoteAsset,
+        feeAsset: item.feeCurrency,
+        fee: new BigNumber(item.feeQty),
+        side: item.side,
         amount,
         price,
         total,
@@ -144,19 +161,60 @@ export function parseTradeOrder(item: any): TradeOrder {
     };
 }
 
-export function parseTradeSubOrder(item: any, pair?: string, side?: Side): TradeSubOrder {
-    const sd = side ?? item.side.toLowerCase();
-    const pr = pair ?? '';
-
+export function parseTradeSubOrder(item: any): TradeSubOrder {
     return {
-        pair: pr,
+        pair: item.symbol,
         exchange: item.exchange,
         id: Number(item.id),
         amount: new BigNumber(item.subOrdQty),
         price: new BigNumber(item.price),
-        status: item.status || 'NEW', // todo: backend,
-        subOrdQty: item.subOrdQty,
-        side: sd,
+        status: item.status || 'NEW',
+        side: item.side,
+        sent: item.sent,
+    }
+}
+
+export function parseTradeOrderV2(item: any): TradeOrderV2 {
+    const amount = new BigNumber(item.amount);
+    const price = new BigNumber(item.price);
+    const [baseAsset, quoteAsset] = item.assetPair.split('-')
+    const subOrdersKeys = Object.keys(item.subOrders)
+    const subOrders = subOrdersKeys.length ? subOrdersKeys.map((key: any) => parseTradeSubOrderV2(item.subOrders[key])) : [];
+
+    const total = amount.multipliedBy(price);
+
+    return {
+        ...{
+            date: Number(item.creationTime),
+            sender: item.sender,
+            id: item.id,
+            type: item.side, // 'buy' / 'sell'
+            pair: item.assetPair, // 'ETH-BTC'
+        },
+        blockchainOrder: item?.blockchainOrder,
+        status: item.status,
+        baseAsset,
+        quoteAsset,
+        feeAsset: item.feeAsset,
+        fee: new BigNumber(item.fee),
+        amount,
+        side: item.side,
+        price,
+        total,
+        subOrders
+    };
+}
+
+export function parseTradeSubOrderV2(item: any): TradeSubOrderV2 {
+    return {
+        pair: item.assetPair,
+        exchange: item.exchange,
+        id: Number(item.id),
+        amount: new BigNumber(item.amount),
+        price: new BigNumber(item.price),
+        status: item.status || 'NEW',
+        side: item.side,
+        tradesInfo: item.tradesInfo
     }
 }
 
@@ -192,9 +250,14 @@ export function parseOrderbookItem(arr: any): OrderbookItem {
     }
 }
 
-export function parseOrderbookItems (message: {asks: Array<[]>, bids: Array<[]>}): {asks: OrderbookItem[], bids: OrderbookItem[]} {
+export function parseOrderbookItemsV1 (message: {asks: Array<[]>, bids: Array<[]>}): {asks: OrderbookItem[], bids: OrderbookItem[]} {
     const { asks, bids } = message
     return {asks: asks.map(parseOrderbookItem), bids: bids.map(parseOrderbookItem)}
+}
+
+export function parseOrderbookItemsV2 (message: OrderbookUpdates): {asks: OrderbookItem[], bids: OrderbookItem[]} {
+    const { a, b } = message.ob
+    return {asks: a.map(parseOrderbookItem), bids: b.map(parseOrderbookItem)}
 }
 
 export function parsePair(arr: string[]): Pair {
@@ -247,6 +310,21 @@ export async function handleResponse(request: AxiosPromise): Promise<AxiosRespon
     } catch (error) {
         return Promise.reject(error)
     }
+}
+
+export async function waitForTx(txResponse: ethers.providers.TransactionResponse, timeoutSec: number, txType: TxType): Promise<string> {
+    let txHasResult = false
+    const timeoutRunner = setTimeout(() => {
+        if (!txHasResult) throw new TxError(txResponse.hash, txType, `Request failed due to exceeding the time limit of ${timeoutSec} seconds!`)
+    }, timeoutSec * 1000);
+
+    const txResult = await txResponse.wait()
+    txHasResult = true
+    clearTimeout(timeoutRunner)
+
+    if (txResult.status !== 1) throw new TxError(txResponse.hash, txType, `Request failed with status ${txResult.status}!`)
+
+    return txResponse.hash
 }
 
 export function getTokenContracts (chain: Chain): Dictionary<ethers.Contract> {

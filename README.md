@@ -3,6 +3,8 @@
 [![code style: eslint](https://img.shields.io/badge/code%20style-eslint-green)](https://github.com/standard/eslint-config-standard)
 [![npm version](https://img.shields.io/npm/v/@orionprotocol/orion-trading-sdk/latest.svg)](https://www.npmjs.com/package/@orionprotocol/orion-trading-sdk/v/latest)
 
+**Attention! For the correct operation of the SDK, you need to update the package to a version not less than 1.5.0. This is due to a change in the work of a part of the used API. All methods remain the same.**
+
 ## Installation
 
 ```sh
@@ -35,7 +37,7 @@ Parameter | Type | Required | Description
 *price* | number | yes | any number
 *amount* | number | yes | any number
 *priceDeviation* | number | yes | it's percents, 0 < priceDeviation < 50
-*needWithdraw* | boolean | yes
+*needWithdraw* | boolean | yes | withdraw the received tokens to the wallet
 *chainPrices* | object | no
 
 *chainPrices* is optional (use it if you already knew prices):
@@ -43,7 +45,7 @@ Parameter | Type | Required | Description
 Parameter | Type | Required | Description
 --- | --- | --- | ---
 *gasWei* | string | yes | gas price in wei
-*baseAsset* | string/number | yes
+*baseAsset* | string/number | yes | aka 'fromCurrency'
 *networkAsset* | string/number | yes
 *feeAsset* | string/number | yes
 
@@ -74,8 +76,14 @@ Parameter | Type | Required | Description
 
 @return order with requested id
 
-***getTradeHistory()***
-- no params
+***getTradeHistory({...options})***
+Parameter | Type | Required | Description
+--- | --- | --- | ---
+*baseAsset* | string | no | token address
+*quoteAsset* | string | no | token address
+*startTime* | number | no |
+*endTime* | number | no |
+*limit* | number | no | default 1000
 
 @return list of orders
 
@@ -96,7 +104,7 @@ Parameter | Type | Required | Description
 *token* | string | yes |
 *amount* | string | yes |
 
-@return transaction object
+@return transaction hash
 
 ***withdraw(token, amount)***
 
@@ -105,7 +113,7 @@ Parameter | Type | Required | Description
 *token* | string | yes |
 *amount* | string | yes |
 
-@return transaction object
+@return transaction hash
 
 <hr>
 
@@ -263,7 +271,7 @@ const order = {
     }
 }
 
-// sign order
+// create and sign order
 const signedOrder = await orionAggregator.createOrder(order)
 
 // send order
@@ -279,10 +287,12 @@ const orderCancelation = await orionAggregator.cancelOrder(sentOrderResponse.ord
 
 **Get orders history/status:**
 ```javascript
+// getTradeHistory returns list of orders
 const history = await orionAggregator.getTradeHistory()
 
+// getOrderById returns order object
 const order = await orionAggregator.getOrderById(sentOrderResponse.orderId)
-const status = order.status
+// const status = order.status
 ```
 
 ## Websockets
@@ -298,6 +308,9 @@ const wsUrl = Constants.ORION_WS.TEST.BSC
 
 // wsUrl by default is ORION_WS.TEST.BSC
 const ws = new WS(wsUrl)
+
+// Important step before using!!
+await ws.init()
 ```
 
 **To subscribe to the price feed:**
@@ -355,16 +368,8 @@ Install dependencies
 npm install
 ```
 
-Copy .env.example file to .env
-```sh
-cp .env.example .env
-```
 
-Fill environment variables. It's necessary for order testing.
-```sh
-PRIVATE_KEY= # your private key
-```
-**Also network tokens are required to pay for transactions, as well as tokens for deposit / withdrawal / exchange. (10 ORN in test cases)**
+
 
 Run tests
 
@@ -373,3 +378,6 @@ npm run test
 ```
 
 You should see output with all test passed
+
+## Resources
+- **[Changelog](https://github.com/orionprotocol/trading-sdk/CHANGELOG.md)**
