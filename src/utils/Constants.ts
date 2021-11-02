@@ -3,8 +3,14 @@ import { TxType } from "./Models";
 export const NETWORK = {
     TEST: {
         BSC: {
-            RPC: 'https://data-seed-prebsc-2-s1.binance.org:8545',
+            RPC: 'https://data-seed-prebsc-1-s1.binance.org:8545',
             ORION: 'https://dev-exp.orionprotocol.io',
+            CHAIN_ID: 97,
+            TX_TIMEOUT_SEC: 60
+        },
+        BSCV2: {
+            RPC: 'https://data-seed-prebsc-2-s1.binance.org:8545',
+            ORION: 'https://dn-bsc.orionprotocol.io',
             CHAIN_ID: 97,
             TX_TIMEOUT_SEC: 60
         },
@@ -34,6 +40,7 @@ export const NETWORK = {
 export const ORION_WS = {
     TEST: {
         BSC: 'wss://dev-exp.orionprotocol.io',
+        BSCV2: 'wss://dn-bsc.orionprotocol.io',
         ETH: 'wss://staging.orionprotocol.io',
     },
     MAIN: {
@@ -60,10 +67,17 @@ export const ORDER_TYPES = {
     ],
 }
 
+export const CANCEL_ORDER_TYPES_V2 = {
+    DeleteOrder: [
+        {name: "sender", type: "address"},
+        {name: "id", type: "string"},
+    ],
+};
+
 export const CANCEL_ORDER_TYPES = {
     DeleteOrder: [
         {name: "senderAddress", type: "address"},
-        {name: "id", type: process.env.REACT_APP_AGG_V2 ? "string" : "uint64"},
+        {name: "id", type: "uint64"},
     ],
 };
 

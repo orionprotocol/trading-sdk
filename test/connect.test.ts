@@ -23,6 +23,7 @@ describe('Connection and initializing', () => {
         await orionAggregator.init()
         expect(orionAggregator).toHaveProperty('chain')
         expect(orionAggregator).toHaveProperty('pairs')
+        expect(orionAggregator).toHaveProperty('version')
     })
 
 })
