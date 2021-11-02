@@ -1,10 +1,10 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
 import { AxiosResponse, AxiosPromise } from "axios"
-import { Dictionary, BlockchainInfo,
-    TradeOrder, TradeSubOrder, Side, OrderbookItem, Pair, GetFeeArgs, MatcherFeeArgs, TxType} from "./Models";
-import { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT,
-    EXCHANGE_ORDER_PRECISION } from '../utils/Constants'
+import { Dictionary, BlockchainInfo, TradeOrder, TradeSubOrder, Side, OrderbookItem,
+    Pair, GetFeeArgs, MatcherFeeArgs, TxType} from "./Models";
+import { EXCHANGE_ORDER_PRECISION} from '../utils/Constants'
+
 import { Chain } from '../services/chain'
 import erc20ABI from '../abis/ERC20.json'
 import { TxError } from './TxError'
@@ -43,15 +43,25 @@ function calculateNetworkFee({
     gasPriceWei,
     assetsPrices,
     needWithdraw,
-    isPool = false
+    isPool = false,
+    limits
 }: {
     networkAsset: string,
     feeAsset: string,
     gasPriceWei: string,
     assetsPrices: Dictionary<BigNumber>,
     needWithdraw: boolean,
-    isPool: boolean}): { networkFeeEth: BigNumber, networkFee: BigNumber } {
+    isPool: boolean,
+    limits: Dictionary<number>
+}): { networkFeeEth: BigNumber, networkFee: BigNumber } {
     if (gasPriceWei === 'N/A') return {networkFeeEth: new BigNumber(0), networkFee: new BigNumber(0)};
+
+    const requiredKeys = ['SWAP_THROUGH_ORION_POOL_GAS_LIMIT', 'FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT', 'FILL_ORDERS_GAS_LIMIT']
+    requiredKeys.forEach(key => {
+        if (!Object.keys(limits).includes(key)) throw new Error(`${key} in limits is required!`)
+    })
+
+    const { SWAP_THROUGH_ORION_POOL_GAS_LIMIT, FILL_ORDERS_AND_WITHDRAW_GAS_LIMIT, FILL_ORDERS_GAS_LIMIT } = limits
 
     const gasPriceEth = new BigNumber(ethers.utils.formatUnits(gasPriceWei, 'ether'));
 
@@ -87,7 +97,8 @@ export function getFee ({
     feePercent,
     feeAsset = 'ORN',
     needWithdraw = false,
-    isPool = false
+    isPool = false,
+    limits
 }: GetFeeArgs): BigNumber {
     if (!amount || new BigNumber(amount).isNaN() || new BigNumber(amount).lte(0)) throw new Error('amount field is invalid!')
     if (!feePercent || Number.isNaN(Number(feePercent)) || Number(feePercent) <= 0) throw new Error('feePercent field is invalid!')
@@ -108,8 +119,11 @@ export function getFee ({
     if (!assetsPrices[feeAsset]) throw new Error('feeAsset field is invalid!')
     if (!assetsPrices[networkAsset]) throw new Error('networkAsset field is invalid!')
 
+    if (!limits || !Object.keys(limits).length) throw new Error('limits field is required')
+    if (!Object.values(limits).every(el => typeof el === 'number' && el > 0)) throw new Error('limits values should be positive numbers')
+
     const matcherFee = calculateMatcherFee({ baseAsset, amount, assetsPrices, feePercent, feeAsset })
-    const { networkFee } = calculateNetworkFee({ networkAsset, feeAsset, gasPriceWei, assetsPrices, needWithdraw, isPool })
+    const { networkFee } = calculateNetworkFee({ networkAsset, feeAsset, gasPriceWei, assetsPrices, needWithdraw, isPool, limits })
 
     if (!matcherFee.gt(0)) throw new Error('matcherFee couldn`t be 0!')
     if (!networkFee.gt(0)) throw new Error('networkFee couldn`t be 0!')

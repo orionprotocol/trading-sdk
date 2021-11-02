@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js"
 import { ethers } from "ethers"
-import { DEPOSIT_ETH_GAS_LIMIT, DEPOSIT_ERC20_GAS_LIMIT, EXCHANGE_ORDER_PRECISION, CHAIN_TX_TYPES } from '../utils/Constants'
 import { BlockchainOrder, Dictionary, BalanceContract } from '../utils/Models'
+import { CHAIN_TX_TYPES, EXCHANGE_ORDER_PRECISION } from '../utils/Constants'
 import { Chain } from './chain'
 import exchangeABI from '../abis/Exchange.json'
 import { numberToUnit, unitToNumber, handleResponse, waitForTx } from '../utils/Helpers'
@@ -75,7 +75,7 @@ export class Exchange {
         unsignedTx.value = ethers.BigNumber.from(amountUnit);
         const txResponse = await this.chain.sendTransaction(
             unsignedTx,
-            DEPOSIT_ETH_GAS_LIMIT,
+            this.chain.baseLimits.DEPOSIT_ETH_GAS_LIMIT,
             gasPriceWei
         )
 
@@ -85,7 +85,7 @@ export class Exchange {
     private async depositERC20(currency: string, amountUnit: string, gasPriceWei: BigNumber): Promise<string> {
         const txResponse = await this.chain.sendTransaction(
             await this.exchangeContract.populateTransaction.depositAsset(this.chain.getTokenAddress(currency), amountUnit),
-            DEPOSIT_ERC20_GAS_LIMIT,
+            this.chain.baseLimits.DEPOSIT_ERC20_GAS_LIMIT,
             gasPriceWei
         )
 
@@ -129,7 +129,7 @@ export class Exchange {
 
             const txResponse = await this.chain.sendTransaction(
                 await this.exchangeContract.populateTransaction.withdraw(this.chain.getTokenAddress(currency), amountUnit),
-                DEPOSIT_ERC20_GAS_LIMIT,
+                this.chain.baseLimits.WITHDRAW_GAS_LIMIT,
                 new BigNumber(gasPriceWeiLocal),
             );
 
