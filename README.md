@@ -3,7 +3,7 @@
 [![code style: eslint](https://img.shields.io/badge/code%20style-eslint-green)](https://github.com/standard/eslint-config-standard)
 [![npm version](https://img.shields.io/npm/v/@orionprotocol/orion-trading-sdk/latest.svg)](https://www.npmjs.com/package/@orionprotocol/orion-trading-sdk/v/latest)
 
-**Attention! For the correct operation of the SDK, you need to update the package to a version not less than 1.4.0. This is due to a change in the work of a part of the used API. All methods remain the same.**
+**Attention! For the correct operation of the SDK, you need to update the package to a version not less than 1.5.0. This is due to a change in the work of a part of the used API. All methods remain the same.**
 
 ## Installation
 
