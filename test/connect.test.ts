@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 
 jest.setTimeout(40000)
 
-describe('Deposit and withdraw', () => {
+describe('Connection and initializing', () => {
     let chain: Chain
     const walletFromMnemonic = ethers.Wallet.fromMnemonic(TEST_WALLET.mnemonicPhrase)
 
@@ -23,6 +23,7 @@ describe('Deposit and withdraw', () => {
         await orionAggregator.init()
         expect(orionAggregator).toHaveProperty('chain')
         expect(orionAggregator).toHaveProperty('pairs')
+        expect(orionAggregator).toHaveProperty('version')
     })
 
 })
