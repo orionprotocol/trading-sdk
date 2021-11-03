@@ -6,7 +6,7 @@ export class Tokens {
     constructor(nameToAddress: Dictionary<string>) {
         this.nameToAddress = {};
         for (const key in nameToAddress) {
-            if (nameToAddress.hasOwnProperty(key)) {
+            if (nameToAddress[key]) {
                 this.nameToAddress[key] = nameToAddress[key].toLowerCase();
             }
         }
@@ -14,7 +14,7 @@ export class Tokens {
 
     addressToName(address: string): (string | undefined) {
         for (const name in this.nameToAddress) {
-            if (this.nameToAddress.hasOwnProperty(name)) {
+            if (this.nameToAddress[name]) {
                 if (this.nameToAddress[name] === address.toLowerCase()) return name;
             }
         }

@@ -17,7 +17,7 @@
     "crypto"
   ],
   "scripts": {
-    "lint": "tsdx lint src test",
+    "lint": "eslint src/ test/",
     "build": "tsdx build",
     "start": "tsdx watch --target node",
     "test": "tsdx test --no-cache",
