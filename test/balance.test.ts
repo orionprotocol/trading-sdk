@@ -3,6 +3,8 @@ import { ethers } from 'ethers';
 import { Chain, Exchange } from '../src/index'
 import { NETWORK, TEST_WALLET } from '../src/utils/Constants'
 
+jest.setTimeout(40000)
+
 describe('Get balances', () => {
     let chain: Chain
     let exchange: Exchange
