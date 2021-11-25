@@ -43,6 +43,7 @@ export class WS {
             const { data } = await axios.get(`${url}/backend/api/v1/version`)
             version = data.apiVersion
         } catch (error) {
+            console.log(error);
             version = 1
         }
         this._version = Number(version)
@@ -66,6 +67,12 @@ export class WS {
         socket.onmessage = (message) => {
             if (!message.data) return
             let handledMessage = JSON.parse(message.data)
+
+            // Ping-pong handling
+            if(handledMessage && handledMessage.T === 'pp') {
+                socket.send(JSON.stringify(handledMessage))
+                return
+            }
 
             if (query && handledMessage.T && query.T !== `${handledMessage.T}s`) return
 
