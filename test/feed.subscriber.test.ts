@@ -5,7 +5,7 @@ import { Pair, OrderbookItem }  from '../src/utils/Models'
 jest.setTimeout(20000)
 
 describe('Subscriber', () => {
-    const wsUrl = Constants.ORION_WS.TEST.BSC
+    const wsUrl = Constants.ORION_WS.MAIN.BSC
     const ws = new WS(wsUrl)
 
     it('Subscribe for all tickers price feed', async (done) => {

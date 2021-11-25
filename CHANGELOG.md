@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.1](https://github.com/orionprotocol/trading-sdk/compare/v1.5.0...v1.5.1) (2021-11-25)
+
+
+### Bug Fixes
+
+* WS ping-pong handling in aggregator v2 ([5c0e6d1](https://github.com/orionprotocol/trading-sdk/commit/5c0e6d111d74806c3e680fdef1dc71bb13993f17))
+
 ## 1.5.0 (2021-11-02)
 
 
