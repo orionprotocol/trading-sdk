@@ -28,23 +28,10 @@ describe('Get balances', () => {
         expect(Object.keys(balance).length).toBeTruthy()
     })
 
-    it('Check wallet balance by ticker', async() => {
-        const balance = await chain.getWalletBalance('ORN')
-        expect(Object.keys(balance).length).toBeTruthy()
-    })
-
     it('Check contract balance summary', async () => {
         const balance = await exchange.getContractBalance()
         const firstKey = Object.keys(balance)[0]
         expect(Object.keys(balance)[0]).toBeTruthy()
         expect(balance[firstKey].total && balance[firstKey].locked && balance[firstKey].available).toBeTruthy()
     })
-
-    it('Check contract balance by ticker', async () => {
-        const balance = await exchange.getContractBalance('ORN')
-        const firstKey = Object.keys(balance)[0]
-        expect(Object.keys(balance)[0]).toBeTruthy()
-        expect(balance[firstKey].total && balance[firstKey].locked && balance[firstKey].available).toBeTruthy()
-    })
-
 })
