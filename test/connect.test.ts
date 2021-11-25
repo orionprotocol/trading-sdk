@@ -10,7 +10,7 @@ describe('Connection and initializing', () => {
     const walletFromMnemonic = ethers.Wallet.fromMnemonic(TEST_WALLET.mnemonicPhrase)
 
     it('Create chain instance and init', async () => {
-        chain = new Chain(walletFromMnemonic.privateKey, NETWORK.TEST.BSC)
+        chain = new Chain(walletFromMnemonic.privateKey, NETWORK.MAIN.BSC)
         await chain.init()
         expect(chain).toHaveProperty('tokensFee')
         expect(chain).toHaveProperty('tokens')

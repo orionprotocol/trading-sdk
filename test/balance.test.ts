@@ -12,7 +12,7 @@ describe('Get balances', () => {
 
 
     it('Create chain instance and init', async () => {
-        chain = new Chain(walletFromMnemonic.privateKey, NETWORK.TEST.BSC)
+        chain = new Chain(walletFromMnemonic.privateKey, NETWORK.MAIN.BSC)
         await chain.init()
         expect(chain.blockchainInfo).toHaveProperty('chainName')
         expect(chain.signer).toHaveProperty('address')
