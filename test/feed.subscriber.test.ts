@@ -9,7 +9,6 @@ describe('Subscriber', () => {
     const ws = new WS(wsUrl)
 
     it('Subscribe for all tickers price feed', async (done) => {
-        await ws.init()
         // Create subscriber
         const subscriberForAll = ws.priceFeedAll()
 
