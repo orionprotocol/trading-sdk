@@ -21,8 +21,6 @@ describe('Connection and initializing', () => {
     it('Create orionAggregator instance and init', async () => {
         const orionAggregator = new OrionAggregator(chain)
         expect(orionAggregator).toHaveProperty('chain')
-        expect(orionAggregator).toHaveProperty('pairs')
-        expect(orionAggregator).toHaveProperty('version')
     })
 
 })

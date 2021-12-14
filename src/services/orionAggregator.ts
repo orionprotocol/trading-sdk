@@ -67,6 +67,7 @@ export class OrionAggregator {
             price: new BigNumber(order.price),
             amount: new BigNumber(order.amount),
             priceDeviation: new BigNumber(order.priceDeviation!==undefined ? order.priceDeviation : 0),
+            needWithdraw: order.needWithdraw || false // set to false by default, because this feature isn't ready
         })
 
         return formattedOrder
@@ -159,7 +160,7 @@ export class OrionAggregator {
         }
     }
 
-    public async sendOrder(order: BlockchainOrder, isCreateInternalOrder: boolean): Promise<{orderId: string | number}> {
+    public async sendOrder(order: BlockchainOrder, isCreateInternalOrder = false): Promise<{orderId: string | number}> {
         const internalRoute = '/order/internal'
         return handleResponse(this.chain.api.orionAggregator.post(isCreateInternalOrder ? internalRoute : '/order', order))
     }
@@ -168,7 +169,7 @@ export class OrionAggregator {
         try {
             const order = await this.getOrderById(orderId)
 
-            const cancelationSubject = this.getCancelationSubjectV2(order)
+            const cancelationSubject = this.getCancelationSubject(order)
 
             cancelationSubject.signature = await signCancelOrder(cancelationSubject, this.chain.signer, this.chain.network.CHAIN_ID)
 
@@ -180,7 +181,7 @@ export class OrionAggregator {
         }
     }
 
-    private getCancelationSubjectV2 (order: TradeOrderV2 | TradeOrder): CancelOrderRequestV2 {
+    private getCancelationSubject (order: TradeOrderV2 | TradeOrder): CancelOrderRequestV2 {
         const { id, blockchainOrder } = order
         return {
             id,
@@ -190,11 +191,7 @@ export class OrionAggregator {
         }
     }
 
-    public getTradeHistory(options?: HistoryParams): Promise<TradeOrderV2[] | TradeOrder[]> {
-        return this.getTradeHistoryV2(options)
-    }
-
-    private async getTradeHistoryV2(options?: HistoryParams): Promise<TradeOrderV2[]> {
+    public async getTradeHistory(options?: HistoryParams): Promise<TradeOrderV2[]> {
         const url = '/order/history'
         const params = {
             address: this.chain.signer.address,
@@ -208,12 +205,9 @@ export class OrionAggregator {
             : []
     }
 
-    public async getOrderById (orderId: number | string): Promise<TradeOrder | TradeOrderV2> {
-        return this.getOrderByIdV2(orderId)
-    }
 
-    private async getOrderByIdV2 (orderId: number | string): Promise<TradeOrderV2> {
-        const path = `/order?orderId=${orderId}&owner=${this.chain.signer.address}`
+    public async getOrderById (orderId: number | string, owner = this.chain.signer.address): Promise<TradeOrderV2> {
+        const path = `/order?orderId=${orderId}&owner=${owner}`
 
         const {order} = await handleResponse(this.chain.api.orionAggregator.get(path))
         return parseTradeOrderV2(order)
