@@ -2,8 +2,7 @@ import Websocket from 'ws';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { ORION_WS } from '../utils/Constants'
 import EventEmitter from 'events'
-import { parseOrderbookItemsV1, parseOrderbookItemsV2, parsePairs } from '../utils/Helpers';
-import axios from 'axios';
+import { parseOrderbookItemsV2, parsePairs } from '../utils/Helpers';
 
 const SubscriptionType = {
     ASSET_PAIRS_CONFIG_UPDATES_SUBSCRIBE: 'apcus',
@@ -30,27 +29,14 @@ interface MiddlewareFunction {
 
 export class WS {
     public readonly wsOrionUrl: string
-    private _version!: number
 
     constructor(url: string = ORION_WS.MAIN.BSC) {
         this.wsOrionUrl = url
     }
 
-    public async init(): Promise<void> {
-        let version = 1
-        try {
-            const url = this.wsOrionUrl.replace('wss://', 'https://')
-            const { data } = await axios.get(`${url}/backend/api/v1/version`)
-            version = data.apiVersion
-        } catch (error) {
-            console.log(error);
-            version = 1
-        }
-        this._version = Number(version)
-    }
-
-    get version (): number {
-        return this._version
+    public async init(): Promise<boolean> {
+        console.warn('WS.init() method is currently deprecated and unnecessary')
+        return new Promise(resolve => resolve(true))
     }
 
     private connect (url: string, middleware?: MiddlewareFunction, query?: Record<string, unknown>): WsEmitter {
@@ -99,13 +85,7 @@ export class WS {
     }
 
     public orderBooks (pair: string): WsEmitter {
-        return this.version === 2 ? this.orderBooksV2(pair) : this.orderBooksV1(pair)
-    }
-
-    private orderBooksV1 (pair: string): WsEmitter {
-        const url = `${this.wsOrionUrl}/ws/${pair}`
-
-        return this.connect(url, parseOrderbookItemsV1)
+        return this.orderBooksV2(pair)
     }
 
     private orderBooksV2 (pair: string): WsEmitter {

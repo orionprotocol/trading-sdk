@@ -4,7 +4,7 @@
 [![Actions Status](https://github.com/orionprotocol/trading-sdk/workflows/CI/badge.svg)](https://github.com/orionprotocol/trading-sdk/workflows/CI/badge.svg)
 [![npm version](https://img.shields.io/npm/v/@orionprotocol/orion-trading-sdk/latest.svg)](https://www.npmjs.com/package/@orionprotocol/orion-trading-sdk/v/latest)
 
-**Attention! For the correct operation of the SDK, you need to update the package to a version not less than 1.5.0. This is due to a change in the work of a part of the used API. All methods remain the same.**
+**Attention! For the correct work of the SDK, you need to update the package to a version not less than 1.6.0 and follow updated instructions below.**
 
 ## Installation
 
@@ -38,7 +38,7 @@ Parameter | Type | Required | Description
 *price* | number | yes | any number
 *amount* | number | yes | any number
 *priceDeviation* | number | yes | it's percents, 0 < priceDeviation < 50
-*needWithdraw* | boolean | yes | withdraw the received tokens to the wallet
+*needWithdraw* | boolean | no | false by default, feature in process
 *chainPrices* | object | no
 
 *chainPrices* is optional (use it if you already knew prices):
@@ -57,7 +57,7 @@ Parameter | Type | Required | Description
 Parameter | Type | Required | Description
 --- | --- | --- | ---
 *order* | object | yes | Order object from `createOrder()`
-*isCreateInternalOrder* | boolean | yes
+*isCreateInternalOrder* | boolean | no | Execution only in the internal order book; false by default
 
 @return *orderId*
 
@@ -65,15 +65,16 @@ Parameter | Type | Required | Description
 
 Parameter | Type | Required | Description
 --- | --- | --- | ---
-*orderId* | number | yes |
+*orderId* | string | yes |
 
 @return *orderId* of cancelled order
 
-***getOrderById(orderId)***
+***getOrderById(orderId, owner)***
 
 Parameter | Type | Required | Description
 --- | --- | --- | ---
-*orderId* | number | yes |
+*orderId* | string | yes |
+*owner* | string | no | by default owner address is a current wallet address
 
 @return order with requested id
 
@@ -244,10 +245,9 @@ import { OrionAggregator } from '@orionprotocol/orion-trading-sdk'
 
 orionAggregator = new OrionAggregator(chain)
 
-await orionAggregator.init()  // initializing of aggregator (required)
+// There is no need to call deprecated method orionAggregator.init() now,
+// module is ready to use. But this method is left for backward compatibility.
 
-// for information purposes
-orionAggregator.pairs // list of available exchange pairs
 ```
 
 **Create, sign and send order to OrionAggregator:**
@@ -261,7 +261,6 @@ const order = {
     price: 12,
     amount: 10,
     priceDeviation: 1,   // it's percents: 0 < priceDeviation < 50
-    needWithdraw: false,
     // 'chainPrices' is optional, use it when prices are already known
     // to increase request speed
     chainPrices: {
@@ -276,7 +275,7 @@ const order = {
 const signedOrder = await orionAggregator.createOrder(order)
 
 // send order
-const sentOrderResponse = await orionAggregator.sendOrder(signedOrder, false)
+const sentOrderResponse = await orionAggregator.sendOrder(signedOrder)
 // Should return order id if successful
 ```
 
@@ -310,8 +309,8 @@ const wsUrl = Constants.ORION_WS.TEST.BSC
 // wsUrl by default is ORION_WS.TEST.BSC
 const ws = new WS(wsUrl)
 
-// Important step before using!!
-await ws.init()
+// There is no need to call deprecated method ws.init() now,
+// module is ready to use. But this method is left for backward compatibility.
 ```
 
 **To subscribe to the price feed:**

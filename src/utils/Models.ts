@@ -40,7 +40,7 @@ export interface SignOrderModelRaw {
     price: number,
     amount: number,
     priceDeviation?: number,
-    needWithdraw: boolean,
+    needWithdraw?: boolean,
     chainPrices?: {  // in case if user already knows chain prices
         gasWei: string,
         baseAsset: string | number,
