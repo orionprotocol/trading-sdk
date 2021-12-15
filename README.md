@@ -4,7 +4,7 @@
 [![Actions Status](https://github.com/orionprotocol/trading-sdk/workflows/CI/badge.svg)](https://github.com/orionprotocol/trading-sdk/workflows/CI/badge.svg)
 [![npm version](https://img.shields.io/npm/v/@orionprotocol/orion-trading-sdk/latest.svg)](https://www.npmjs.com/package/@orionprotocol/orion-trading-sdk/v/latest)
 
-**Attention! For the correct work of the SDK, you need to update the package to a version not less than 1.6.0 and follow updated instructions below.**
+**Attention! For the correct work of the SDK, you need to update the package to the latest version and follow updated instructions below.**
 
 ## Installation
 
