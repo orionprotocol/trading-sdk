@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.2](https://github.com/orionprotocol/trading-sdk/compare/v1.5.0...v1.5.2) (2021-12-15)
+
+
+### Features
+
+* Refactoring OrionAggregator and WS module ([a722a5b](https://github.com/orionprotocol/trading-sdk/commit/a722a5b243c531f3a3450bebb453a98e0a75ab92))
+* remake deprecated init() ([6071731](https://github.com/orionprotocol/trading-sdk/commit/60717316ed87d670de9580757ab18126383ed89e))
+
+
+### Bug Fixes
+
+* WS ping-pong handling in aggregator v2 ([5c0e6d1](https://github.com/orionprotocol/trading-sdk/commit/5c0e6d111d74806c3e680fdef1dc71bb13993f17))
+
 ### [1.5.1](https://github.com/orionprotocol/trading-sdk/compare/v1.5.0...v1.5.1) (2021-11-25)
 
 
