@@ -17,7 +17,7 @@ export class OrionAggregator {
     }
 
     public async init(): Promise<boolean> {
-        /* method is deprecated and unnecessary, but left for backward compatibility */
+        console.warn('OrionAggregator.init() method is currently deprecated and unnecessary')
         return new Promise(resolve => resolve(true))
     }
 
