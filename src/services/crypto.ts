@@ -1,7 +1,7 @@
 import { signTypedMessage } from 'eth-sig-util'
 import {ethers} from "ethers"
 import { BlockchainOrder, CancelOrderRequest, CancelOrderRequestV2, DomainData} from "../utils/Models"
-import { DOMAIN_TYPE, ORDER_TYPES, CANCEL_ORDER_TYPES, CANCEL_ORDER_TYPES_V2 } from '../utils/Constants'
+import { DOMAIN_TYPE, ORDER_TYPES, CANCEL_ORDER_TYPES_V2 } from '../utils/Constants'
 
 function getDomainData(chainId: number): DomainData {
     return {
@@ -12,13 +12,13 @@ function getDomainData(chainId: number): DomainData {
     };
 }
 
-export async function signCancelOrder(cancelOrderRequest: CancelOrderRequest | CancelOrderRequestV2, signer: ethers.Wallet, chainId: number, version: number): Promise<string> {
+export async function signCancelOrder(cancelOrderRequest: CancelOrderRequest | CancelOrderRequestV2, signer: ethers.Wallet, chainId: number): Promise<string> {
     if (signer.privateKey) {
 
         const data = {
             types: {
                 EIP712Domain: DOMAIN_TYPE,
-                DeleteOrder: version === 2 ? CANCEL_ORDER_TYPES_V2.DeleteOrder : CANCEL_ORDER_TYPES.DeleteOrder,
+                DeleteOrder: CANCEL_ORDER_TYPES_V2.DeleteOrder,
             },
             domain: getDomainData(chainId),
             primaryType: 'DeleteOrder',
