@@ -34,6 +34,11 @@ export class WS {
         this.wsOrionUrl = url
     }
 
+    public async init(): Promise<boolean> {
+        /* method is deprecated and unnecessary, but left for backward compatibility */
+        return new Promise(resolve => resolve(true))
+    }
+
     private connect (url: string, middleware?: MiddlewareFunction, query?: Record<string, unknown>): WsEmitter {
         const socket = new ReconnectingWebSocket(url, [], {
             WebSocket: Websocket

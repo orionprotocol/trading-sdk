@@ -245,7 +245,8 @@ import { OrionAggregator } from '@orionprotocol/orion-trading-sdk'
 
 orionAggregator = new OrionAggregator(chain)
 
-// no need in further initializing, module is ready to use
+// There is no need to call deprecated method orionAggregator.init() now,
+// module is ready to use. But this method is left for backward compatibility.
 
 ```
 
@@ -308,7 +309,8 @@ const wsUrl = Constants.ORION_WS.TEST.BSC
 // wsUrl by default is ORION_WS.TEST.BSC
 const ws = new WS(wsUrl)
 
-// no need in further initializing, module is ready to use
+// There is no need to call deprecated method ws.init() now,
+// module is ready to use. But this method is left for backward compatibility.
 ```
 
 **To subscribe to the price feed:**

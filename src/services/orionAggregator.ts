@@ -16,6 +16,11 @@ export class OrionAggregator {
         this.exchange = new Exchange(chain)
     }
 
+    public async init(): Promise<boolean> {
+        /* method is deprecated and unnecessary, but left for backward compatibility */
+        return new Promise(resolve => resolve(true))
+    }
+
     public async getPairsInfo (): Promise<Record<string, PairConfig>> {
         try {
             const data: PairConfig[] = await handleResponse(this.chain.api.orionAggregator.get('/pairs/exchangeInfo'))
