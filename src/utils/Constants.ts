@@ -4,19 +4,13 @@ export const NETWORK = {
     TEST: {
         BSC: {
             RPC: 'https://data-seed-prebsc-1-s1.binance.org:8545',
-            ORION: 'https://dev-exp.orionprotocol.io',
-            CHAIN_ID: 97,
-            TX_TIMEOUT_SEC: 60
-        },
-        BSCV2: {
-            RPC: 'https://data-seed-prebsc-2-s1.binance.org:8545',
-            ORION: 'https://dn-bsc.orionprotocol.io',
+            ORION: 'https://testing.orionprotocol.io/bsc-testnet',
             CHAIN_ID: 97,
             TX_TIMEOUT_SEC: 60
         },
         ETH: {
-            RPC: 'https://staging.orionprotocol.io/rpc',
-            ORION: 'https://staging.orionprotocol.io',
+            RPC: 'https://testing.orionprotocol.io/eth-ropsten/rpc',
+            ORION: 'https://testing.orionprotocol.io/eth-ropsten',
             CHAIN_ID: 3,
             TX_TIMEOUT_SEC: 60
         }
@@ -39,9 +33,8 @@ export const NETWORK = {
 
 export const ORION_WS = {
     TEST: {
-        BSC: 'wss://dev-exp.orionprotocol.io',
-        BSCV2: 'wss://dn-bsc.orionprotocol.io',
-        ETH: 'wss://staging.orionprotocol.io',
+        BSC: 'wss://testing.orionprotocol.io/bsc-testnet',
+        ETH: 'wss://testing.orionprotocol.io/eth-ropsten',
     },
     MAIN: {
         BSC: 'wss://trade-exp.orionprotocol.io',
