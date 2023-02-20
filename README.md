@@ -1,4 +1,6 @@
-# Orion Trading SDK
+# Deprecated in favor [Orion Protocol SDK](https://github.com/orionprotocol/sdk)
+
+## Orion Trading SDK
 
 [![code style: eslint](https://img.shields.io/badge/code%20style-eslint-green)](https://github.com/standard/eslint-config-standard)
 [![Actions Status](https://github.com/orionprotocol/trading-sdk/workflows/CI/badge.svg)](https://github.com/orionprotocol/trading-sdk/workflows/CI/badge.svg)
